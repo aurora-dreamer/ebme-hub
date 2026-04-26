@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ventilator — Hazard, Alarm & Safety Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f8f5;
+  --white: #ffffff;
+  --ink: #12100e;
+  --ink2: #3d3830;
+  --ink3: #7a7268;
+  --ink4: #b0a898;
+  --rule: #e2ddd6;
+  --rule2: #ede9e2;
+
+  --patient: #c0392b;
+  --patient-bg: #fdf3f2;
+  --patient-light: #fae5e3;
+  --patient-border: #f5b7b1;
+
+  --user: #1a5276;
+  --user-bg: #eaf2f8;
+  --user-light: #d6eaf8;
+  --user-border: #85c1e9;
+
+  --eng: #1e8449;
+  --eng-bg: #eafaf1;
+  --eng-light: #d5f5e3;
+  --eng-border: #82e0aa;
+
+  --alarm: #7d3c98;
+  --alarm-bg: #f5eef8;
+  --alarm-light: #e8daef;
+
+  --safe: #1a5276;
+  --safe-bg: #eaf2f8;
+
+  --crit: #922b21;
+  --maj: #784212;
+  --mod: #4d611b;
+
+  --shadow: 0 1px 3px rgba(18,16,14,0.08), 0 4px 16px rgba(18,16,14,0.05);
+  --shadow-hover: 0 4px 12px rgba(18,16,14,0.12), 0 12px 32px rgba(18,16,14,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── MASTHEAD ─────────────────────── */
+.masthead {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.masthead-inner {
+  padding: 44px 52px 36px;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: flex-end;
+}
+/* halftone-style background dots */
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(249,248,245,0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  z-index: 1;
+}
+.masthead-rule {
+  width: 48px; height: 3px;
+  background: var(--patient);
+  margin-bottom: 14px;
+}
+.masthead-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(249,248,245,0.45);
+  margin-bottom: 10px;
+}
+.masthead h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 900;
+  line-height: 1.0;
+  letter-spacing: -1px;
+  margin-bottom: 10px;
+}
+.masthead h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: rgba(249,248,245,0.5);
+}
+.masthead-sub {
+  font-size: 13px;
+  color: rgba(249,248,245,0.5);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.5px;
+  margin-top: 6px;
+}
+.masthead-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  align-items: flex-end;
+  padding-bottom: 4px;
+}
+.mpill {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 2px;
+  border: 1px solid;
+  font-weight: 500;
+}
+.mpill-p { color: #f5b7b1; border-color: #f5b7b1; }
+.mpill-u { color: #85c1e9; border-color: #85c1e9; }
+.mpill-e { color: #82e0aa; border-color: #82e0aa; }
+
+/* ── NAV BAR ──────────────────────── */
+.navbar {
+  background: var(--white);
+  border-bottom: 2px solid var(--rule);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(18,16,14,0.07);
+}
+.navbar-inner {
+  display: flex;
+  overflow-x: auto;
+  padding: 0 52px;
+  gap: 0;
+  scrollbar-width: none;
+}
+.navbar-inner::-webkit-scrollbar { display: none; }
+.ntab {
+  padding: 16px 20px 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ntab:hover { color: var(--ink); }
+.ntab-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ntab.active-p { color: var(--patient); border-bottom-color: var(--patient); }
+.ntab.active-u { color: var(--user); border-bottom-color: var(--user); }
+.ntab.active-e { color: var(--eng); border-bottom-color: var(--eng); }
+.ntab.active-n { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ── PAGE SHELL ───────────────────── */
+.shell {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 48px 52px;
+}
+.section { display: none; }
+.section.on { display: block; animation: appear 0.3s ease both; }
+@keyframes appear {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SECTION HEADER ───────────────── */
+.sec-hd {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: flex-end;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 32px;
+}
+.sec-eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+.sec-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.sec-note {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink3);
+  max-width: 380px;
+  text-align: right;
+  line-height: 1.55;
+}
+
+/* ── RISK MATRIX ──────────────────── */
+.matrix-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+.matrix-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--ink4);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.matrix-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+.rm { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 3px; }
+.rc {
+  padding: 10px 6px;
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+.rc-head { background: var(--ink); color: var(--bg); letter-spacing: 1px; }
+.rc-side { background: var(--rule2); color: var(--ink2); text-align: right; padding-right: 12px; display: flex; align-items: center; justify-content: flex-end; font-size: 9px; }
+.rc-neg { background: #d5f5e3; color: #145a32; }
+.rc-acc { background: #fef9c3; color: #7d6608; }
+.rc-alarp { background: #fde8c8; color: #784212; }
+.rc-un { background: #fadbd8; color: #922b21; font-weight: 700; }
+
+/* ── OVERVIEW CARDS ───────────────── */
+.ov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+.ov-card {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.ov-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.ov-card.cp::before { background: var(--patient); }
+.ov-card.cu::before { background: var(--user); }
+.ov-card.ce::before { background: var(--eng); }
+.ov-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+
+.ov-hd { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+.ov-icon { font-size: 22px; line-height: 1; }
+.ov-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+.ov-role { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+
+.ov-stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule2); font-size: 11px; gap: 10px; }
+.ov-stat:last-child { border-bottom: none; }
+.ov-stat-label { color: var(--ink2); }
+
+/* ── SEVERITY BADGES ──────────────── */
+.sev {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid;
+}
+.sev-crit { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.sev-maj { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.sev-mod { background: #fdfefe; color: var(--mod); border-color: #a9cce3; }
+.sev-min { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+/* ── HAZARD CARDS ─────────────────── */
+.hz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.hz {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: all 0.2s;
+}
+.hz:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.hz-top {
+  padding: 16px 20px;
+  border-bottom: 1px solid;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.hz-glyph { font-size: 20px; line-height: 1; margin-top: 3px; }
+.hz-meta { flex: 1; min-width: 0; }
+.hz-id { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 2px; margin-bottom: 3px; }
+.hz-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.2; }
+.hz-body { padding: 16px 20px; }
+.hz-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--rule2); font-size: 12px; align-items: flex-start; }
+.hz-row:last-child { border-bottom: none; padding-bottom: 0; }
+.hz-k { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; padding-top: 2px; }
+.hz-v { color: var(--ink); line-height: 1.5; }
+
+/* ── ALARM TABLE ──────────────────── */
+.atbl { width: 100%; border-collapse: collapse; }
+.atbl th { text-align: left; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); background: var(--ink); font-weight: 500; }
+.atbl td { padding: 12px 14px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.atbl tr:hover td { background: var(--rule2); }
+.atbl td:first-child { font-weight: 600; color: var(--ink); font-size: 12px; }
+.pri { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; border: 1px solid; }
+.p-h { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.p-m { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.p-l { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+
+/* ── SAFETY MECHANISMS ────────────── */
+.sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px; }
+.sm {
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.sm:hover { border-color: var(--ink3); box-shadow: var(--shadow-hover); }
+.sm-bg-num {
+  position: absolute;
+  right: 14px; top: 8px;
+  font-family: 'Playfair Display', serif;
+  font-size: 52px;
+  font-weight: 900;
+  color: rgba(18,16,14,0.04);
+  line-height: 1;
+}
+.sm-icon-wrap { width: 38px; height: 38px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+.sm-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin-bottom: 4px; }
+.sm-name { font-size: 14px; font-weight: 700; font-family: 'IBM Plex Sans', sans-serif; margin-bottom: 8px; line-height: 1.25; }
+.sm-desc { font-size: 12px; color: var(--ink3); line-height: 1.55; margin-bottom: 10px; }
+.sm-std { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 0.5px; padding-top: 8px; border-top: 1px dashed var(--rule2); }
+
+/* ── DEFENCE ──────────────────────── */
+.def-wrap { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; box-shadow: var(--shadow); overflow: hidden; }
+.def-row { display: grid; grid-template-columns: 72px 1fr; border-bottom: 1px solid var(--rule); }
+.def-row:last-child { border-bottom: none; }
+.def-num { padding: 24px 16px; border-right: 1px solid var(--rule); display: flex; align-items: flex-start; justify-content: center; padding-top: 28px; }
+.def-roman { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; color: var(--ink4); font-style: italic; }
+.def-body { padding: 22px 28px; }
+.def-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.def-desc { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
+.def-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.dtag { padding: 2px 9px; border-radius: 2px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.3px; border: 1px solid; }
+.dtag-p { background: var(--patient-light); color: var(--patient); border-color: var(--patient-border); }
+.dtag-u { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+.dtag-e { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+/* ── STANDARDS TABLE ──────────────── */
+.stbl { width: 100%; border-collapse: collapse; }
+.stbl th { text-align: left; padding: 12px 16px; background: var(--ink); color: var(--bg); font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; }
+.stbl td { padding: 12px 16px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.stbl tr:hover td { background: var(--rule2); }
+.stbl td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--ink); font-size: 11px; white-space: nowrap; }
+
+/* ── BANNER ───────────────────────── */
+.banner { display: flex; gap: 12px; padding: 14px 18px; border-radius: 3px; margin-bottom: 20px; font-size: 13px; line-height: 1.55; border-left: 4px solid; }
+.banner-e { background: var(--eng-bg); border-color: var(--eng); color: var(--eng); }
+.banner-p { background: var(--patient-bg); border-color: var(--patient); color: var(--patient); }
+.banner strong { font-weight: 700; display: block; margin-bottom: 3px; }
+
+/* ── ALARM PRIORITY CARDS ─────────── */
+.pri-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.pri-card { padding: 20px; border-radius: 3px; border: 1px solid; }
+.pc-h { background: #fdedec; border-color: #f1948a; }
+.pc-m { background: #fef5e4; border-color: #f0b27a; }
+.pc-l { background: var(--user-bg); border-color: var(--user-border); }
+.pc-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+.pc-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; font-family: 'IBM Plex Sans', sans-serif; }
+.pc-items { font-size: 11px; line-height: 1.8; color: var(--ink2); }
+
+/* ── VENTILATOR TYPES ─────────────── */
+.vtype-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+.vtype { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 18px; box-shadow: var(--shadow); }
+.vtype-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+.vtype-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+.vtype-desc { font-size: 11px; color: var(--ink3); line-height: 1.6; }
+
+/* ── WAVEFORM SVG CONTAINER ───────── */
+.waveform-wrap { background: var(--ink); border-radius: 3px; padding: 20px; margin-bottom: 20px; overflow: hidden; }
+
+/* ── RESPONSIVE ───────────────────── */
+@media (max-width: 1000px) {
+  .masthead-inner { grid-template-columns: 1fr; }
+  .masthead-pills { flex-direction: row; }
+  .ov-grid, .hz-grid, .sm-grid, .pri-grid { grid-template-columns: 1fr; }
+  .vtype-grid { grid-template-columns: repeat(2, 1fr); }
+  .shell { padding: 28px 20px; }
+  .navbar-inner { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-eyebrow">ISO 80601-2-12 · IEC 60601-1-8 · ISO 14971 · Clinical Engineering Reference</div>
+      <div class="masthead-rule"></div>
+      <h1>Ventilator<br><em>Hazard, Alarm &<br>Safety Analysis</em></h1>
+      <div class="masthead-sub">Risk across patient · clinical user · service engineer</div>
+    </div>
+    <div class="masthead-pills">
+      <span class="mpill mpill-p">● Patient Risk</span>
+      <span class="mpill mpill-u">● Clinical User</span>
+      <span class="mpill mpill-e">● Service Engineer</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="ntab active-n" id="t-over" onclick="go('over',this,'active-n')">
+      <div class="ntab-dot" style="background:var(--ink)"></div>Overview
+    </div>
+    <div class="ntab" id="t-pat" onclick="go('pat',this,'active-p')">
+      <div class="ntab-dot" style="background:var(--patient)"></div>Patient Hazards
+    </div>
+    <div class="ntab" id="t-usr" onclick="go('usr',this,'active-u')">
+      <div class="ntab-dot" style="background:var(--user)"></div>User Hazards
+    </div>
+    <div class="ntab" id="t-eng" onclick="go('eng',this,'active-e')">
+      <div class="ntab-dot" style="background:var(--eng)"></div>Engineer Hazards
+    </div>
+    <div class="ntab" id="t-alm" onclick="go('alm',this,'active-n')">
+      <div class="ntab-dot" style="background:var(--ink)"></div>Alarm System
+    </div>
+    <div class="ntab" id="t-saf" onclick="go('saf',this,'active-n')">
+      <div class="ntab-dot" style="background:var(--ink)"></div>Safety Mechanisms
+    </div>
+    <div class="ntab" id="t-def" onclick="go('def',this,'active-n')">
+      <div class="ntab-dot" style="background:var(--ink)"></div>Defence-in-Depth
+    </div>
+    <div class="ntab" id="t-std" onclick="go('std',this,'active-n')">
+      <div class="ntab-dot" style="background:var(--ink)"></div>Standards
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+<div id="sec-over" class="section on">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 00 · Stakeholder Risk Map</div>
+      <div class="sec-title">The Ventilator<br>Risk Landscape</div>
+    </div>
+    <div class="sec-note">Mechanical ventilation is one of the highest-risk interventions in critical care. Failures — whether device, user, or service — carry direct life-threatening consequences with seconds to minutes for intervention.</div>
+  </div>
+
+  <!-- Ventilator types -->
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink4);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Device Scope</div>
+  <div class="vtype-grid">
+    <div class="vtype">
+      <div class="vtype-name">ICU / Critical Care</div>
+      <div class="vtype-sub">Draeger · Hamilton · Maquet · Carestation</div>
+      <div class="vtype-desc">Full-featured, multiple modes (VC, PC, SIMV, PSV, APRV), invasive and NIV. Long-term intubated patients. Compressor + O₂ blending.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">Transport Ventilator</div>
+      <div class="vtype-sub">Medumat · Hamilton T1 · LTV Series</div>
+      <div class="vtype-desc">Portable, battery-powered. Used during inter-hospital transfer or within hospital (CT, theatre). Simplified modes, turbine or pneumatic drive.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">Emergency / MRI</div>
+      <div class="vtype-sub">MRI-compatible · Resuscitation</div>
+      <div class="vtype-desc">MRI-safe (no ferromagnetic components), pneumatically driven. Emergency: resuscitation rooms, ambulance. Robustness over feature-breadth.</div>
+    </div>
+  </div>
+
+  <!-- Overview cards -->
+  <div class="ov-grid">
+    <div class="ov-card cp" onclick="go('pat',document.getElementById('t-pat'),'active-p')">
+      <div class="ov-hd">
+        <div class="ov-icon">🫁</div>
+        <div>
+          <div class="ov-name" style="color:var(--patient)">Patient</div>
+          <div class="ov-role">Direct physiological consequence</div>
+        </div>
+      </div>
+      <div class="ov-stat"><span class="ov-stat-label">Barotrauma / Volutrauma</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Inadvertent extubation</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Hypoxia / O₂ failure</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Trigger failure / asynchrony</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">VAP / contamination</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Electrical micro-shock (CF)</span><span class="sev sev-maj">MAJOR</span></div>
+    </div>
+
+    <div class="ov-card cu" onclick="go('usr',document.getElementById('t-usr'),'active-u')">
+      <div class="ov-hd">
+        <div class="ov-icon">👩‍⚕️</div>
+        <div>
+          <div class="ov-name" style="color:var(--user)">Clinical User</div>
+          <div class="ov-role">Use error & human factors</div>
+        </div>
+      </div>
+      <div class="ov-stat"><span class="ov-stat-label">Mode / parameter error</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Alarm fatigue</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Circuit misconnection</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">PEEP not set for transport</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Humidifier burns</span><span class="sev sev-mod">MODERATE</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Needlestick / coughing</span><span class="sev sev-mod">MODERATE</span></div>
+    </div>
+
+    <div class="ov-card ce" onclick="go('eng',document.getElementById('t-eng'),'active-e')">
+      <div class="ov-hd">
+        <div class="ov-icon">🔧</div>
+        <div>
+          <div class="ov-name" style="color:var(--eng)">Engineer</div>
+          <div class="ov-role">Occupational & patient-forward</div>
+        </div>
+      </div>
+      <div class="ov-stat"><span class="ov-stat-label">Electric shock (mains)</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Post-service flow inaccuracy</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Biological exposure</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">O₂ sensor mis-calibration</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Compressor contamination</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">High-pressure O₂ release</span><span class="sev sev-maj">MAJOR</span></div>
+    </div>
+  </div>
+
+  <!-- ISO 14971 Matrix -->
+  <div class="matrix-card">
+    <div class="matrix-label">ISO 14971:2019</div>
+    <div class="matrix-title">Risk Acceptability Matrix — Ventilator Hazard Positions</div>
+    <div class="rm">
+      <div class="rc" style="background:transparent;border:none"></div>
+      <div class="rc rc-head">Negligible</div>
+      <div class="rc rc-head">Minor</div>
+      <div class="rc rc-head">Moderate</div>
+      <div class="rc rc-head">Serious</div>
+      <div class="rc rc-head">Catastrophic</div>
+
+      <div class="rc rc-side">Improbable</div>
+      <div class="rc rc-neg">Neg</div>
+      <div class="rc rc-neg">Neg</div>
+      <div class="rc rc-acc">Accept</div>
+      <div class="rc rc-acc">Accept</div>
+      <div class="rc rc-alarp">ALARP</div>
+
+      <div class="rc rc-side">Remote</div>
+      <div class="rc rc-neg">Neg</div>
+      <div class="rc rc-acc">Accept</div>
+      <div class="rc rc-acc">Accept</div>
+      <div class="rc rc-alarp">ALARP</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Occasional</div>
+      <div class="rc rc-acc">Accept</div>
+      <div class="rc rc-acc">Accept</div>
+      <div class="rc rc-alarp">ALARP</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Probable</div>
+      <div class="rc rc-acc">Accept</div>
+      <div class="rc rc-alarp">ALARP</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Frequent</div>
+      <div class="rc rc-alarp">ALARP</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+      <div class="rc rc-un">⚠ UNACCEPTABLE</div>
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:var(--ink3);line-height:1.6;font-style:italic">
+      Pre-mitigation: <strong>Barotrauma from Ppeak overdelivery</strong> → Catastrophic × Occasional → Unacceptable — mitigated by Ppeak alarm + pressure-relief valve + dual-CPU. <strong>Alarm fatigue (missed disconnect)</strong> → Catastrophic × Probable → Unacceptable — mitigated by mandatory alarm on, physiological monitors (SpO₂, ETCO₂), IEC 60601-1-8.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PATIENT ═══════════════ -->
+<div id="sec-pat" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 01 · Patient Hazards</div>
+      <div class="sec-title" style="color:var(--patient)">Direct Physiological Risk</div>
+    </div>
+    <div class="sec-note">Patient harm from ventilator failure manifests within minutes. Lung-protective strategies (ARDS net) and closed-loop alarm monitoring form the primary defence line.</div>
+  </div>
+
+  <div class="hz-grid">
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)">
+        <div class="hz-glyph">💥</div>
+        <div class="hz-meta">
+          <div class="hz-id">P.01</div>
+          <div class="hz-name">Barotrauma / Volutrauma</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Ppeak too high (>40 cmH₂O); Vt too large (>10 mL/kg); inadvertent PEEP stacking; inappropriate mode for obstructive disease.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Pneumothorax, pneumomediastinum, tension pneumothorax — cardiac arrest within minutes. Alveolar rupture and VILI (ventilator-induced lung injury).</div></div>
+        <div class="hz-row"><div class="hz-k">Magnitude</div><div class="hz-v">Immediate life-threat. ARDS lung protective: Vt 6 mL/kg IBW, Ppeak <30 cmH₂O, Pplat <28 cmH₂O.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Ppeak alarm (hard limit), software pressure relief, dual-CPU watchdog, compliance monitoring, lung-protective protocol.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">ISO 80601-2-12 §201.12.4 — Ppeak alarm mandatory</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)">
+        <div class="hz-glyph">⚠️</div>
+        <div class="hz-meta">
+          <div class="hz-id">P.02</div>
+          <div class="hz-name">Inadvertent Extubation / Circuit Disconnect</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Patient movement, unsecured ETT, heavy circuit tubing pulling, coughing during transport, inadequate tube fixation.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Complete cessation of ventilation → hypoxia → cardiac arrest within 3–5 minutes if undetected. Laryngeal trauma on extubation.</div></div>
+        <div class="hz-row"><div class="hz-k">Detection</div><div class="hz-v">Low Ppeak alarm (disconnect = pressure drops); low minute volume alarm; ETCO₂ waveform disappearance (fastest); SpO₂ drop (delayed).</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory low airway pressure alarm (cannot be disabled per ISO 80601-2-12); ETCO₂ continuous monitoring; circuit supports and swivel connectors.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)">
+        <div class="hz-glyph">🫧</div>
+        <div class="hz-meta">
+          <div class="hz-id">P.03</div>
+          <div class="hz-name">Hypoxia — O₂ Supply / Blending Failure</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Pipeline O₂ failure; blender valve fault; FiO₂ sensor drift (under-reads → operator increases FiO₂ delivery beyond intended); air compressor failure on air-oxygen blended ventilators.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">SpO₂ desaturation → hypoxic brain injury. Critical in ICU patients with already compromised lungs.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">FiO₂ low alarm; independent SpO₂ monitor; O₂ analyser in inspiratory limb; O₂ supply pressure alarm; backup cylinder.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-1-8 · ISO 80601-2-12 §201.12.6</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)">
+        <div class="hz-glyph">🔄</div>
+        <div class="hz-meta">
+          <div class="hz-id">P.04</div>
+          <div class="hz-name">Patient–Ventilator Asynchrony</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Trigger threshold too insensitive; inspiratory time mismatch; reverse triggering; mode inappropriate for respiratory drive. Auto-PEEP causing trigger failure.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Increased work of breathing, respiratory fatigue, barotrauma risk, patient distress, agitation-driven unsafe self-extubation.</div></div>
+        <div class="hz-row"><div class="hz-k">Types</div><div class="hz-v">Missed triggers, double-triggering, delayed cycling, reverse triggering — visible on flow-time and pressure-time waveforms.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Trigger sensitivity adjustment; mode selection; waveform monitoring; sedation review; NAVA (neurally adjusted ventilatory assist) on advanced platforms.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)">
+        <div class="hz-glyph">🦠</div>
+        <div class="hz-meta">
+          <div class="hz-id">P.05</div>
+          <div class="hz-name">VAP — Ventilator-Associated Pneumonia</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Contaminated breathing circuit; condensate pooling and retrograde aspiration; failure to use HME/heated humidifier appropriately; inadequate circuit change frequency.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">VAP: mortality 20–50% in ICU. Adds 7–21 days of ventilation. High antibiotic burden.</div></div>
+        <div class="hz-row"><div class="hz-k">Incidence</div><div class="hz-v">1–4 episodes per 1000 ventilator-days in well-managed ICUs. Device and care bundle dependent.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Heat and moisture exchanger (HME) or closed heated humidifier; circuit change per protocol (not &lt;48–72 hrs); drainage of condensate away from patient; subglottic suction ETT.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)">
+        <div class="hz-glyph">⚡</div>
+        <div class="hz-meta">
+          <div class="hz-id">P.06</div>
+          <div class="hz-name">Electrical Micro-shock (CF Applied Part)</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Leakage current via humidifier, heated wire circuit, or flow sensor to patient. Ground fault or insulation breakdown. Fluid ingress to circuit connections.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">VF at ≥10 µA via intracardiac path (CF classification). Burn injury at contact points. Risk highest when invasive monitoring co-exists.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">CF applied part ≤10 µA leakage (normal), ≤50 µA (single fault); IEC 62353 annual re-test; Class I earthing; hospital-grade outlets; no extension leads.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-1 Table 1 · IEC 62353 recurrent</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)">
+        <div class="hz-glyph">🔋</div>
+        <div class="hz-meta">
+          <div class="hz-id">P.07</div>
+          <div class="hz-name">Power Failure — Battery Exhaustion</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Mains failure without UPS; transport battery not charged; battery degradation below spec (≥2 hr autonomy required); BMS fault preventing charge.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Complete ventilator shutdown → apnoea in a patient who may have no respiratory drive → hypoxic cardiac arrest.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Battery capacity test at PPM; mains connect alarm; battery low and critical alarms; manual resuscitation bag (Ambu) always at bedside — last resort.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">ISO 80601-2-12 §201.6.8.3 — min internal power source</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)">
+        <div class="hz-glyph">🌬️</div>
+        <div class="hz-meta">
+          <div class="hz-id">P.08</div>
+          <div class="hz-name">Rebreathing — CO₂ Retention</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Exhaled valve malfunction; inappropriate ventilation mode with trapped gas; dead space too large; HME resistance too high in paediatric circuit.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Hypercapnia → respiratory acidosis → arrhythmia → cardiac arrest. Rising ETCO₂ is earliest sign.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">ETCO₂ monitoring (capnography); expiratory valve inspection at PPM; circuit configuration verification; high ETCO₂ alarm.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ USER ═══════════════ -->
+<div id="sec-usr" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 02 · Clinical User Hazards</div>
+      <div class="sec-title" style="color:var(--user)">Use Error &<br>Human Factors</div>
+    </div>
+    <div class="sec-note">ICU nurses and RT staff interact with ventilators under high cognitive load. Complex interfaces, multiple simultaneous alarms, and critical patients create optimal conditions for use error.</div>
+  </div>
+
+  <div class="hz-grid">
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)">
+        <div class="hz-glyph">⚙️</div>
+        <div class="hz-meta">
+          <div class="hz-id">U.01</div>
+          <div class="hz-name">Incorrect Mode / Parameter Setting</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Wrong mode selected (VC when PS intended); Vt set per kg body weight not IBW; rate incorrectly set; PEEP removed inadvertently; I:E ratio inappropriate.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Barotrauma, hypo/hyperventilation, patient-ventilator asynchrony, VILI, respiratory alkalosis/acidosis.</div></div>
+        <div class="hz-row"><div class="hz-k">Human factor</div><div class="hz-v">Different ventilator models on same ICU have different knob/button layouts and default values. Handover gaps. Cognitive overload at night.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Standardised settings checklist at start of shift; independent double-check after any changes; IEC 62366 usability testing for interface design.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)">
+        <div class="hz-glyph">🔔</div>
+        <div class="hz-meta">
+          <div class="hz-id">U.02</div>
+          <div class="hz-name">Alarm Fatigue</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">ICU patients generate 350–700 alarms per bed per day. >90% are non-actionable. Nurses silence or disable alarms that have repeatedly cried wolf.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">True critical alarms (disconnect, apnoea, high pressure) missed → patient death. ECRI Institute: alarm hazards #1 hospital technology hazard for 10+ consecutive years.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">IEC 60601-1-8 three-priority alarm; individualised alarm limits; smart alarm systems; mandatory minimum alarm settings per protocol; EBME role in reducing nuisance alarm rate.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-1-8 · AAMI/ECRI Alarm Safety white paper</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)">
+        <div class="hz-glyph">🔀</div>
+        <div class="hz-meta">
+          <div class="hz-id">U.03</div>
+          <div class="hz-name">Circuit Misconnection</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Inspiratory and expiratory limbs swapped; wrong-size connector forced; nebuliser tubing in wrong port; PEEP valve not fitted correctly.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Reversed circuit = patient exhales into machine, CO₂ rebreathing; overpressure if expiratory port blocked; immediate hypercapnia.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">ISO 5356 standard connectors (22/15 mm asymmetric); colour-coded circuit limbs (white insp / grey exp); pre-use check; misconnection alarm on some platforms.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)">
+        <div class="hz-glyph">🚑</div>
+        <div class="hz-meta">
+          <div class="hz-id">U.04</div>
+          <div class="hz-name">Inadequate Transport Preparation</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Transport ventilator battery not charged; PEEP not maintained during switch; O₂ cylinder inadequate for journey time; alarm limits not rechecked on transport device.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Apnoea, desaturation, haemodynamic collapse during inter-hospital or intra-hospital transfer. High-risk environment (CT, MRI) with limited resuscitation access.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Pre-transport checklist (SAFE-ICU protocol); battery >80% before every transport; cylinder duration calculation; manual Ambu bag at hand.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)">
+        <div class="hz-glyph">💧</div>
+        <div class="hz-meta">
+          <div class="hz-id">U.05</div>
+          <div class="hz-name">Humidifier Burns / Water Ingress</div>
+        </div>
+        <span class="sev sev-mod">MODERATE</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Heated humidifier chamber empty → overheating → hot gas delivery; condensate in circuit water trap not drained → aspiration into patient.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Airway burns (hot gas); tracheobronchitis; aspiration pneumonia; water ingress to ventilator electronics causing short circuit.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Auto-fill humidifier or dry-out alarm; heated wire circuit to prevent condensate; water traps drainage protocol; HME as alternative for shorter ventilation.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)">
+        <div class="hz-glyph">💉</div>
+        <div class="hz-meta">
+          <div class="hz-id">U.06</div>
+          <div class="hz-name">Aerosol / Biological Exposure</div>
+        </div>
+        <span class="sev sev-mod">MODERATE</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Patient coughing during circuit disconnection; open suctioning without viral filter; aerosolising procedures (nebuliser, bronchoscopy).</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Respiratory pathogen transmission (TB, COVID-19, influenza); occupational exposure to drug aerosols (inhaled antibiotics).</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Viral/bacterial filter on expiratory port; closed suctioning system; PPE (FFP3, visor); pause ventilation before disconnection; negative pressure room where applicable.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">COSHH 2002 · IPC guidance · NHS IPC manual</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)">
+        <div class="hz-glyph">📵</div>
+        <div class="hz-meta">
+          <div class="hz-id">U.07</div>
+          <div class="hz-name">Alarm Limit Not Set / Too Wide</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Alarm limits left at factory defaults (too wide); limits silenced for a procedure and not restored; low-priority alarms ignored because limits too tight triggering constantly.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Critical events (disconnect, high pressure, apnoea) fall within the alarm window and no alert fires → patient harmed before discovery.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory alarm limits per clinical protocol; IEC 60601-1-8 mandated alarms cannot be disabled; shift checklist includes alarm limit verification.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)">
+        <div class="hz-glyph">🌐</div>
+        <div class="hz-meta">
+          <div class="hz-id">U.08</div>
+          <div class="hz-name">EMI / Wireless Device Interference</div>
+        </div>
+        <span class="sev sev-mod">MODERATE</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Mobile phone too close; electrosurgery in adjacent bay; MRI stray field on incompatible ventilator; RFID reader interference.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">False alarm cascade; ventilator mode reset; trigger sensitivity disruption; display freeze. Rare but documented.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">IEC 60601-1-2 EMC testing; respect separation distances; MRI-compatible ventilator in MRI suite; co-located device EMC risk assessment at installation.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ ENGINEER ═══════════════ -->
+<div id="sec-eng" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 03 · Service Engineer Hazards</div>
+      <div class="sec-title" style="color:var(--eng)">Occupational &<br>Patient-Forward Risk</div>
+    </div>
+    <div class="sec-note">EBME engineers carry dual liability — personal safety and patient safety through the quality of service. Post-service errors propagate directly into a life-critical device.</div>
+  </div>
+
+  <div class="banner banner-e">
+    <span style="font-size:18px">⚠</span>
+    <div>
+      <strong>Regulatory context</strong>
+      Post-service verification is mandatory under UK MDR 2002. Any service that could affect safety performance must be documented. Failure to verify performance after repair is a potential MHRA reportable event if patient harm results.
+    </div>
+  </div>
+
+  <div class="hz-grid">
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)">
+        <div class="hz-glyph">⚡</div>
+        <div class="hz-meta">
+          <div class="hz-id">E.01</div>
+          <div class="hz-name">Electric Shock — Mains Voltage</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Live PCB fault-finding; probing energised PSU; capacitor discharge not waited out after mains removal; damaged test leads; no isolation.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">230 V AC at >100 mA → VF → death. Flash burns. Muscle tetany preventing release. 50 mA can cause cardiac arrest.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">LOTO; isolation transformer for live work; Cat IV test leads per IEC 61010; competency sign-off; two-person rule for live mains probing; capacitor discharge wait (typically 60 sec).</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">Electricity at Work Regs 1989 · IEC 61010-1</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)">
+        <div class="hz-glyph">🩸</div>
+        <div class="hz-meta">
+          <div class="hz-id">E.02</div>
+          <div class="hz-name">Biological Exposure — Patient Circuit</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Secretions in expiratory valve housing; condensate in circuit; blood/sputum contamination on flow sensor; no decontamination certificate.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Bloodborne pathogen transmission (HBV, HCV, HIV); TB or drug-resistant organism contact; MRSA carriage transfer.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Decontamination certificate before EBME handles device; universal precautions; PPE (gloves, apron, FFP3 for aerosol-generating procedures); hand hygiene.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">COSHH 2002 · MHRA DB2006(06)</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)">
+        <div class="hz-glyph">📊</div>
+        <div class="hz-meta">
+          <div class="hz-id">E.03</div>
+          <div class="hz-name">Post-Service Flow / Volume Inaccuracy (Patient Harm)</div>
+        </div>
+        <span class="sev sev-crit">CRITICAL</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Flow sensor replaced but not calibrated; compliance test not re-run after circuit change; expiratory valve reassembled incorrectly; leak test skipped.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Patient receives wrong tidal volume on return to service → barotrauma or hypoventilation depending on direction of error.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory Vt accuracy test at ≥3 compliance settings post-service; leak test; compliance compensation verification; PPM checklist sign-off before return to use.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)">
+        <div class="hz-glyph">🫧</div>
+        <div class="hz-meta">
+          <div class="hz-id">E.04</div>
+          <div class="hz-name">O₂ Sensor Mis-calibration</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Galvanic fuel cell replaced but not calibrated to 21% (room air) and 100% O₂; wrong reference gas used; sensor connected in wrong orientation; expired cell installed.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">FiO₂ under/over-reads → wrong O₂ delivery to patient. Low-reading → clinician increases O₂ → hyperoxia (retinopathy in neonates, oxygen toxicity in COPD). High-reading → hypoxia.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Two-point calibration (21% + 100%) after every sensor replacement; traceable reference gas; certificate; cell expiry date check before use.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)">
+        <div class="hz-glyph">🌬️</div>
+        <div class="hz-meta">
+          <div class="hz-id">E.05</div>
+          <div class="hz-name">Compressor / Turbine Contamination</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Blocked inlet filters on compressor-driven ventilators; legionella/pseudomonas in humidifier water; dirty turbine housing after patient use; filter not replaced at PPM.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Pathogen delivery directly to patient's airway; compressor overheating and shutdown; reduced flow at high demand.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Inlet filter inspection/replacement at PPM; sterile water in humidifier (no tap water); log compressor running hours; turbine bearing check; decontamination before service.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)">
+        <div class="hz-glyph">💨</div>
+        <div class="hz-meta">
+          <div class="hz-id">E.06</div>
+          <div class="hz-name">High-Pressure O₂ Release Hazard</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">O₂ hose disconnection under pressure; pressure regulator failure; O₂ pipeline pressure spike during servicing; O₂ enriched atmosphere near ignition source.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">O₂-enriched environment → rapid fire escalation; high-pressure hose whip injury; decompression burn from rapid O₂ release.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Depressurise before disconnecting O₂ hoses; oil-free tools near O₂ connections; no grease on O₂ connectors; ventilate area when working with O₂ pipelines.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">HTM 02-01 · MHRA O₂ safety guidance</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)">
+        <div class="hz-glyph">💾</div>
+        <div class="hz-meta">
+          <div class="hz-id">E.07</div>
+          <div class="hz-name">Firmware Rollback / Software Error</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Board replacement installs older firmware; interrupted update leaves partial firmware; alarm configuration reset to defaults; ventilation mode unavailable after update.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Missing alarm logic (e.g., disconnect alarm absent in old firmware); incorrect tidal volume calculation in old versions; mode unavailable at critical moment.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Verify firmware version before and after service; OEM-approved update path only; document version in asset record; functional test all alarms after update.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">IEC 62304 software lifecycle · MHRA FSN process</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)">
+        <div class="hz-glyph">🔬</div>
+        <div class="hz-meta">
+          <div class="hz-id">E.08</div>
+          <div class="hz-name">Inadequate ESR Re-test After Repair</div>
+        </div>
+        <span class="sev sev-maj">MAJOR</span>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">PSU or mains wiring repaired without IEC 62353 re-test; earth conductor not reconnected properly; heated humidifier circuit repaired without leakage re-test.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Undetected earth fault → leakage current rise → micro-shock via patient breathing circuit (CF classification violated → >10 µA).</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">IEC 62353 after any mains-side repair: earth ≤0.1 Ω; enclosure leakage; CF patient leakage ≤10 µA. Log test results with approved analyser serial number.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">IEC 62353 · NHS HTM 06-01</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ ALARMS ═══════════════ -->
+<div id="sec-alm" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 04 · Alarm System</div>
+      <div class="sec-title">IEC 60601-1-8<br>Alarm Classification</div>
+    </div>
+    <div class="sec-note">Ventilator alarm logic is more complex than infusion devices — pressure, volume, flow, gas, and ventilator-patient interaction all require independent alarm chains. Mandated alarms cannot be disabled.</div>
+  </div>
+
+  <!-- Priority characteristics -->
+  <div class="pri-grid">
+    <div class="pri-card pc-h">
+      <div class="pc-label" style="color:#922b21">HIGH PRIORITY</div>
+      <div class="pc-title" style="color:#922b21">Immediate Action</div>
+      <div class="pc-items">
+        · Red flashing visual<br>
+        · 10-pulse repeating burst<br>
+        · ≥65 dBA at 1 m<br>
+        · Max 2 min silence period<br>
+        · Cannot be disabled
+      </div>
+    </div>
+    <div class="pri-card pc-m">
+      <div class="pc-label" style="color:#784212">MEDIUM PRIORITY</div>
+      <div class="pc-title" style="color:#784212">Prompt Response</div>
+      <div class="pc-items">
+        · Yellow flashing visual<br>
+        · 3-pulse repeating burst<br>
+        · ≥45 dBA at 1 m<br>
+        · Max 15 min silence<br>
+        · Can be paused briefly
+      </div>
+    </div>
+    <div class="pri-card pc-l">
+      <div class="pc-label" style="color:var(--user)">LOW PRIORITY</div>
+      <div class="pc-title" style="color:var(--user)">Awareness</div>
+      <div class="pc-items">
+        · Cyan / steady visual<br>
+        · Single chime or none<br>
+        · Audio optional<br>
+        · No silence limit<br>
+        · Advisory only
+      </div>
+    </div>
+  </div>
+
+  <!-- Alarm waveform annotation -->
+  <div class="waveform-wrap">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(249,248,245,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">VENTILATOR WAVEFORM — ANNOTATED ALARM TRIGGERS</div>
+    <svg viewBox="0 0 900 220" width="100%" style="max-height:240px">
+      <!-- Grid -->
+      <defs>
+        <pattern id="wg" width="30" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 30 0 L 0 0 0 20" fill="none" stroke="rgba(249,248,245,0.06)" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="900" height="220" fill="url(#wg)"/>
+
+      <!-- Ppeak label -->
+      <text x="10" y="18" fill="rgba(249,248,245,0.5)" font-size="9" font-family="IBM Plex Mono, monospace" letter-spacing="1">AIRWAY PRESSURE (cmH₂O)</text>
+
+      <!-- HIGH alarm line -->
+      <line x1="0" y1="35" x2="900" y2="35" stroke="#f5b7b1" stroke-width="1.2" stroke-dasharray="6,4"/>
+      <text x="850" y="31" fill="#f5b7b1" font-size="8" font-family="IBM Plex Mono,monospace">HIGH</text>
+
+      <!-- LOW alarm line -->
+      <line x1="0" y1="155" x2="900" y2="155" stroke="#85c1e9" stroke-width="1.2" stroke-dasharray="6,4"/>
+      <text x="854" y="151" fill="#85c1e9" font-size="8" font-family="IBM Plex Mono,monospace">LOW</text>
+
+      <!-- PEEP line -->
+      <line x1="0" y1="170" x2="900" y2="170" stroke="rgba(130,224,170,0.6)" stroke-width="1" stroke-dasharray="3,4"/>
+      <text x="854" y="166" fill="#82e0aa" font-size="8" font-family="IBM Plex Mono,monospace">PEEP</text>
+
+      <!-- Normal breaths -->
+      <!-- Breath 1 -->
+      <path d="M 40 170 L 40 155 Q 40 70 70 55 Q 100 40 110 55 Q 120 70 120 155 L 160 155 L 160 170" fill="none" stroke="#60a5fa" stroke-width="2"/>
+      <!-- Breath 2 -->
+      <path d="M 200 170 L 200 155 Q 200 70 230 55 Q 260 40 270 55 Q 280 70 280 155 L 320 155 L 320 170" fill="none" stroke="#60a5fa" stroke-width="2"/>
+      <!-- Breath 3 HIGH PRESSURE breach -->
+      <path d="M 360 170 L 360 155 Q 360 50 400 22 Q 420 8 430 22 Q 440 50 440 155 L 480 155 L 480 170" fill="none" stroke="#f5b7b1" stroke-width="2.5"/>
+      <!-- Alarm indicator -->
+      <rect x="390" y="4" width="60" height="16" rx="2" fill="#c0392b" opacity="0.9"/>
+      <text x="420" y="15" fill="white" font-size="8" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">HIGH P</text>
+
+      <!-- Breath 4 & 5 normal -->
+      <path d="M 520 170 L 520 155 Q 520 70 550 55 Q 580 40 590 55 Q 600 70 600 155 L 640 155 L 640 170" fill="none" stroke="#60a5fa" stroke-width="2"/>
+
+      <!-- DISCONNECT — pressure drops to 0 -->
+      <path d="M 680 170 L 680 155 Q 680 100 700 100" fill="none" stroke="#fde047" stroke-width="2"/>
+      <path d="M 700 100 L 900 100" fill="none" stroke="#fde047" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <rect x="720" y="88" width="80" height="16" rx="2" fill="#d4ac0d" opacity="0.9"/>
+      <text x="760" y="99" fill="#12100e" font-size="8" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-weight="600">DISCONNECT</text>
+
+      <!-- Time axis -->
+      <line x1="0" y1="200" x2="900" y2="200" stroke="rgba(249,248,245,0.15)" stroke-width="1"/>
+      <text x="440" y="215" fill="rgba(249,248,245,0.3)" font-size="8" text-anchor="middle" font-family="IBM Plex Mono,monospace" letter-spacing="2">TIME →</text>
+    </svg>
+  </div>
+
+  <!-- Full alarm table -->
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px;">
+    <table class="atbl">
+      <thead>
+        <tr>
+          <th style="width:18%">Alarm</th>
+          <th style="width:9%">Priority</th>
+          <th style="width:22%">Trigger Condition</th>
+          <th style="width:22%">Ventilator Response</th>
+          <th style="width:29%">Engineer's Service Check</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>High Airway Pressure</td><td><span class="pri p-h">HIGH</span></td><td>Ppeak &gt; set limit (typically 40 cmH₂O)</td><td>Audible + visual; some machines: inspiratory hold + PEEP release</td><td>Calibrate pressure sensor vs. reference manometer; verify at 3 levels</td></tr>
+        <tr><td>Low Airway Pressure / Disconnect</td><td><span class="pri p-h">HIGH</span></td><td>Ppeak &lt; set low limit for &gt;15 sec</td><td>Alarm sounds; ventilation continues attempting breaths</td><td>Leak test circuit; pressure sensor zero; verify with simulated disconnect</td></tr>
+        <tr><td>Apnoea</td><td><span class="pri p-h">HIGH</span></td><td>No breath detected for apnoea interval (default 20 sec)</td><td>Switches to backup ventilation (apnoea ventilation mode)</td><td>Verify trigger sensitivity; test apnoea interval; confirm backup mode activates</td></tr>
+        <tr><td>Low Minute Volume</td><td><span class="pri p-h">HIGH</span></td><td>Measured MV &lt; set threshold</td><td>Alarm; continues attempting programmed ventilation</td><td>Flow sensor calibration; leak test; check sensor for water fouling</td></tr>
+        <tr><td>High Minute Volume</td><td><span class="pri p-m">MED</span></td><td>Measured MV &gt; set upper limit</td><td>Alarm; may indicate patient fighting or leak artefact</td><td>Flow sensor clean/calibrate; leak test exhaled limb</td></tr>
+        <tr><td>FiO₂ Low</td><td><span class="pri p-h">HIGH</span></td><td>Delivered O₂ concentration &lt; set low limit</td><td>Alarm; attempts to maintain O₂ delivery</td><td>Two-point O₂ sensor calibration (21% + 100%); replace galvanic cell if &gt;12 months</td></tr>
+        <tr><td>FiO₂ High</td><td><span class="pri p-m">MED</span></td><td>Delivered O₂ &gt; set high limit</td><td>Alarm; clinical review needed</td><td>Blender valve function; O₂ sensor calibration</td></tr>
+        <tr><td>O₂ Supply Failure</td><td><span class="pri p-h">HIGH</span></td><td>O₂ pipeline pressure &lt; 2.5 bar</td><td>Audible + visual; switches to 100% air (or shuts down if no air)</td><td>O₂ supply pressure sensor test; pipeline integrity; backup cylinder present</td></tr>
+        <tr><td>Air Supply Failure</td><td><span class="pri p-h">HIGH</span></td><td>Air pipeline or compressor pressure low</td><td>Alarm; switches to 100% O₂ where possible</td><td>Compressor filter, pressure sensor, tank pressure test</td></tr>
+        <tr><td>Battery Low</td><td><span class="pri p-m">MED</span></td><td>Battery &lt;20% remaining</td><td>Alert; continues on available power</td><td>Annual battery capacity discharge test to 80% DoD; replace if &lt;80% capacity</td></tr>
+        <tr><td>Battery Critical</td><td><span class="pri p-h">HIGH</span></td><td>Battery &lt;5% or imminent shutdown</td><td>Loud alarm; shuts down gracefully if not connected to mains</td><td>Replace battery; test shutdown sequence; verify alarm sounds before shutdown</td></tr>
+        <tr><td>High PEEP</td><td><span class="pri p-m">MED</span></td><td>Measured end-expiratory pressure &gt; set PEEP + margin</td><td>Alarm; indicates possible auto-PEEP or valve fault</td><td>Expiratory valve function; PEEP sensor calibration</td></tr>
+        <tr><td>High Respiratory Rate</td><td><span class="pri p-m">MED</span></td><td>Total rate (mandatory + spontaneous) &gt; set limit</td><td>Alert clinician; patient may be tachypnoeic</td><td>Trigger threshold test; breath detection algorithm</td></tr>
+        <tr><td>Tidal Volume Out of Range</td><td><span class="pri p-m">MED</span></td><td>Measured Vt &lt; or &gt; set limits</td><td>Alarm; indicates compliance change or leak</td><td>Flow sensor calibration; compliance compensation function; leak test</td></tr>
+        <tr><td>Temperature Alarm (Humidifier)</td><td><span class="pri p-m">MED</span></td><td>Inspiratory gas temperature &gt; 43°C or &lt; 34°C</td><td>Alarm; some devices auto-adjust heater</td><td>Temperature probe calibration; heater wire inspection; humidifier chamber integrity</td></tr>
+        <tr><td>Circuit Occlusion</td><td><span class="pri p-h">HIGH</span></td><td>Pressure rise with zero flow — kinked or blocked circuit</td><td>Alarm; halts inspiration on some models</td><td>Flow sensor and pressure sensor cross-check; circuit inspection</td></tr>
+        <tr><td>Ventilator Inoperative</td><td><span class="pri p-h">HIGH</span></td><td>Watchdog timeout; CPU fault; drive failure</td><td>Audible alarm; machine locks out</td><td>Read event log; dual-CPU watchdog function test; refer to OEM if board-level</td></tr>
+        <tr><td>Mains Disconnect</td><td><span class="pri p-l">LOW</span></td><td>AC mains lost; running on battery</td><td>Brief advisory; continues on battery</td><td>Mains detect circuit; cord integrity</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════ SAFETY MECHANISMS ═══════════════ -->
+<div id="sec-saf" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 05 · Engineered Controls</div>
+      <div class="sec-title">Built-In Safety<br>Mechanisms</div>
+    </div>
+    <div class="sec-note">These are the design-embedded defences that act before any human response is required. Their integrity must be verified at every PPM.</div>
+  </div>
+
+  <div class="sm-grid">
+
+    <div class="sm">
+      <div class="sm-bg-num">01</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">💥</div>
+      <div class="sm-eyebrow">Mechanical · Patient</div>
+      <div class="sm-name">Pressure Relief Valve (Pop-Off)</div>
+      <div class="sm-desc">Mechanical spring valve opens automatically if airway pressure exceeds a preset maximum (typically 60–80 cmH₂O). Acts even if software alarms fail — purely passive defence against barotrauma.</div>
+      <div class="sm-std">ISO 80601-2-12 §201.12.4.2 — mandatory</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">02</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🧠</div>
+      <div class="sm-eyebrow">Electronic · Safety Architecture</div>
+      <div class="sm-name">Dual-CPU Watchdog Safety System</div>
+      <div class="sm-desc">Independent safety processor monitors main CPU via hardware watchdog. On main CPU failure, safety CPU halts inspiration, triggers alarm, and can switch to safe backup mode — fully independent of application firmware.</div>
+      <div class="sm-std">IEC 62304 Class C · IEC 61508 SIL-2</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">03</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🎛️</div>
+      <div class="sm-eyebrow">Software · Patient</div>
+      <div class="sm-name">Mandatory High/Low Pressure Alarms</div>
+      <div class="sm-desc">Per ISO 80601-2-12, disconnect (low pressure) and high pressure alarms are MANDATORY and CANNOT be disabled. They must have independent signal paths from the main ventilation algorithm.</div>
+      <div class="sm-std">ISO 80601-2-12 §201.12 — cannot disable</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">04</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🔋</div>
+      <div class="sm-eyebrow">Electrical · Continuity</div>
+      <div class="sm-name">Internal Battery with BMS</div>
+      <div class="sm-desc">Li-ion or sealed lead-acid battery provides minimum 2–4 hr autonomy (transport: 6+ hr). BMS prevents overcharge, deep discharge, and thermal runaway. Maintains ventilation through power failures and transport.</div>
+      <div class="sm-std">ISO 80601-2-12 §201.6.8.3 · IEC 62133</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">05</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🫧</div>
+      <div class="sm-eyebrow">Electronic · Patient</div>
+      <div class="sm-name">Apnoea Backup Ventilation</div>
+      <div class="sm-desc">If spontaneous breathing ceases (PSV/CPAP mode), ventilator automatically switches to a preset backup rate and Vt. Protects patients who tire and lose respiratory drive without nurse detection.</div>
+      <div class="sm-std">ISO 80601-2-12 §201.12.4.4</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">06</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🌬️</div>
+      <div class="sm-eyebrow">Software · Patient</div>
+      <div class="sm-name">O₂ / Air Blender Limit Lock</div>
+      <div class="sm-desc">Electronic gas blending enforces FiO₂ range 21–100%. On O₂ supply failure, switches to 100% air. On air failure, switches to 100% O₂. Prevents delivery of hypoxic mixtures regardless of user input.</div>
+      <div class="sm-std">ISO 80601-2-12 §201.12.6</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">07</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">⚡</div>
+      <div class="sm-eyebrow">Electrical · Patient</div>
+      <div class="sm-name">CF Applied Part Isolation</div>
+      <div class="sm-desc">Patient breathing circuit connected parts are electrically isolated from mains via optocouplers/isolation transformers. Leakage current ≤10 µA normal, ≤50 µA single fault. Protects against micro-shock via heated wire circuits.</div>
+      <div class="sm-std">IEC 60601-1 Table 1 — CF classification</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">08</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🔔</div>
+      <div class="sm-eyebrow">Software · User</div>
+      <div class="sm-name">Three-Priority Alarm Framework</div>
+      <div class="sm-desc">IEC 60601-1-8 compliant: High (red, ≥65 dBA), Medium (amber), Low (cyan). Alarm signal path is independent from ventilation CPU. Alarm audio cannot be permanently silenced on High alarms.</div>
+      <div class="sm-std">IEC 60601-1-8 — mandated signal characteristics</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">09</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🛡️</div>
+      <div class="sm-eyebrow">Software · Patient</div>
+      <div class="sm-name">Compliance Compensation</div>
+      <div class="sm-desc">Measures circuit compliance (typically 1–3 mL/cmH₂O) and automatically corrects tidal volume delivery to account for volume lost in circuit compression. Ensures patient receives the prescribed Vt, not the set Vt minus circuit loss.</div>
+      <div class="sm-std">ISO 80601-2-12 accuracy requirements</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">10</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🌡️</div>
+      <div class="sm-eyebrow">Mechanical · Patient</div>
+      <div class="sm-name">Expiratory Valve (PEEP / Anti-Asphyxia)</div>
+      <div class="sm-desc">Electromechanically controlled expiratory valve maintains PEEP and prevents complete circuit closure. Anti-asphyxia mechanism ensures minimum expiratory flow path even on valve actuator failure — patient can breathe spontaneously.</div>
+      <div class="sm-std">ISO 80601-2-12 §201.11 — anti-asphyxia</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">11</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🔐</div>
+      <div class="sm-eyebrow">Software · User</div>
+      <div class="sm-name">Key Lock / Tamper Prevention</div>
+      <div class="sm-desc">PIN or physical key-lock prevents accidental or patient-initiated parameter changes. Protects critical settings during transport. Audits changes via event log.</div>
+      <div class="sm-std">IEC 62366 usability · site policy</div>
+    </div>
+
+    <div class="sm">
+      <div class="sm-bg-num">12</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">📒</div>
+      <div class="sm-eyebrow">Software · Forensic</div>
+      <div class="sm-name">Event Log / Audit Trail</div>
+      <div class="sm-desc">Non-volatile log of alarm events, parameter changes, mode switches, and fault codes. Critical for post-incident investigation. EBME should download at PPM and after every reported incident.</div>
+      <div class="sm-std">IEC 62304 · MHRA incident investigation</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ DEFENCE ═══════════════ -->
+<div id="sec-def" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 06 · Swiss Cheese Model</div>
+      <div class="sec-title">Defence-in-Depth</div>
+    </div>
+    <div class="sec-note">Each layer has holes. Harm reaches the patient only when holes align across all layers simultaneously — the foundation of ISO 14971 risk-based design and MHRA incident investigation.</div>
+  </div>
+
+  <div class="def-wrap">
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">I</div></div>
+      <div class="def-body">
+        <div class="def-title">Inherent Design Controls</div>
+        <div class="def-desc">Hazard eliminated at the engineering design stage. Mechanical pressure relief valve acts independently of all software. Anti-asphyxia valve ensures minimum expiratory path on actuator failure. O₂ blender limits FiO₂ ≥21%. CF isolation removes micro-shock pathway. ISO 14971 risk analysis drives all design constraints.</div>
+        <div class="def-tags">
+          <span class="dtag dtag-p">Pop-off valve</span>
+          <span class="dtag dtag-p">Anti-asphyxia valve</span>
+          <span class="dtag dtag-p">CF isolation</span>
+          <span class="dtag dtag-p">Blender FiO₂ floor</span>
+          <span class="dtag dtag-p">Dual-CPU watchdog</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">II</div></div>
+      <div class="def-body">
+        <div class="def-title">Automatic Protection Devices</div>
+        <div class="def-desc">Sensors and control logic detect hazardous states and act without human involvement. Pressure sensor halts inspiration on high Ppeak. Apnoea detection activates backup ventilation. O₂ sensor triggers supply switchover. Watchdog halts ventilation on CPU fault.</div>
+        <div class="def-tags">
+          <span class="dtag dtag-p">Ppeak auto-halt</span>
+          <span class="dtag dtag-p">Apnoea backup</span>
+          <span class="dtag dtag-p">O₂ switchover</span>
+          <span class="dtag dtag-p">Compliance correction</span>
+          <span class="dtag dtag-p">Battery switchover</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">III</div></div>
+      <div class="def-body">
+        <div class="def-title">Alarms & Warnings</div>
+        <div class="def-desc">IEC 60601-1-8 three-priority alarm framework requires clinician attention. Critically, this layer FAILS when alarm fatigue causes silencing or ignoring of alarms. Mandatory alarms (disconnect, high pressure) cannot be disabled by design.</div>
+        <div class="def-tags">
+          <span class="dtag dtag-u">High pressure alarm</span>
+          <span class="dtag dtag-u">Disconnect alarm</span>
+          <span class="dtag dtag-u">Apnoea alarm</span>
+          <span class="dtag dtag-u">FiO₂ alarm</span>
+          <span class="dtag dtag-u">Battery alarm</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">IV</div></div>
+      <div class="def-body">
+        <div class="def-title">Clinical Procedures & Human Factors</div>
+        <div class="def-desc">Ventilator care bundles (VAP bundle), shift checklists, alarm limit verification protocol, independent double-check on parameter changes, circuit change procedures. IEC 62366 usability engineering makes interfaces resistant to use errors. Transport protocol ensures battery and O₂ sufficiency before any move.</div>
+        <div class="def-tags">
+          <span class="dtag dtag-u">VAP bundle</span>
+          <span class="dtag dtag-u">Shift checklist</span>
+          <span class="dtag dtag-u">Transport protocol</span>
+          <span class="dtag dtag-u">Alarm limit verification</span>
+          <span class="dtag dtag-u">IEC 62366 usability</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">V</div></div>
+      <div class="def-body">
+        <div class="def-title">Planned Preventive Maintenance (EBME)</div>
+        <div class="def-desc">Annual PPM verifies all safety mechanisms remain functional. Flow accuracy at multiple compliance settings, leak test, O₂ sensor calibration, pressure sensor calibration, alarm verification (audibility ≥65 dBA), battery capacity, expiratory valve inspection, and IEC 62353 electrical safety re-test. PPM is the EBME engineer's primary patient safety contribution.</div>
+        <div class="def-tags">
+          <span class="dtag dtag-e">Vt accuracy test</span>
+          <span class="dtag dtag-e">Leak test</span>
+          <span class="dtag dtag-e">O₂ sensor cal</span>
+          <span class="dtag dtag-e">IEC 62353 ESR</span>
+          <span class="dtag dtag-e">Battery capacity</span>
+          <span class="dtag dtag-e">Expiratory valve</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="def-row" style="border-bottom:none">
+      <div class="def-num"><div class="def-roman">VI</div></div>
+      <div class="def-body">
+        <div class="def-title">Post-Market Surveillance & Vigilance</div>
+        <div class="def-desc">MHRA Yellow Card and MIR reporting, Field Safety Corrective Actions (FSCA), incident investigation, trend analysis across asset fleet. EU MDR 2017/745 / UK MDR 2002 mandate PMS, PSUR, and PMCF. ECRI/AAMI hazard alerts disseminated through EBME to clinical teams.</div>
+        <div class="def-tags">
+          <span class="dtag dtag-e">MHRA Yellow Card</span>
+          <span class="dtag dtag-e">Datix incident</span>
+          <span class="dtag dtag-e">FSN response</span>
+          <span class="dtag dtag-e">PSUR / PMCF</span>
+          <span class="dtag dtag-e">ECRI alerts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ STANDARDS ═══════════════ -->
+<div id="sec-std" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 07 · Normative Framework</div>
+      <div class="sec-title">Applicable Standards<br>& Regulations</div>
+    </div>
+    <div class="sec-note">Ventilators carry a more complex standard landscape than infusion devices — covering ventilation-specific safety, gas delivery, humidification, alarms, software, and post-market obligations.</div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow)">
+    <table class="stbl">
+      <thead>
+        <tr>
+          <th style="width:18%">Standard / Reg</th>
+          <th style="width:28%">Scope</th>
+          <th style="width:16%">Applies To</th>
+          <th style="width:38%">Key Requirements for EBME</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>ISO 80601-2-12</td><td>Particular requirements for critical care ventilators</td><td>Manufacturer · EBME</td><td>Mandatory alarms (cannot disable); Vt accuracy; apnoea backup ventilation; pressure relief; anti-asphyxia valve; battery minimum duration</td></tr>
+        <tr><td>ISO 80601-2-72</td><td>Home mechanical ventilation — long-term care</td><td>Manufacturer · EBME</td><td>Extended battery life; simplified user interface; alarm audibility in home environment</td></tr>
+        <tr><td>IEC 60601-1</td><td>General ME equipment — electrical, mechanical safety</td><td>Manufacturer · EBME</td><td>CF leakage ≤10 µA; earth continuity ≤0.1 Ω; creepage; mechanical hazards; MOOP/MOPP</td></tr>
+        <tr><td>IEC 60601-1-8</td><td>Alarm systems for ME equipment</td><td>Manufacturer · EBME · Users</td><td>3-priority alarm: High (≥65 dBA, red), Medium (amber), Low (cyan); silence time limits; independent alarm signal path</td></tr>
+        <tr><td>IEC 60601-1-2</td><td>EMC — electromagnetic disturbances</td><td>Manufacturer · EBME</td><td>EMC immunity; stray field from MRI; RF interference from phones/RFID; emission limits</td></tr>
+        <tr><td>IEC 60601-1-6</td><td>Usability engineering</td><td>Manufacturer · Clinical Users</td><td>IEC 62366 formative and summative usability testing; use-error risk analysis; UI design for ICU conditions</td></tr>
+        <tr><td>IEC 62304</td><td>Medical device software lifecycle</td><td>Manufacturer · EBME</td><td>Class C (highest risk software); firmware change management; SOUP; update validation; configuration management</td></tr>
+        <tr><td>IEC 62353</td><td>Recurrent test and test after repair</td><td>EBME</td><td>Electrical safety re-test after any mains-side repair; earth ≤0.1 Ω; CF leakage ≤10 µA; competency requirements</td></tr>
+        <tr><td>ISO 14971:2019</td><td>Risk management for medical devices</td><td>Manufacturer · EBME</td><td>Hazard identification; ALARP; residual risk acceptability; benefit-risk; risk management file</td></tr>
+        <tr><td>ISO 5356</td><td>Breathing system connectors</td><td>Manufacturer · Clinical</td><td>22 mm / 15 mm asymmetric connectors; non-interchangeability with gas supply; correct assembly verification</td></tr>
+        <tr><td>UK MDR 2002</td><td>UK medical device regulation</td><td>Manufacturer · EBME · Trust</td><td>UKCA marking; registration; incident reporting; FSCA obligations; vigilance system</td></tr>
+        <tr><td>EU MDR 2017/745</td><td>EU Medical Device Regulation</td><td>Manufacturer</td><td>Class III classification for critical care ventilators; UDI/EUDAMED; PMS; PMCF; PSUR; Notified Body</td></tr>
+        <tr><td>NHS HTM 02-01</td><td>Medical gas pipeline systems</td><td>EBME · Estates</td><td>O₂ and air pipeline integrity; ventilator inlet valve testing; pressure monitoring; emergency shutoff</td></tr>
+        <tr><td>NHS HTM 06-01</td><td>Electrical services in healthcare</td><td>EBME · Estates</td><td>ICU electrical installation; UPS systems; bedhead unit testing; PAT; earthing continuity</td></tr>
+        <tr><td>Electricity at Work 1989</td><td>Electrical safety at work</td><td>EBME Engineer</td><td>Competence for electrical work; LOTO; CAT-rated test equipment; safe systems of work</td></tr>
+        <tr><td>COSHH 2002</td><td>Control of substances hazardous to health</td><td>EBME · Clinical</td><td>Biological exposure assessment; PPE specification; decontamination before service; drug aerosol exposure</td></tr>
+        <tr><td>RIDDOR 2013</td><td>Reporting injuries, diseases, dangerous occurrences</td><td>All staff</td><td>Reportable injuries to EBME engineer (electric shock, sharps); must be reported to HSE</td></tr>
+        <tr><td>MHRA DB2010(02)</td><td>Managing medical devices</td><td>EBME · Trust</td><td>Asset management; user training records; maintenance records retention; incident management</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+<script>
+function go(id, el, cls) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.getElementById('sec-' + id).classList.add('on');
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active-p','active-u','active-e','active-n'));
+  el.classList.add(cls);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
