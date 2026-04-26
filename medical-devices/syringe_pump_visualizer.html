@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Syringe Pump — Clinical Engineering Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117;
+  --panel: #161b22;
+  --panel2: #1c232c;
+  --border: #2d3748;
+  --accent: #58a6ff;
+  --accent2: #3fb950;
+  --accent3: #f78166;
+  --warn: #d29922;
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --red: #f85149;
+  --purple: #bc8cff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* HEADER */
+.header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.header-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: var(--accent);
+  color: #000;
+  padding: 3px 10px;
+  letter-spacing: 2px;
+  font-weight: 600;
+  border-radius: 2px;
+}
+.header h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.3px; }
+.header .meta {
+  color: var(--text2);
+  font-size: 11px;
+  margin-left: auto;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* LAYOUT */
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr 300px;
+  height: calc(100vh - 52px);
+}
+
+/* SIDENAV */
+.sidenav {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 14px 0;
+}
+.nav-section {
+  padding: 10px 18px 4px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+}
+.nav-item {
+  padding: 9px 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+  font-size: 12px;
+}
+.nav-item:hover { background: var(--panel2); }
+.nav-item.active {
+  background: rgba(88,166,255,0.08);
+  border-left-color: var(--accent);
+  color: var(--accent);
+}
+.nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* MAIN */
+.main {
+  overflow-y: auto;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.canvas-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+  font-weight: 500;
+}
+.canvas-title {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 14px;
+  letter-spacing: -0.2px;
+}
+
+/* DIAGRAM */
+.diagram-wrap {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  position: relative;
+}
+svg text { font-family: 'JetBrains Mono', monospace; }
+
+/* ANIMATIONS */
+@keyframes leadscrew-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes pusher-advance {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(180px); }
+}
+@keyframes plunger-depress {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(180px); }
+}
+@keyframes fluid-expel {
+  0% { width: 160px; fill-opacity: 0.4; }
+  100% { width: 0; fill-opacity: 0.1; }
+}
+@keyframes flow-dash {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -40; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@keyframes threading {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -20; }
+}
+
+.leadscrew-threads { animation: threading 1.5s linear infinite; }
+.flow-anim { animation: flow-dash 1.2s linear infinite; }
+.pulse-anim { animation: pulse 2s ease-in-out infinite; }
+
+/* CARDS */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.card-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 14px;
+}
+.card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.card-value {
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+}
+.card-unit { font-size: 12px; color: var(--text2); margin-left: 4px; font-weight: 400; }
+.card-desc { font-size: 11px; color: var(--text2); margin-top: 5px; line-height: 1.5; }
+
+/* TABLE */
+.alarm-table { width: 100%; border-collapse: collapse; }
+.alarm-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.alarm-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(45,55,72,0.5);
+  font-size: 11px;
+  vertical-align: top;
+}
+.alarm-table tr:hover td { background: var(--panel2); }
+.tag {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+.tag-high { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.4); }
+.tag-med { background: rgba(210,153,34,0.15); color: var(--warn); border: 1px solid rgba(210,153,34,0.4); }
+.tag-low { background: rgba(88,166,255,0.12); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+.tag-ok { background: rgba(63,185,80,0.12); color: var(--accent2); border: 1px solid rgba(63,185,80,0.3); }
+.tag-purple { background: rgba(188,140,255,0.12); color: var(--purple); border: 1px solid rgba(188,140,255,0.3); }
+
+/* RIGHT PANEL */
+.infopanel {
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.info-section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  text-transform: uppercase;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(45,55,72,0.5);
+  gap: 8px;
+}
+.info-key { color: var(--text2); font-size: 11px; flex-shrink: 0; }
+.info-val { color: var(--text); font-size: 11px; text-align: right; font-family: 'JetBrains Mono', monospace; }
+
+.fault-block {
+  background: rgba(248,81,73,0.04);
+  border: 1px solid rgba(248,81,73,0.2);
+  border-radius: 4px;
+  padding: 12px;
+}
+.fault-title {
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.fault-item {
+  font-size: 11px;
+  color: var(--text2);
+  padding: 3px 0;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.fault-item::before { content: '→'; color: var(--red); flex-shrink: 0; margin-top: 1px; }
+
+/* COMPONENTS */
+.component-list { display: flex; flex-direction: column; gap: 9px; }
+.component-item {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 12px 14px;
+  transition: border-color 0.15s;
+}
+.component-item:hover { border-color: var(--accent); }
+.comp-name {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.comp-desc { font-size: 11px; color: var(--text2); line-height: 1.55; }
+
+/* PPM */
+.ppm-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(45,55,72,0.5);
+  align-items: center;
+}
+.ppm-task { font-size: 11px; line-height: 1.4; }
+.ppm-freq { font-size: 10px; color: var(--text2); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+
+.scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.section { display: none; }
+.section.visible { display: block; }
+
+/* Comparison vs peristaltic */
+.compare-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+.compare-row > div { padding: 10px 14px; }
+.compare-row.header > div {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text3);
+  text-transform: uppercase;
+  background: var(--panel2);
+  font-weight: 600;
+}
+.compare-feature { color: var(--text2); }
+.compare-syringe { color: var(--accent); border-left: 2px solid var(--accent); }
+.compare-peristaltic { color: var(--text); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">EBME</div>
+  <h1>Syringe Pump — Clinical Engineering Reference</h1>
+  <span class="meta">IEC 60601-2-24 &nbsp;·&nbsp; Lead-Screw Driven Syringe</span>
+</div>
+
+<div class="layout">
+
+  <!-- SIDENAV -->
+  <div class="sidenav scrollbar-thin">
+    <div class="nav-section">Mechanics</div>
+    <div class="nav-item active" onclick="showSection('mechanism', this)">
+      <div class="nav-dot" style="background:var(--accent)"></div> Drive Mechanism
+    </div>
+    <div class="nav-item" onclick="showSection('syringe', this)">
+      <div class="nav-dot" style="background:var(--accent2)"></div> Syringe Interface
+    </div>
+    <div class="nav-item" onclick="showSection('forces', this)">
+      <div class="nav-dot" style="background:var(--purple)"></div> Force & Pressure
+    </div>
+    <div class="nav-section">Electronics</div>
+    <div class="nav-item" onclick="showSection('electronics', this)">
+      <div class="nav-dot" style="background:var(--warn)"></div> Electronics & Control
+    </div>
+    <div class="nav-item" onclick="showSection('sensors', this)">
+      <div class="nav-dot" style="background:var(--purple)"></div> Sensor Array
+    </div>
+    <div class="nav-section">Safety</div>
+    <div class="nav-item" onclick="showSection('alarms', this)">
+      <div class="nav-dot" style="background:var(--red)"></div> Alarm Logic
+    </div>
+    <div class="nav-item" onclick="showSection('occlusion', this)">
+      <div class="nav-dot" style="background:var(--accent3)"></div> Occlusion & Bolus
+    </div>
+    <div class="nav-item" onclick="showSection('siphon', this)">
+      <div class="nav-dot" style="background:var(--red)"></div> Siphon Risk
+    </div>
+    <div class="nav-section">Servicing</div>
+    <div class="nav-item" onclick="showSection('ppm', this)">
+      <div class="nav-dot" style="background:var(--accent2)"></div> PPM Schedule
+    </div>
+    <div class="nav-item" onclick="showSection('faults', this)">
+      <div class="nav-dot" style="background:var(--red)"></div> Fault Diagnosis
+    </div>
+    <div class="nav-item" onclick="showSection('accuracy', this)">
+      <div class="nav-dot" style="background:var(--accent)"></div> Accuracy Testing
+    </div>
+    <div class="nav-item" onclick="showSection('compare', this)">
+      <div class="nav-dot" style="background:var(--text2)"></div> vs Peristaltic
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main scrollbar-thin">
+
+    <!-- MECHANISM -->
+    <div id="sec-mechanism" class="section visible">
+      <div class="canvas-kicker">Drive Mechanism</div>
+      <div class="canvas-title">Lead-Screw Linear Actuator</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 720 300" width="100%" style="max-height:320px">
+          <defs>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2d3748" stroke-width="0.4"/>
+            </pattern>
+            <linearGradient id="metalGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4a5568"/>
+              <stop offset="50%" stop-color="#2d3748"/>
+              <stop offset="100%" stop-color="#1a202c"/>
+            </linearGradient>
+            <linearGradient id="fluidGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#58a6ff" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#58a6ff" stop-opacity="0.2"/>
+            </linearGradient>
+          </defs>
+          <rect width="720" height="300" fill="url(#grid)"/>
+
+          <!-- STEPPER MOTOR -->
+          <rect x="30" y="130" width="70" height="70" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+          <circle cx="65" cy="165" r="18" fill="none" stroke="#58a6ff" stroke-width="1" opacity="0.4"/>
+          <circle cx="65" cy="165" r="10" fill="#58a6ff" opacity="0.2"/>
+          <text x="65" y="120" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">STEPPER</text>
+          <text x="65" y="215" fill="#8b949e" font-size="8" text-anchor="middle">200 steps/rev</text>
+          <text x="65" y="226" fill="#8b949e" font-size="8" text-anchor="middle">1/32 microstep</text>
+
+          <!-- COUPLING -->
+          <rect x="100" y="158" width="16" height="14" fill="#6e7681"/>
+          <circle cx="102" cy="165" r="2" fill="#161b22"/>
+          <circle cx="114" cy="165" r="2" fill="#161b22"/>
+
+          <!-- LEAD SCREW (horizontal threaded rod) -->
+          <g id="leadscrew">
+            <!-- rod -->
+            <rect x="116" y="162" width="380" height="8" fill="url(#metalGrad)"/>
+            <!-- thread pattern (animated) -->
+            <path d="M 116 166 L 496 166"
+                  stroke="#e6edf3" stroke-width="1"
+                  stroke-dasharray="4,4" fill="none"
+                  class="leadscrew-threads" opacity="0.5"/>
+            <!-- tick marks along screw -->
+            <g stroke="#2d3748" stroke-width="0.8">
+              <line x1="130" y1="160" x2="130" y2="172"/>
+              <line x1="150" y1="160" x2="150" y2="172"/>
+              <line x1="170" y1="160" x2="170" y2="172"/>
+              <line x1="190" y1="160" x2="190" y2="172"/>
+              <line x1="210" y1="160" x2="210" y2="172"/>
+              <line x1="230" y1="160" x2="230" y2="172"/>
+              <line x1="250" y1="160" x2="250" y2="172"/>
+              <line x1="270" y1="160" x2="270" y2="172"/>
+              <line x1="290" y1="160" x2="290" y2="172"/>
+              <line x1="310" y1="160" x2="310" y2="172"/>
+              <line x1="330" y1="160" x2="330" y2="172"/>
+              <line x1="350" y1="160" x2="350" y2="172"/>
+              <line x1="370" y1="160" x2="370" y2="172"/>
+              <line x1="390" y1="160" x2="390" y2="172"/>
+              <line x1="410" y1="160" x2="410" y2="172"/>
+              <line x1="430" y1="160" x2="430" y2="172"/>
+              <line x1="450" y1="160" x2="450" y2="172"/>
+              <line x1="470" y1="160" x2="470" y2="172"/>
+            </g>
+          </g>
+          <text x="306" y="150" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">LEAD SCREW &nbsp;|&nbsp; pitch = 1 mm/rev</text>
+
+          <!-- LINEAR GUIDE RAIL (below) -->
+          <rect x="116" y="200" width="380" height="4" fill="#2d3748"/>
+          <text x="306" y="216" fill="#6e7681" font-size="8" text-anchor="middle">linear guide rail (anti-rotation)</text>
+
+          <!-- PUSHER / CARRIAGE -->
+          <g id="pusher">
+            <!-- body -->
+            <rect x="230" y="130" width="50" height="70" rx="3" fill="#3fb950" stroke="#3fb950" stroke-width="1.5" opacity="0.9"/>
+            <rect x="230" y="130" width="50" height="70" rx="3" fill="#0d1117" stroke="#3fb950" stroke-width="1.5" opacity="0.5"/>
+            <!-- nut (captures lead screw) -->
+            <rect x="240" y="158" width="30" height="16" rx="2" fill="#3fb950"/>
+            <text x="255" y="170" fill="#000" font-size="7" text-anchor="middle" font-weight="700">NUT</text>
+            <!-- carriage indicator -->
+            <circle cx="255" cy="138" r="2" fill="#3fb950" class="pulse-anim"/>
+          </g>
+          <text x="255" y="121" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">DRIVE BLOCK</text>
+          <text x="255" y="250" fill="#8b949e" font-size="8" text-anchor="middle">→ pushes plunger</text>
+
+          <!-- Arrow showing motion direction -->
+          <defs>
+            <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+            </marker>
+          </defs>
+          <line x1="285" y1="240" x2="380" y2="240" stroke="#3fb950" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+          <text x="332" y="234" fill="#3fb950" font-size="8" text-anchor="middle">advance</text>
+
+          <!-- SYRINGE BARREL (simplified) -->
+          <rect x="500" y="140" width="180" height="50" fill="rgba(88,166,255,0.05)" stroke="#58a6ff" stroke-width="1.5" rx="2"/>
+          <text x="590" y="132" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">SYRINGE</text>
+          <!-- Fluid -->
+          <rect x="500" y="142" width="160" height="46" fill="url(#fluidGrad)"/>
+          <!-- Plunger stopper -->
+          <rect x="495" y="138" width="10" height="54" fill="#f78166" stroke="#f78166" stroke-width="1"/>
+          <!-- Nozzle tip -->
+          <path d="M 680 155 L 700 162 L 700 168 L 680 175 Z" fill="#2d3748" stroke="#58a6ff" stroke-width="1"/>
+          <text x="708" y="168" fill="#8b949e" font-size="8">Luer-lock</text>
+
+          <!-- Fluid path -->
+          <line x1="700" y1="165" x2="700" y2="265" stroke="#58a6ff" stroke-width="2" stroke-dasharray="6,4" class="flow-anim"/>
+          <text x="708" y="230" fill="#58a6ff" font-size="8">to patient</text>
+
+          <!-- ENCODER -->
+          <rect x="30" y="220" width="70" height="40" rx="3" fill="#161b22" stroke="#d29922" stroke-width="1.5"/>
+          <text x="65" y="237" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">ENCODER</text>
+          <text x="65" y="250" fill="#8b949e" font-size="8" text-anchor="middle">1000 PPR</text>
+          <line x1="65" y1="220" x2="65" y2="200" stroke="#d29922" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- FORCE SENSOR on pusher arm -->
+          <rect x="230" y="95" width="50" height="20" rx="2" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+          <text x="255" y="108" fill="#bc8cff" font-size="8" text-anchor="middle" font-weight="600">FORCE SENSOR</text>
+          <line x1="255" y1="115" x2="255" y2="130" stroke="#bc8cff" stroke-width="1" stroke-dasharray="2,2"/>
+
+          <!-- Flow equation box -->
+          <rect x="540" y="215" width="170" height="70" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="625" y="232" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">FLOW RATE</text>
+          <text x="625" y="250" fill="#e6edf3" font-size="12" text-anchor="middle" font-weight="600">Q = A × v</text>
+          <text x="625" y="264" fill="#8b949e" font-size="8" text-anchor="middle">A = syringe cross-section</text>
+          <text x="625" y="274" fill="#8b949e" font-size="8" text-anchor="middle">v = pusher linear speed</text>
+        </svg>
+      </div>
+
+      <div class="card-grid-4">
+        <div class="card">
+          <div class="card-label">Mechanism</div>
+          <div style="font-size:14px;font-weight:700;color:var(--accent)">Lead-Screw</div>
+          <div class="card-desc">Rotation → linear motion. Self-locking (no free-flow on power loss).</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Flow Range</div>
+          <div class="card-value">0.01<span class="card-unit">–1200 mL/hr</span></div>
+          <div class="card-desc">Wider low-end than peristaltic. Critical for neonatal.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Accuracy</div>
+          <div class="card-value">±2%<span class="card-unit"></span></div>
+          <div class="card-desc">Steady state, IEC 60601-2-24. Better at low rates than peristaltic.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Syringe Range</div>
+          <div style="font-size:14px;font-weight:700;color:var(--accent2)">1–60 mL</div>
+          <div class="card-desc">Multi-brand compatible via barrel detection sensors.</div>
+        </div>
+      </div>
+
+      <div class="diagram-wrap">
+        <div style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase;font-weight:600">
+          Step → Linear Displacement Chain
+        </div>
+        <svg viewBox="0 0 720 120" width="100%" style="max-height:130px">
+          <defs>
+            <marker id="chain-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+            </marker>
+          </defs>
+          <!-- Stage 1: Electrical pulse -->
+          <rect x="20" y="30" width="120" height="60" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+          <text x="80" y="50" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">PULSE</text>
+          <text x="80" y="66" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">f (Hz)</text>
+          <text x="80" y="80" fill="#8b949e" font-size="8" text-anchor="middle">microcontroller</text>
+          <line x1="140" y1="60" x2="160" y2="60" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#chain-arrow)"/>
+
+          <!-- Stage 2: Motor step -->
+          <rect x="160" y="30" width="120" height="60" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+          <text x="220" y="50" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">MOTOR STEP</text>
+          <text x="220" y="66" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">1.8°/step</text>
+          <text x="220" y="80" fill="#8b949e" font-size="8" text-anchor="middle">+ 1/32 microstep</text>
+          <line x1="280" y1="60" x2="300" y2="60" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#chain-arrow)"/>
+
+          <!-- Stage 3: Screw turn -->
+          <rect x="300" y="30" width="120" height="60" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+          <text x="360" y="50" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">SCREW ROTATION</text>
+          <text x="360" y="66" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">pitch × f</text>
+          <text x="360" y="80" fill="#8b949e" font-size="8" text-anchor="middle">direct-drive or geared</text>
+          <line x1="420" y1="60" x2="440" y2="60" stroke="#58a6ff" stroke-width="1.5" marker-end="url(#chain-arrow)"/>
+
+          <!-- Stage 4: Linear advance -->
+          <rect x="440" y="30" width="120" height="60" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="500" y="50" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">LINEAR ADVANCE</text>
+          <text x="500" y="66" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">v (mm/s)</text>
+          <text x="500" y="80" fill="#8b949e" font-size="8" text-anchor="middle">pusher block</text>
+          <line x1="560" y1="60" x2="580" y2="60" stroke="#3fb950" stroke-width="1.5" marker-end="url(#chain-arrow)"/>
+
+          <!-- Stage 5: Fluid expelled -->
+          <rect x="580" y="30" width="120" height="60" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="640" y="50" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">FLOW</text>
+          <text x="640" y="66" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">Q = A·v</text>
+          <text x="640" y="80" fill="#8b949e" font-size="8" text-anchor="middle">mL/hr delivered</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- SYRINGE INTERFACE -->
+    <div id="sec-syringe" class="section">
+      <div class="canvas-kicker">Syringe Interface</div>
+      <div class="canvas-title">Barrel Clamp, Flange Grip & Brand Detection</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 720 280" width="100%" style="max-height:300px">
+          <defs>
+            <pattern id="grid2" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2d3748" stroke-width="0.4"/>
+            </pattern>
+          </defs>
+          <rect width="720" height="280" fill="url(#grid2)"/>
+
+          <!-- PUMP BODY OUTLINE -->
+          <rect x="40" y="60" width="640" height="180" rx="6" fill="rgba(22,27,34,0.5)" stroke="#58a6ff" stroke-width="1" stroke-dasharray="5,4"/>
+          <text x="360" y="52" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600" letter-spacing="2">PUMP CHASSIS</text>
+
+          <!-- BARREL CLAMP (holds syringe body) -->
+          <g>
+            <!-- Lower clamp -->
+            <rect x="240" y="145" width="80" height="20" rx="3" fill="#2d3748" stroke="#f78166" stroke-width="1.5"/>
+            <!-- Upper clamp arm -->
+            <rect x="240" y="100" width="80" height="12" rx="3" fill="#2d3748" stroke="#f78166" stroke-width="1.5"/>
+            <!-- Spring indicator -->
+            <path d="M 280 112 L 278 118 L 282 124 L 278 130 L 282 136 L 280 145"
+                  fill="none" stroke="#f78166" stroke-width="1.2"/>
+            <text x="225" y="108" fill="#f78166" font-size="9" text-anchor="end" font-weight="600">CLAMP</text>
+            <text x="225" y="120" fill="#8b949e" font-size="8" text-anchor="end">spring-</text>
+            <text x="225" y="130" fill="#8b949e" font-size="8" text-anchor="end">loaded</text>
+          </g>
+
+          <!-- SYRINGE BARREL -->
+          <g>
+            <!-- Barrel -->
+            <rect x="240" y="115" width="230" height="32" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1.5"/>
+            <!-- Graduations -->
+            <g stroke="#58a6ff" stroke-width="0.6">
+              <line x1="260" y1="115" x2="260" y2="120"/>
+              <line x1="280" y1="115" x2="280" y2="120"/>
+              <line x1="300" y1="115" x2="300" y2="123"/>
+              <line x1="320" y1="115" x2="320" y2="120"/>
+              <line x1="340" y1="115" x2="340" y2="120"/>
+              <line x1="360" y1="115" x2="360" y2="123"/>
+              <line x1="380" y1="115" x2="380" y2="120"/>
+              <line x1="400" y1="115" x2="400" y2="120"/>
+              <line x1="420" y1="115" x2="420" y2="123"/>
+              <line x1="440" y1="115" x2="440" y2="120"/>
+            </g>
+            <!-- Fluid -->
+            <rect x="270" y="117" width="195" height="28" fill="rgba(88,166,255,0.3)"/>
+            <!-- FLANGE (at rear of syringe) -->
+            <rect x="236" y="105" width="10" height="52" fill="#58a6ff"/>
+            <text x="232" y="100" fill="#58a6ff" font-size="8" text-anchor="middle" font-weight="600">FLANGE</text>
+            <!-- Plunger rod -->
+            <rect x="210" y="127" width="30" height="8" fill="#f78166"/>
+            <!-- Plunger stopper (inside barrel) -->
+            <rect x="265" y="115" width="8" height="32" fill="#f78166"/>
+            <!-- Nozzle -->
+            <path d="M 470 127 L 490 132 L 490 138 L 470 143 Z" fill="#58a6ff"/>
+          </g>
+
+          <!-- FLANGE GRIP (holds rear flange) -->
+          <rect x="215" y="95" width="22" height="80" rx="2" fill="none" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <text x="226" y="90" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">FLANGE</text>
+          <text x="226" y="185" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">GRIP</text>
+
+          <!-- PUSHER (drives plunger) -->
+          <rect x="180" y="120" width="30" height="22" fill="#3fb950" stroke="#3fb950" stroke-width="1"/>
+          <text x="195" y="134" fill="#000" font-size="7" text-anchor="middle" font-weight="700">PUSH</text>
+          <!-- Hooks on pusher -->
+          <rect x="208" y="116" width="4" height="6" fill="#3fb950"/>
+          <rect x="208" y="140" width="4" height="6" fill="#3fb950"/>
+          <text x="195" y="160" fill="#3fb950" font-size="8" text-anchor="middle">release pads</text>
+
+          <!-- BARREL SIZE SENSOR (detects syringe diameter) -->
+          <rect x="330" y="175" width="100" height="26" rx="3" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+          <text x="380" y="188" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">BARREL SENSOR</text>
+          <text x="380" y="198" fill="#8b949e" font-size="8" text-anchor="middle">optical / potentiometer</text>
+          <line x1="380" y1="175" x2="380" y2="160" stroke="#bc8cff" stroke-width="1" stroke-dasharray="2,2"/>
+
+          <!-- Labels -->
+          <text x="570" y="150" fill="#e6edf3" font-size="10" font-weight="600">COMPONENTS</text>
+          <text x="570" y="166" fill="#8b949e" font-size="9">• Barrel clamp (spring)</text>
+          <text x="570" y="178" fill="#8b949e" font-size="9">• Flange grip (anti-pullback)</text>
+          <text x="570" y="190" fill="#8b949e" font-size="9">• Pusher with release pads</text>
+          <text x="570" y="202" fill="#8b949e" font-size="9">• Barrel diameter sensor</text>
+          <text x="570" y="214" fill="#8b949e" font-size="9">• Force sensor on pusher</text>
+        </svg>
+      </div>
+
+      <div class="component-list">
+        <div class="component-item">
+          <div class="comp-name">Syringe Barrel Clamp <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Spring-loaded clamp holds syringe body firmly against pump chassis. Prevents barrel sliding during infusion — a common siphon failure mode. Check spring tension at PPM; replace if degraded.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Flange Grip / Anti-Pullback Clip <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Engages rear flange of syringe to prevent barrel being pulled out while plunger is gripped. Without it, negative pressure could aspirate air or cause siphon. Test actuation force and latch integrity.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Plunger Pusher with Release Pads <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Claw-like mechanism grips plunger head. Release pads must be pressed to disengage — design prevents accidental release mid-infusion. Without plunger grip, negative intrathoracic pressure can aspirate drug (siphon risk).</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Barrel Size Sensor <span class="tag tag-med">ACCURACY</span></div>
+          <div class="comp-desc">Optical array or linear potentiometer measures syringe barrel diameter. Determines cross-sectional area A to compute flow Q = A·v. Wrong reading = wrong dose. Clean optical path; verify with known syringe at PPM.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Brand Recognition <span class="tag tag-med">COMPATIBILITY</span></div>
+          <div class="comp-desc">User selects syringe brand from device menu (BD, Terumo, B.Braun). Each has slightly different internal dimensions. Wrong brand selection = up to 5% accuracy error. Drug library can enforce brand selection.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORCES -->
+    <div id="sec-forces" class="section">
+      <div class="canvas-kicker">Force & Pressure</div>
+      <div class="canvas-title">Mechanical Force Translation to Line Pressure</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 720 260" width="100%" style="max-height:280px">
+          <defs>
+            <pattern id="grid3" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2d3748" stroke-width="0.4"/>
+            </pattern>
+            <marker id="force-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#bc8cff"/>
+            </marker>
+          </defs>
+          <rect width="720" height="260" fill="url(#grid3)"/>
+
+          <!-- Force chain -->
+          <text x="360" y="30" fill="#bc8cff" font-size="11" text-anchor="middle" font-weight="600" letter-spacing="2">FORCE → PRESSURE CHAIN</text>
+
+          <!-- Motor torque -->
+          <rect x="30" y="60" width="140" height="140" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+          <text x="100" y="82" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">MOTOR TORQUE</text>
+          <text x="100" y="110" fill="#e6edf3" font-size="18" text-anchor="middle" font-weight="700">τ</text>
+          <text x="100" y="135" fill="#8b949e" font-size="9" text-anchor="middle">typical: 0.2–0.5 N·m</text>
+          <text x="100" y="150" fill="#8b949e" font-size="9" text-anchor="middle">stepper rated torque</text>
+          <text x="100" y="175" fill="#6e7681" font-size="8" text-anchor="middle">limited by coil current</text>
+
+          <line x1="170" y1="130" x2="200" y2="130" stroke="#bc8cff" stroke-width="2" marker-end="url(#force-arrow)"/>
+          <text x="185" y="123" fill="#bc8cff" font-size="8" text-anchor="middle">lead screw</text>
+
+          <!-- Linear Force -->
+          <rect x="200" y="60" width="140" height="140" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+          <text x="270" y="82" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">LINEAR FORCE</text>
+          <text x="270" y="108" fill="#e6edf3" font-size="14" text-anchor="middle" font-weight="700">F = 2πτ·η/p</text>
+          <text x="270" y="125" fill="#8b949e" font-size="8" text-anchor="middle">p = pitch</text>
+          <text x="270" y="138" fill="#8b949e" font-size="8" text-anchor="middle">η = screw efficiency</text>
+          <text x="270" y="162" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">≈ 50–150 N</text>
+          <text x="270" y="180" fill="#6e7681" font-size="8" text-anchor="middle">on plunger</text>
+
+          <line x1="340" y1="130" x2="370" y2="130" stroke="#bc8cff" stroke-width="2" marker-end="url(#force-arrow)"/>
+          <text x="355" y="123" fill="#bc8cff" font-size="8" text-anchor="middle">plunger</text>
+
+          <!-- Plunger Pressure -->
+          <rect x="370" y="60" width="140" height="140" rx="6" fill="#161b22" stroke="#bc8cff" stroke-width="1.5"/>
+          <text x="440" y="82" fill="#bc8cff" font-size="10" text-anchor="middle" font-weight="600">SYRINGE PRESSURE</text>
+          <text x="440" y="108" fill="#e6edf3" font-size="14" text-anchor="middle" font-weight="700">P = F / A</text>
+          <text x="440" y="125" fill="#8b949e" font-size="8" text-anchor="middle">A = barrel cross-section</text>
+          <text x="440" y="145" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">50 mL → 2.5 kPa/N</text>
+          <text x="440" y="158" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">5 mL → 40 kPa/N</text>
+          <text x="440" y="180" fill="#f78166" font-size="8" text-anchor="middle">small syringe = high P</text>
+
+          <line x1="510" y1="130" x2="540" y2="130" stroke="#bc8cff" stroke-width="2" marker-end="url(#force-arrow)"/>
+          <text x="525" y="123" fill="#bc8cff" font-size="8" text-anchor="middle">tubing</text>
+
+          <!-- Line pressure -->
+          <rect x="540" y="60" width="140" height="140" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.5"/>
+          <text x="610" y="82" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">LINE PRESSURE</text>
+          <text x="610" y="108" fill="#e6edf3" font-size="14" text-anchor="middle" font-weight="700">P_line</text>
+          <text x="610" y="125" fill="#8b949e" font-size="8" text-anchor="middle">= P_syringe</text>
+          <text x="610" y="138" fill="#8b949e" font-size="8" text-anchor="middle">− ΔP_tubing</text>
+          <text x="610" y="162" fill="#e6edf3" font-size="10" text-anchor="middle" font-weight="600">300–900 mmHg</text>
+          <text x="610" y="180" fill="#6e7681" font-size="8" text-anchor="middle">occlusion threshold</text>
+
+          <!-- Alert -->
+          <text x="360" y="230" fill="#f78166" font-size="10" text-anchor="middle" font-weight="600">⚠ CLINICAL IMPLICATION</text>
+          <text x="360" y="246" fill="#8b949e" font-size="10" text-anchor="middle">Smaller syringes generate higher pressure per unit force → faster occlusion detection but higher stored bolus</text>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Typical Motor Force Output</div>
+          <div class="card-value">50–150<span class="card-unit">N</span></div>
+          <div class="card-desc">Determined by stepper torque, gear ratio, lead screw pitch, and efficiency. Too high = patient trauma risk if occluded line releases.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Pressure Per Unit Force (50 mL)</div>
+          <div class="card-value">2.5<span class="card-unit">kPa/N</span></div>
+          <div class="card-desc">Large bore syringe = lower pressure per unit pusher force. Safer for low-rate delivery but slower occlusion detection.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Pressure Per Unit Force (5 mL)</div>
+          <div class="card-value" style="color:var(--accent3)">40<span class="card-unit">kPa/N</span></div>
+          <div class="card-desc">Small bore = 16× higher pressure per Newton. Fast occlusion alarm but large bolus stored in tubing compliance. Paediatric concern.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Mechanical Advantage</div>
+          <div class="card-value">F = 2πτ·η/p</div>
+          <div class="card-desc">Lead screw converts rotation to linear force. Small pitch = higher force, slower motion. Typical p = 1 mm/rev.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELECTRONICS -->
+    <div id="sec-electronics" class="section">
+      <div class="canvas-kicker">Electronics & Control</div>
+      <div class="canvas-title">Dual-Processor Closed-Loop System</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 720 320" width="100%" style="max-height:340px">
+          <defs>
+            <pattern id="grid4" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2d3748" stroke-width="0.4"/>
+            </pattern>
+          </defs>
+          <rect width="720" height="320" fill="url(#grid4)"/>
+
+          <!-- MAIN CPU -->
+          <rect x="280" y="130" width="160" height="100" rx="5" fill="#1c232c" stroke="#58a6ff" stroke-width="2"/>
+          <text x="360" y="152" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600" letter-spacing="1">MAIN CPU</text>
+          <text x="360" y="167" fill="#e6edf3" font-size="9" text-anchor="middle">ARM Cortex-M4</text>
+          <text x="360" y="182" fill="#8b949e" font-size="8" text-anchor="middle">PID closed-loop</text>
+          <text x="360" y="195" fill="#8b949e" font-size="8" text-anchor="middle">drug library (DERS)</text>
+          <text x="360" y="208" fill="#8b949e" font-size="8" text-anchor="middle">UI / logging</text>
+          <text x="360" y="221" fill="#8b949e" font-size="8" text-anchor="middle">event log &gt;1000 entries</text>
+
+          <!-- SAFETY CPU -->
+          <rect x="280" y="40" width="160" height="70" rx="5" fill="#1c232c" stroke="#f85149" stroke-width="2"/>
+          <text x="360" y="62" fill="#f85149" font-size="10" text-anchor="middle" font-weight="600">SAFETY CPU</text>
+          <text x="360" y="76" fill="#e6edf3" font-size="9" text-anchor="middle">watchdog · IEC 62304 C</text>
+          <text x="360" y="90" fill="#8b949e" font-size="8" text-anchor="middle">independent encoder check</text>
+          <text x="360" y="103" fill="#8b949e" font-size="8" text-anchor="middle">force threshold monitor</text>
+          <line x1="360" y1="110" x2="360" y2="130" stroke="#f85149" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+          <!-- Motor Driver -->
+          <rect x="80" y="130" width="130" height="60" rx="4" fill="#1c232c" stroke="#d29922" stroke-width="1.5"/>
+          <text x="145" y="152" fill="#d29922" font-size="9" text-anchor="middle" font-weight="600">MOTOR DRIVER</text>
+          <text x="145" y="165" fill="#8b949e" font-size="8" text-anchor="middle">TMC2209 / DRV8711</text>
+          <text x="145" y="178" fill="#8b949e" font-size="8" text-anchor="middle">microstepping + current</text>
+          <line x1="210" y1="160" x2="280" y2="170" stroke="#d29922" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+          <!-- Sensor Interface -->
+          <rect x="510" y="130" width="130" height="80" rx="4" fill="#1c232c" stroke="#bc8cff" stroke-width="1.5"/>
+          <text x="575" y="152" fill="#bc8cff" font-size="9" text-anchor="middle" font-weight="600">SENSOR I/F</text>
+          <text x="575" y="168" fill="#8b949e" font-size="8" text-anchor="middle">24-bit ADC</text>
+          <text x="575" y="181" fill="#8b949e" font-size="8" text-anchor="middle">force · barrel size</text>
+          <text x="575" y="194" fill="#8b949e" font-size="8" text-anchor="middle">encoder · switches</text>
+          <line x1="510" y1="170" x2="440" y2="175" stroke="#bc8cff" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+          <!-- Power -->
+          <rect x="80" y="240" width="130" height="60" rx="4" fill="#1c232c" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="145" y="260" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">POWER MGMT</text>
+          <text x="145" y="273" fill="#8b949e" font-size="8" text-anchor="middle">Class I AC/DC</text>
+          <text x="145" y="286" fill="#8b949e" font-size="8" text-anchor="middle">Li-ion battery ≥6 hr</text>
+          <line x1="145" y1="240" x2="145" y2="190" stroke="#3fb950" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="210" y1="265" x2="280" y2="215" stroke="#3fb950" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- Display -->
+          <rect x="510" y="240" width="130" height="60" rx="4" fill="#1c232c" stroke="#e6edf3" stroke-width="1.5"/>
+          <text x="575" y="260" fill="#e6edf3" font-size="9" text-anchor="middle" font-weight="600">UI / DISPLAY</text>
+          <text x="575" y="273" fill="#8b949e" font-size="8" text-anchor="middle">TFT touch · keypad</text>
+          <text x="575" y="286" fill="#8b949e" font-size="8" text-anchor="middle">LED status · buzzer</text>
+          <line x1="575" y1="240" x2="440" y2="220" stroke="#e6edf3" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+
+          <!-- Comms -->
+          <rect x="280" y="260" width="160" height="40" rx="4" fill="#1c232c" stroke="#3fb950" stroke-width="1"/>
+          <text x="360" y="278" fill="#3fb950" font-size="9" text-anchor="middle" font-weight="600">COMMS</text>
+          <text x="360" y="291" fill="#8b949e" font-size="8" text-anchor="middle">USB · RS-232 · WiFi · IrDA nurse-call</text>
+          <line x1="360" y1="260" x2="360" y2="230" stroke="#3fb950" stroke-width="1" stroke-dasharray="3,3"/>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Control Loop</div>
+          <div style="font-size:13px;font-weight:700;color:var(--accent)">PID + Encoder + Force</div>
+          <div class="card-desc">Three feedback paths: encoder for position, current for motor torque, force sensor for plunger resistance. Redundancy catches single-sensor failure.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Safety Architecture</div>
+          <div style="font-size:13px;font-weight:700;color:var(--red)">Dual-CPU Independent</div>
+          <div class="card-desc">Safety CPU can halt motor independently via hardware interrupt, bypassing main CPU. IEC 62304 Class C compliant.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Power Class</div>
+          <div style="font-size:13px;font-weight:700;color:var(--accent2)">Class I + Internal Battery</div>
+          <div class="card-desc">Mains + Li-ion ≥6 hr (longer than volumetric due to lower mechanical load). CF applied part via isolation.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Software Classification</div>
+          <div style="font-size:13px;font-weight:700;color:var(--warn)">IEC 62304 Class C</div>
+          <div class="card-desc">Highest risk category. Each firmware version requires formal validation and regression testing before deployment.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENSORS -->
+    <div id="sec-sensors" class="section">
+      <div class="canvas-kicker">Sensor Array</div>
+      <div class="canvas-title">Detection, Feedback & Interlock Sensors</div>
+
+      <div class="component-list">
+        <div class="component-item">
+          <div class="comp-name">Pusher Force Sensor (Strain Gauge) <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Load cell between motor and pusher block. Measures force applied to plunger. Rising force = occlusion. Multi-level thresholds (low/med/high) user-selectable. Most critical sensor for occlusion detection in syringe pumps. Verify calibration with known weights at PPM.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Barrel Size Sensor <span class="tag tag-high">ACCURACY CRITICAL</span></div>
+          <div class="comp-desc">Optical emitter/detector array or mechanical linear potentiometer measures syringe outer diameter. Cross-sectional area A used in flow calculation. Wrong reading cascades into wrong dose. Test with reference syringes of known diameter.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Plunger Position Detector <span class="tag tag-med">INTERLOCK</span></div>
+          <div class="comp-desc">Confirms plunger is correctly seated in pusher grip. Optical or microswitch-based. Prevents pump run without plunger engagement — critical siphon prevention. Check mechanical actuation and contact bounce.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Flange Clamp Sensor <span class="tag tag-med">INTERLOCK</span></div>
+          <div class="comp-desc">Confirms rear flange clip is engaged over syringe flange. Prevents syringe being withdrawn during infusion. Failure mode: user forces syringe with clip not engaged → siphon potential.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Rotary Encoder <span class="tag tag-med">PERFORMANCE</span></div>
+          <div class="comp-desc">1000 PPR optical encoder on motor shaft. Validates actual rotation vs. commanded steps. Detects stalled motor, skipped steps, or mechanical binding. Clean encoder disc during PPM.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">End-of-Travel Switches <span class="tag tag-low">LIMITS</span></div>
+          <div class="comp-desc">Microswitches at full-forward and full-back positions. Prevent mechanical damage from driving beyond range. Trigger "syringe empty" and "syringe loading" states. Test actuation during PPM.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Motor Current Sensor <span class="tag tag-low">MONITORING</span></div>
+          <div class="comp-desc">Shunt resistor or Hall effect current sensor in motor driver. Indirect torque measurement — supplements force sensor for redundancy. Elevated current with normal force = mechanical friction buildup.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Temperature Sensor <span class="tag tag-low">MONITORING</span></div>
+          <div class="comp-desc">NTC or PT100 on motor/PCB. Protects against overheating — relevant for prolonged high-rate infusions. Also monitors battery cell temperature for safety.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALARMS -->
+    <div id="sec-alarms" class="section">
+      <div class="canvas-kicker">Alarm Logic</div>
+      <div class="canvas-title">IEC 60601-1-8 Alarm Framework</div>
+
+      <div class="diagram-wrap" style="padding:14px">
+        <table class="alarm-table">
+          <thead>
+            <tr>
+              <th>Alarm</th>
+              <th>Priority</th>
+              <th>Trigger</th>
+              <th>Response</th>
+              <th>Service Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Occlusion (Downstream)</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Force sensor &gt; user threshold</td>
+              <td>Halt motor + auto back-off</td>
+              <td>Calibrate force sensor; verify thresholds</td>
+            </tr>
+            <tr>
+              <td>Syringe Empty / Near End</td>
+              <td><span class="tag tag-med">MED</span></td>
+              <td>Pusher near end-of-travel</td>
+              <td>Alert; continue to KVO</td>
+              <td>Check end-stop switch; pusher travel</td>
+            </tr>
+            <tr>
+              <td>Syringe Disengaged</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Flange or plunger sensor open</td>
+              <td>Halt motor</td>
+              <td>Clean flange sensor; check switch</td>
+            </tr>
+            <tr>
+              <td>Wrong Syringe / Size Mismatch</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Barrel sensor vs. selected brand</td>
+              <td>Prevent start</td>
+              <td>Verify barrel sensor against references</td>
+            </tr>
+            <tr>
+              <td>Motor Stalled / Step Loss</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Encoder ≠ commanded steps</td>
+              <td>Halt + error code</td>
+              <td>Inspect lead-screw, encoder disc, belt</td>
+            </tr>
+            <tr>
+              <td>Near End of Infusion</td>
+              <td><span class="tag tag-med">MED</span></td>
+              <td>Remaining time &lt; user-set</td>
+              <td>Audio/visual advisory</td>
+              <td>Check near-end threshold setting</td>
+            </tr>
+            <tr>
+              <td>Battery Low</td>
+              <td><span class="tag tag-med">MED</span></td>
+              <td>Battery capacity &lt;20%</td>
+              <td>Alert; continue on mains</td>
+              <td>Battery capacity test at PPM</td>
+            </tr>
+            <tr>
+              <td>KVO (Keep Vein Open)</td>
+              <td><span class="tag tag-low">LOW</span></td>
+              <td>VTBI complete</td>
+              <td>Drop to KVO rate (~0.1–1 mL/hr)</td>
+              <td>Verify KVO rate configuration</td>
+            </tr>
+            <tr>
+              <td>Standby Timeout</td>
+              <td><span class="tag tag-low">LOW</span></td>
+              <td>Programmed but not started</td>
+              <td>Reminder tone</td>
+              <td>Human factors — verify on clinical feedback</td>
+            </tr>
+            <tr>
+              <td>System Fault / Internal Error</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Safety CPU watchdog, RAM/ROM</td>
+              <td>Halt + E-code</td>
+              <td>Read event log; reference OEM service manual</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- OCCLUSION -->
+    <div id="sec-occlusion" class="section">
+      <div class="canvas-kicker">Occlusion Detection</div>
+      <div class="canvas-title">Force Build-Up & Auto Back-Off Feature</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 720 240" width="100%" style="max-height:260px">
+          <defs>
+            <pattern id="grid5" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2d3748" stroke-width="0.4"/>
+            </pattern>
+          </defs>
+          <rect width="720" height="240" fill="url(#grid5)"/>
+
+          <!-- Axes -->
+          <line x1="60" y1="200" x2="680" y2="200" stroke="#2d3748" stroke-width="1.5"/>
+          <line x1="60" y1="200" x2="60" y2="30" stroke="#2d3748" stroke-width="1.5"/>
+          <text x="370" y="220" fill="#8b949e" font-size="9" text-anchor="middle">Time →</text>
+          <text x="22" y="115" fill="#8b949e" font-size="9" text-anchor="middle" transform="rotate(-90,22,115)">Plunger Force</text>
+
+          <!-- Thresholds -->
+          <line x1="60" y1="80" x2="680" y2="80" stroke="#f85149" stroke-width="1" stroke-dasharray="6,4" opacity="0.6"/>
+          <text x="65" y="75" fill="#f85149" font-size="8">HIGH (alarm)</text>
+          <line x1="60" y1="120" x2="680" y2="120" stroke="#d29922" stroke-width="1" stroke-dasharray="6,4" opacity="0.5"/>
+          <text x="65" y="115" fill="#d29922" font-size="8">MED</text>
+          <line x1="60" y1="160" x2="680" y2="160" stroke="#3fb950" stroke-width="1" stroke-dasharray="6,4" opacity="0.4"/>
+          <text x="65" y="155" fill="#3fb950" font-size="8">LOW</text>
+
+          <!-- Normal baseline -->
+          <path d="M60,190 L160,190 L250,185 L340,188 L430,186" fill="none" stroke="#3fb950" stroke-width="2"/>
+          <text x="245" y="178" fill="#3fb950" font-size="9">baseline friction</text>
+
+          <!-- Occlusion onset -->
+          <circle cx="430" cy="186" r="3" fill="#d29922"/>
+          <text x="430" y="208" fill="#d29922" font-size="8" text-anchor="middle">occlusion</text>
+
+          <!-- Pressure rise to alarm -->
+          <path d="M430,186 Q470,150 510,115 Q530,95 550,80" fill="none" stroke="#f85149" stroke-width="2"/>
+          <circle cx="550" cy="80" r="5" fill="#f85149" class="pulse-anim"/>
+          <text x="555" y="72" fill="#f85149" font-size="9" font-weight="600">ALARM!</text>
+
+          <!-- Back-off action -->
+          <path d="M550,80 L570,80 L570,130 L600,130" fill="none" stroke="#bc8cff" stroke-width="2" stroke-dasharray="3,2"/>
+          <text x="605" y="135" fill="#bc8cff" font-size="9">auto back-off</text>
+          <text x="605" y="148" fill="#8b949e" font-size="8">(reduces stored</text>
+          <text x="605" y="158" fill="#8b949e" font-size="8">elastic energy)</text>
+
+          <!-- Accumulation region -->
+          <path d="M430,186 L430,200 L550,200 L550,80 Z" fill="rgba(248,81,73,0.08)"/>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Time-to-Alarm (Low Rate)</div>
+          <div class="card-value" style="color:var(--warn)">10–60<span class="card-unit">min</span></div>
+          <div class="card-desc">At 1 mL/hr with 50 mL syringe, build-up to alarm can exceed 30 min. Critical risk for ICU vasopressors — patient may be haemodynamically compromised before alarm.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Time-to-Alarm (High Rate)</div>
+          <div class="card-value" style="color:var(--accent2)">seconds</div>
+          <div class="card-desc">At higher flow rates, force builds quickly — rapid detection. Low occlusion threshold reduces TTA but increases nuisance alarms.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Auto Back-Off Feature</div>
+          <div class="card-value" style="color:var(--purple);font-size:14px">Reverse Stepping</div>
+          <div class="card-desc">After alarm, pump briefly reverses to relieve stored pressure in tubing → reduces post-occlusion bolus delivered when line clears. Not all pumps; verify per model.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Stored Energy Release (Bolus Risk)</div>
+          <div class="card-value" style="color:var(--red);font-size:14px">E = ½kx²</div>
+          <div class="card-desc">Syringe plunger compression + tubing compliance store potential energy during occlusion. Released as bolus when line clears. Clinically significant: small-bore syringes store more energy/vol than large.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIPHON RISK -->
+    <div id="sec-siphon" class="section">
+      <div class="canvas-kicker">Siphon Risk</div>
+      <div class="canvas-title">Gravity-Driven Uncontrolled Delivery</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 720 280" width="100%" style="max-height:300px">
+          <defs>
+            <pattern id="grid6" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2d3748" stroke-width="0.4"/>
+            </pattern>
+          </defs>
+          <rect width="720" height="280" fill="url(#grid6)"/>
+
+          <text x="360" y="28" fill="#f85149" font-size="11" text-anchor="middle" font-weight="600" letter-spacing="2">⚠ SIPHON SCENARIO — SYRINGE ABOVE PATIENT</text>
+
+          <!-- Pump at top -->
+          <rect x="220" y="60" width="280" height="80" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+          <text x="360" y="80" fill="#58a6ff" font-size="9" text-anchor="middle" font-weight="600">SYRINGE PUMP (elevated on stand)</text>
+          <!-- Syringe inside -->
+          <rect x="260" y="90" width="200" height="25" fill="rgba(88,166,255,0.15)" stroke="#58a6ff" stroke-width="1"/>
+          <rect x="300" y="92" width="155" height="21" fill="rgba(88,166,255,0.4)"/>
+          <rect x="255" y="85" width="8" height="35" fill="#f78166"/>
+          <text x="360" y="132" fill="#8b949e" font-size="8" text-anchor="middle">plunger NOT securely gripped →</text>
+
+          <!-- Height difference indicator -->
+          <line x1="120" y1="100" x2="120" y2="230" stroke="#f78166" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="115" y1="100" x2="125" y2="100" stroke="#f78166" stroke-width="1.5"/>
+          <line x1="115" y1="230" x2="125" y2="230" stroke="#f78166" stroke-width="1.5"/>
+          <text x="90" y="165" fill="#f78166" font-size="9" text-anchor="middle">Δh</text>
+          <text x="90" y="178" fill="#8b949e" font-size="8" text-anchor="middle">1–2 m</text>
+
+          <!-- Tubing path down -->
+          <path d="M460,115 L500,115 L500,230 L400,230" fill="none" stroke="#f85149" stroke-width="3"/>
+          <path d="M460,115 L500,115 L500,230 L400,230" fill="none" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="8,6" class="flow-anim"/>
+
+          <!-- Patient at bottom -->
+          <rect x="260" y="220" width="140" height="30" rx="4" fill="rgba(63,185,80,0.1)" stroke="#3fb950" stroke-width="1.5"/>
+          <text x="330" y="238" fill="#3fb950" font-size="10" text-anchor="middle" font-weight="600">PATIENT</text>
+
+          <!-- Force arrows -->
+          <defs>
+            <marker id="gravity" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#f85149"/>
+            </marker>
+          </defs>
+          <line x1="500" y1="150" x2="500" y2="200" stroke="#f85149" stroke-width="2.5" marker-end="url(#gravity)"/>
+          <text x="510" y="175" fill="#f85149" font-size="10" font-weight="600">gravity</text>
+
+          <!-- Pressure calc box -->
+          <rect x="530" y="80" width="170" height="110" rx="4" fill="#161b22" stroke="#f85149" stroke-width="1.5"/>
+          <text x="615" y="100" fill="#f85149" font-size="9" text-anchor="middle" font-weight="600">SIPHON PRESSURE</text>
+          <text x="615" y="122" fill="#e6edf3" font-size="14" text-anchor="middle" font-weight="700">P = ρgh</text>
+          <text x="615" y="140" fill="#8b949e" font-size="8" text-anchor="middle">ρ = 1000 kg/m³ (saline)</text>
+          <text x="615" y="153" fill="#8b949e" font-size="8" text-anchor="middle">h = 1 m → ~75 mmHg</text>
+          <text x="615" y="166" fill="#8b949e" font-size="8" text-anchor="middle">h = 2 m → ~150 mmHg</text>
+          <text x="615" y="182" fill="#f78166" font-size="8" text-anchor="middle">&gt; venous pressure</text>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Mechanism</div>
+          <div style="font-size:13px;font-weight:700;color:var(--red)">Gravity-Driven Flow</div>
+          <div class="card-desc">If plunger is not securely gripped by pusher and pump is above patient, hydrostatic pressure (P = ρgh) drives uncontrolled drug delivery — potentially several mL in minutes.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Failure Modes</div>
+          <div style="font-size:13px;font-weight:700;color:var(--warn)">Multiple</div>
+          <div class="card-desc">Plunger disengaged from pusher; flange clip broken or worn; syringe cracked; loose Luer connection; gravity bag compression acting on partially-loaded syringe.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Critical Risk Scenario</div>
+          <div style="font-size:13px;font-weight:700;color:var(--red)">Opioid/Vasopressor</div>
+          <div class="card-desc">Siphon of potent drug (morphine, noradrenaline, propofol) can deliver lethal bolus in seconds. Death cases documented in MHRA/FDA databases.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Engineering Prevention</div>
+          <div style="font-size:13px;font-weight:700;color:var(--accent2)">4-Layer Defence</div>
+          <div class="card-desc">(1) Plunger position sensor, (2) flange clip sensor, (3) alarm on disengagement, (4) anti-siphon valve downstream. Verify ALL on every PPM.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PPM -->
+    <div id="sec-ppm" class="section">
+      <div class="canvas-kicker">Planned Preventive Maintenance</div>
+      <div class="canvas-title">Annual PPM Schedule</div>
+
+      <div class="diagram-wrap" style="padding:14px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:12px;text-transform:uppercase;font-weight:600">Ref: Manufacturer Service Manual · MHRA DB2010(02) · IEC 62353</div>
+        <div class="ppm-row" style="border-bottom:2px solid var(--border)">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-weight:600">Task</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-weight:600">Frequency</div>
+          <div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;font-weight:600">Status</div>
+        </div>
+        <div class="ppm-row"><div class="ppm-task">Visual inspection — casing, clamp, display, keypad</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Electrical safety test (IEC 62353) — earth continuity, leakage</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Flow accuracy — gravimetric, 3 rates (0.5, 5, 500 mL/hr)</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Occlusion alarm test — low/med/high thresholds</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Siphon test — simulate plunger disengagement during run</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Force sensor calibration (reference weights / test rig)</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CALIBRATE</span></div>
+        <div class="ppm-row"><div class="ppm-task">Barrel size sensor — verify with 3+ reference syringes</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Lead-screw inspection — wear, lubrication, backlash</div><div class="ppm-freq">Annual</div><span class="tag tag-med">INSPECT</span></div>
+        <div class="ppm-row"><div class="ppm-task">Pusher release mechanism — grip force, latch integrity</div><div class="ppm-freq">Annual</div><span class="tag tag-med">INSPECT</span></div>
+        <div class="ppm-row"><div class="ppm-task">Flange clip function — spring force, engagement detection</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Battery capacity test — discharge to 80% DoD</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Alarm audio level (IEC 60601-1-8 ≥65 dBA)</div><div class="ppm-freq">Annual</div><span class="tag tag-med">MEASURE</span></div>
+        <div class="ppm-row"><div class="ppm-task">Firmware version check + update per FSN</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">VERIFY</span></div>
+        <div class="ppm-row"><div class="ppm-task">Drug library version verification + update</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">VERIFY</span></div>
+        <div class="ppm-row"><div class="ppm-task">Clean barrel sensor optical path; pusher mechanism</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">CLEAN</span></div>
+        <div class="ppm-row"><div class="ppm-task">Event log download for trend analysis</div><div class="ppm-freq">Annual</div><span class="tag tag-low">LOG</span></div>
+        <div class="ppm-row"><div class="ppm-task">Replace worn pusher pads, release springs</div><div class="ppm-freq">Condition-based</div><span class="tag tag-low">CONDITION</span></div>
+        <div class="ppm-row"><div class="ppm-task">Lead-screw re-greasing (manufacturer-specified lube)</div><div class="ppm-freq">2 years</div><span class="tag tag-low">CONDITION</span></div>
+      </div>
+    </div>
+
+    <!-- FAULTS -->
+    <div id="sec-faults" class="section">
+      <div class="canvas-kicker">Fault Diagnosis</div>
+      <div class="canvas-title">Symptom-Based Fault Trees</div>
+
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <div class="fault-block">
+          <div class="fault-title">⚠ SYMPTOM: Nuisance Occlusion Alarms at Normal Flow</div>
+          <div class="fault-item">Force sensor offset drift — recalibrate with zero-load reference</div>
+          <div class="fault-item">Wrong syringe brand selected → higher friction than expected</div>
+          <div class="fault-item">Lead-screw binding — clean, inspect for wear, re-lubricate</div>
+          <div class="fault-item">Occlusion threshold set too low for clinical application</div>
+          <div class="fault-item">Pusher mechanism mis-aligned with plunger axis (lateral friction)</div>
+        </div>
+
+        <div class="fault-block" style="border-color:rgba(210,153,34,0.25);background:rgba(210,153,34,0.03)">
+          <div class="fault-title" style="color:var(--warn)">⚠ SYMPTOM: Flow Accuracy Out of Spec (±2%)</div>
+          <div class="fault-item">Barrel size sensor reading wrong diameter — calibrate with reference syringes</div>
+          <div class="fault-item">User selected wrong syringe brand in menu</div>
+          <div class="fault-item">Lead-screw backlash — inspect nut, replace if &gt;0.05 mm play</div>
+          <div class="fault-item">Encoder disc dirty or misaligned — clean and re-align</div>
+          <div class="fault-item">Motor step loss at high flow — check driver current setting</div>
+        </div>
+
+        <div class="fault-block" style="border-color:rgba(188,140,255,0.25);background:rgba(188,140,255,0.03)">
+          <div class="fault-title" style="color:var(--purple)">⚠ SYMPTOM: "Wrong Syringe" Alarm with Correct Syringe</div>
+          <div class="fault-item">Barrel sensor optical path contaminated — clean with IPA wipe</div>
+          <div class="fault-item">Barrel sensor mis-calibrated — verify against reference diameters</div>
+          <div class="fault-item">Spring tension in barrel clamp degraded — syringe not fully seated</div>
+          <div class="fault-item">Linear potentiometer worn — replace sensor assembly</div>
+        </div>
+
+        <div class="fault-block" style="border-color:rgba(63,185,80,0.2);background:rgba(63,185,80,0.02)">
+          <div class="fault-title" style="color:var(--accent2)">⚠ SYMPTOM: Motor Stall / Step Loss Error Code</div>
+          <div class="fault-item">Lead-screw binding or corrosion — clean, re-lubricate, inspect</div>
+          <div class="fault-item">Motor driver current set too low — reference service manual</div>
+          <div class="fault-item">Encoder fault — validate PPR count on service screen</div>
+          <div class="fault-item">Mechanical obstruction in pusher path (debris, damaged guide)</div>
+          <div class="fault-item">Excessive load — occluded line + high flow exceeded motor torque</div>
+        </div>
+
+        <div class="fault-block" style="border-color:rgba(248,81,73,0.2);background:rgba(248,81,73,0.03)">
+          <div class="fault-title">⚠ SYMPTOM: Plunger Disengagement Alarm Intermittent</div>
+          <div class="fault-item">Plunger sensor contacts worn or dirty — clean/replace switch</div>
+          <div class="fault-item">Pusher release pads degraded — replace pad assembly</div>
+          <div class="fault-item">Spring fatigue in pusher grip — replace spring</div>
+          <div class="fault-item">Wrong syringe brand — plunger head geometry outside grip tolerance</div>
+          <div class="fault-item">Vibration during patient transport causing momentary disengagement</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ACCURACY -->
+    <div id="sec-accuracy" class="section">
+      <div class="canvas-kicker">Accuracy Testing</div>
+      <div class="canvas-title">Gravimetric Trumpet Curves — IEC 60601-2-24</div>
+
+      <div class="card-grid" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-label">Method</div>
+          <div style="font-size:13px;font-weight:700;color:var(--accent)">Gravimetric</div>
+          <div class="card-desc">Analytical balance (±0.001 g). Weigh output over observation window. Volume = mass / density. Use water at room temperature (ρ = 1 g/mL approx).</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Standard Requirement</div>
+          <div class="card-value">±2%<span class="card-unit"></span></div>
+          <div class="card-desc">Steady state error. Excludes startup phase (first 30 min or per IFU) and KVO mode.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Trumpet Curve Windows</div>
+          <div style="font-size:14px;font-weight:700;color:var(--purple)">2, 5, 11, 19, 31 min</div>
+          <div class="card-desc">IEC 60601-2-24 requires accuracy at multiple observation windows. Short windows reveal pulsation; long windows reveal mean accuracy.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Startup Bolus (Trumpet Start)</div>
+          <div class="card-value" style="color:var(--warn)">Critical</div>
+          <div class="card-desc">Mechanical slack take-up before steady flow. Can deliver extra ~0.01–0.1 mL bolus at start. Clinically relevant for potent drugs at low rates.</div>
+        </div>
+      </div>
+
+      <div class="diagram-wrap">
+        <div style="font-size:11px;color:var(--accent);font-family:'JetBrains Mono',monospace;letter-spacing:1px;margin-bottom:10px;text-transform:uppercase;font-weight:600">Trumpet Curve — Percentage Error vs Observation Window</div>
+        <svg viewBox="0 0 720 200" width="100%" style="max-height:220px">
+          <defs>
+            <pattern id="grid7" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#2d3748" stroke-width="0.4"/>
+            </pattern>
+          </defs>
+          <rect width="720" height="200" fill="url(#grid7)"/>
+
+          <!-- Axes -->
+          <line x1="60" y1="170" x2="680" y2="170" stroke="#2d3748" stroke-width="1.5"/>
+          <line x1="60" y1="170" x2="60" y2="20" stroke="#2d3748" stroke-width="1.5"/>
+          <text x="370" y="190" fill="#8b949e" font-size="9" text-anchor="middle">Observation Window (min)</text>
+          <text x="20" y="90" fill="#8b949e" font-size="9" text-anchor="middle" transform="rotate(-90,20,90)">% Error</text>
+
+          <!-- Spec limits -->
+          <line x1="60" y1="60" x2="680" y2="60" stroke="#f85149" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+          <text x="65" y="55" fill="#f85149" font-size="8">+2% spec</text>
+          <line x1="60" y1="140" x2="680" y2="140" stroke="#f85149" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>
+          <text x="65" y="153" fill="#f85149" font-size="8">−2% spec</text>
+          <line x1="60" y1="100" x2="680" y2="100" stroke="#3fb950" stroke-width="0.8" stroke-dasharray="3,3" opacity="0.4"/>
+          <text x="65" y="96" fill="#3fb950" font-size="8">0% (ideal)</text>
+
+          <!-- Upper trumpet curve -->
+          <path d="M 90,30 Q 180,50 280,80 Q 380,92 480,96 Q 580,98 650,99"
+                fill="none" stroke="#58a6ff" stroke-width="2"/>
+          <!-- Lower trumpet curve -->
+          <path d="M 90,170 Q 180,150 280,120 Q 380,108 480,104 Q 580,102 650,101"
+                fill="none" stroke="#58a6ff" stroke-width="2"/>
+          <!-- Fill between -->
+          <path d="M 90,30 Q 180,50 280,80 Q 380,92 480,96 Q 580,98 650,99 L 650,101 Q 580,102 480,104 Q 380,108 280,120 Q 180,150 90,170 Z"
+                fill="rgba(88,166,255,0.08)"/>
+
+          <!-- Data points at standard windows -->
+          <g fill="#3fb950" stroke="#0d1117" stroke-width="1">
+            <circle cx="120" cy="45" r="3"/>
+            <circle cx="180" cy="65" r="3"/>
+            <circle cx="260" cy="85" r="3"/>
+            <circle cx="380" cy="95" r="3"/>
+            <circle cx="520" cy="99" r="3"/>
+          </g>
+          <g fill="#3fb950" stroke="#0d1117" stroke-width="1">
+            <circle cx="120" cy="155" r="3"/>
+            <circle cx="180" cy="135" r="3"/>
+            <circle cx="260" cy="115" r="3"/>
+            <circle cx="380" cy="105" r="3"/>
+            <circle cx="520" cy="101" r="3"/>
+          </g>
+
+          <!-- Window labels -->
+          <text x="120" y="182" fill="#6e7681" font-size="8" text-anchor="middle">2</text>
+          <text x="180" y="182" fill="#6e7681" font-size="8" text-anchor="middle">5</text>
+          <text x="260" y="182" fill="#6e7681" font-size="8" text-anchor="middle">11</text>
+          <text x="380" y="182" fill="#6e7681" font-size="8" text-anchor="middle">19</text>
+          <text x="520" y="182" fill="#6e7681" font-size="8" text-anchor="middle">31</text>
+
+          <!-- Y-axis tick -->
+          <text x="55" y="33" fill="#6e7681" font-size="8" text-anchor="end">+5</text>
+          <text x="55" y="63" fill="#6e7681" font-size="8" text-anchor="end">+2</text>
+          <text x="55" y="103" fill="#6e7681" font-size="8" text-anchor="end">0</text>
+          <text x="55" y="143" fill="#6e7681" font-size="8" text-anchor="end">−2</text>
+          <text x="55" y="173" fill="#6e7681" font-size="8" text-anchor="end">−5</text>
+
+          <!-- Annotation -->
+          <text x="600" y="70" fill="#58a6ff" font-size="8" text-anchor="end" font-weight="600">converges toward steady state</text>
+          <text x="200" y="30" fill="#f78166" font-size="8" font-weight="600">wide error at short window</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- COMPARE -->
+    <div id="sec-compare" class="section">
+      <div class="canvas-kicker">Comparison</div>
+      <div class="canvas-title">Syringe vs. Volumetric Peristaltic</div>
+
+      <div class="diagram-wrap" style="padding:0;overflow:hidden">
+        <div class="compare-row header">
+          <div>Feature</div>
+          <div>Syringe Pump</div>
+          <div>Volumetric Peristaltic</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Mechanism</div>
+          <div class="compare-syringe">Lead-screw linear drive → plunger</div>
+          <div class="compare-peristaltic">Rotary / linear fingers → flexible tubing</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Flow range</div>
+          <div class="compare-syringe">0.01–1200 mL/hr</div>
+          <div class="compare-peristaltic">0.1–999 mL/hr</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Low-rate accuracy</div>
+          <div class="compare-syringe">Excellent (neonatal, paediatric)</div>
+          <div class="compare-peristaltic">Moderate (pulsatile at low rates)</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Volume capacity</div>
+          <div class="compare-syringe">Limited to syringe (1–60 mL)</div>
+          <div class="compare-peristaltic">Large (IV bag) — up to 3 L</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Occlusion detection</div>
+          <div class="compare-syringe">Force sensor on pusher (direct)</div>
+          <div class="compare-peristaltic">Pressure sensor on tubing (indirect)</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Occlusion alarm time (low rate)</div>
+          <div class="compare-syringe">10–60 min</div>
+          <div class="compare-peristaltic">30+ min (rate-dependent)</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Free-flow risk (door open)</div>
+          <div class="compare-syringe">Low — plunger self-locking</div>
+          <div class="compare-peristaltic">HIGH — needs anti-siphon clamp</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Siphon risk (height difference)</div>
+          <div class="compare-syringe">HIGH — if plunger disengaged</div>
+          <div class="compare-peristaltic">Low — tubing pinched by fingers</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Clinical application</div>
+          <div class="compare-syringe">ICU, anaesthesia, neonatal, vasoactive drugs</div>
+          <div class="compare-peristaltic">General ward, fluids, antibiotics, TPN</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Consumable cost</div>
+          <div class="compare-syringe">Low (standard syringe)</div>
+          <div class="compare-peristaltic">Higher (pump-specific tubing)</div>
+        </div>
+        <div class="compare-row">
+          <div class="compare-feature">Battery life</div>
+          <div class="compare-syringe">6–8 hr (lower mechanical load)</div>
+          <div class="compare-peristaltic">4–6 hr</div>
+        </div>
+        <div class="compare-row" style="border-bottom:none">
+          <div class="compare-feature">Primary patient-safety mechanism</div>
+          <div class="compare-syringe">Plunger grip + siphon prevention</div>
+          <div class="compare-peristaltic">Anti-free-flow clamp</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="infopanel scrollbar-thin">
+    <div>
+      <div class="info-section-title">Quick Specs</div>
+      <div class="info-row"><span class="info-key">Drive</span><span class="info-val">Lead-screw</span></div>
+      <div class="info-row"><span class="info-key">Flow range</span><span class="info-val">0.01–1200 mL/hr</span></div>
+      <div class="info-row"><span class="info-key">Accuracy</span><span class="info-val">±2%</span></div>
+      <div class="info-row"><span class="info-key">Syringe size</span><span class="info-val">1–60 mL</span></div>
+      <div class="info-row"><span class="info-key">Force output</span><span class="info-val">50–150 N</span></div>
+      <div class="info-row"><span class="info-key">Occlusion thresh</span><span class="info-val">Low/Med/High</span></div>
+      <div class="info-row"><span class="info-key">Battery</span><span class="info-val">≥6 hr</span></div>
+      <div class="info-row"><span class="info-key">Leakage (CF)</span><span class="info-val">&lt;10 µA</span></div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Applicable Standards</div>
+      <div class="info-row"><span class="info-key">Safety</span><span class="info-val">IEC 60601-1</span></div>
+      <div class="info-row"><span class="info-key">Infusion pumps</span><span class="info-val">IEC 60601-2-24</span></div>
+      <div class="info-row"><span class="info-key">Alarms</span><span class="info-val">IEC 60601-1-8</span></div>
+      <div class="info-row"><span class="info-key">Software</span><span class="info-val">IEC 62304 C</span></div>
+      <div class="info-row"><span class="info-key">Risk mgmt</span><span class="info-val">ISO 14971</span></div>
+      <div class="info-row"><span class="info-key">Usability</span><span class="info-val">IEC 62366-1</span></div>
+      <div class="info-row"><span class="info-key">Recurrent test</span><span class="info-val">IEC 62353</span></div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Key Service Risks</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.7">
+        <div style="margin-bottom:7px">⚠ <span style="color:var(--red)">Siphon:</span> Always test plunger disengagement alarm + flange clip on PPM. Siphon has caused documented deaths.</div>
+        <div style="margin-bottom:7px">⚠ <span style="color:var(--warn)">Barrel sensor:</span> Wrong brand/size = up to 5% dose error. Verify with reference syringes of each approved brand.</div>
+        <div style="margin-bottom:7px">⚠ <span style="color:var(--accent)">Force calibration:</span> Force sensor drift = wrong occlusion threshold. Calibrate with reference weight annually.</div>
+        <div>⚠ <span style="color:var(--accent2)">Trumpet curve:</span> Low-rate accuracy only visible in long observation windows — single test can miss transient errors.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Clinical Context</div>
+      <div class="info-row"><span class="info-key">ICU vasopressors</span><span class="info-val">Most common use</span></div>
+      <div class="info-row"><span class="info-key">Anaesthesia TIVA</span><span class="info-val">Propofol / remi</span></div>
+      <div class="info-row"><span class="info-key">Neonatal</span><span class="info-val">Low-rate critical</span></div>
+      <div class="info-row"><span class="info-key">PCA opioid</span><span class="info-val">Bolus + lockout</span></div>
+      <div class="info-row"><span class="info-key">Chemo</span><span class="info-val">Precise volumes</span></div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Asset Management</div>
+      <div class="info-row"><span class="info-key">CMMS</span><span class="info-val">Equatrace / Insite</span></div>
+      <div class="info-row"><span class="info-key">Label</span><span class="info-val">Asset + PPM date</span></div>
+      <div class="info-row"><span class="info-key">Event log</span><span class="info-val">Download at PPM</span></div>
+      <div class="info-row"><span class="info-key">Incidents</span><span class="info-val">MHRA / Datix</span></div>
+      <div class="info-row"><span class="info-key">UDI</span><span class="info-val">Record per EUDAMED</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.getElementById('sec-' + id).classList.add('visible');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

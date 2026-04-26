@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anaesthesia Machine — Engineering Visualiser</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --panel: #0f1520;
+    --panel2: #141c2a;
+    --border: #1e2d42;
+    --accent: #00c8ff;
+    --accent2: #ff6b35;
+    --accent3: #39ff14;
+    --accent4: #ffd700;
+    --warn: #ff4444;
+    --text: #c8daea;
+    --muted: #4a6080;
+    --mono: 'Share Tech Mono', monospace;
+    --head: 'Barlow Condensed', sans-serif;
+    --body: 'Barlow', sans-serif;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === HEADER === */
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .logo {
+    font-family: var(--head);
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--text); font-weight: 300; }
+  .badge {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    background: rgba(0,200,255,0.1);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 2px;
+  }
+
+  /* === LAYOUT === */
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    grid-template-rows: auto 1fr;
+    height: calc(100vh - 58px);
+    gap: 0;
+  }
+
+  /* === SIDEBAR LEFT — subsystems === */
+  .sidebar-left {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 0;
+  }
+  .sys-label {
+    font-family: var(--head);
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    padding: 16px 16px 8px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .sys-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(30,45,66,0.5);
+    transition: background 0.15s, border-left 0.15s;
+    border-left: 3px solid transparent;
+    user-select: none;
+  }
+  .sys-btn:hover { background: var(--panel2); }
+  .sys-btn.active {
+    background: var(--panel2);
+    border-left-color: var(--accent);
+  }
+  .sys-icon {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .sys-info { flex: 1; min-width: 0; }
+  .sys-name {
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+  .sys-sub {
+    font-size: 0.68rem;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+  }
+  .ok { background: var(--accent3); }
+  .warn { background: var(--accent4); }
+  .fault { background: var(--warn); }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* === CENTRE — diagram area === */
+  .centre {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .diagram-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* === SVG DIAGRAM === */
+  svg#machine {
+    width: 100%;
+    height: 100%;
+    max-width: 640px;
+    max-height: 640px;
+  }
+
+  /* Animated gas flow lines */
+  .flow-o2 { stroke: #00c8ff; stroke-width: 2; fill: none; stroke-dasharray: 6 4; animation: flow 1.2s linear infinite; }
+  .flow-n2o { stroke: #ffd700; stroke-width: 2; fill: none; stroke-dasharray: 6 4; animation: flow 1.4s linear infinite; }
+  .flow-air { stroke: #aaccff; stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; animation: flow 1.6s linear infinite; }
+  .flow-agent { stroke: #ff6b35; stroke-width: 2; fill: none; stroke-dasharray: 5 3; animation: flow 1s linear infinite; }
+  .flow-exhale { stroke: #39ff14; stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; animation: flow-rev 1.8s linear infinite; }
+
+  @keyframes flow {
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -20; }
+  }
+  @keyframes flow-rev {
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: 20; }
+  }
+
+  /* Highlight ring when component selected */
+  .comp-hitbox {
+    cursor: pointer;
+    fill: transparent;
+  }
+  .comp-hitbox:hover + .comp-highlight, .comp-hitbox.sel + .comp-highlight {
+    opacity: 1;
+  }
+  .comp-highlight {
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  /* Bellows animation */
+  @keyframes bellow {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.6); }
+  }
+  .bellows-anim { transform-origin: bottom; animation: bellow 3s ease-in-out infinite; }
+
+  /* APL valve oscillate */
+  @keyframes apl {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* === INFO PANEL LEFT BOTTOM === */
+  .gas-legend {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .leg {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.65rem; font-family: var(--mono);
+  }
+  .leg-line {
+    width: 22px; height: 2px;
+    background: repeating-linear-gradient(90deg, currentColor 0 5px, transparent 5px 9px);
+  }
+
+  /* === RIGHT PANEL === */
+  .sidebar-right {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-title {
+    font-family: var(--head);
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    padding: 14px 16px 8px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+
+  /* Component detail */
+  #detail-area { flex: 1; padding: 0; }
+  .detail-empty {
+    padding: 28px 18px;
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.7;
+  }
+  .detail-card { padding: 0; }
+  .detail-header {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .detail-name {
+    font-family: var(--head);
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--accent);
+    letter-spacing: 0.03em;
+  }
+  .detail-std {
+    font-size: 0.68rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    margin-top: 2px;
+  }
+  .detail-body { padding: 12px 16px; }
+  .detail-section {
+    margin-bottom: 14px;
+  }
+  .det-sec-title {
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .det-text {
+    font-size: 0.78rem;
+    line-height: 1.65;
+    color: var(--text);
+  }
+  .check-list { list-style: none; }
+  .check-list li {
+    font-size: 0.75rem;
+    padding: 4px 0;
+    display: flex;
+    gap: 7px;
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(30,45,66,0.5);
+    line-height: 1.4;
+  }
+  .check-list li:last-child { border-bottom: none; }
+  .chk { color: var(--accent3); font-family: var(--mono); flex-shrink: 0; }
+  .chk.w { color: var(--accent4); }
+  .spec-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .spec-item {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 7px 10px;
+    border-radius: 3px;
+  }
+  .spec-key { font-size: 0.6rem; color: var(--muted); font-family: var(--mono); }
+  .spec-val { font-size: 0.82rem; color: var(--accent); font-family: var(--mono); font-weight: 600; }
+
+  /* Fault codes */
+  .fault-list { list-style: none; }
+  .fault-list li {
+    font-size: 0.72rem;
+    padding: 5px 0;
+    display: flex;
+    gap: 7px;
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(30,45,66,0.5);
+  }
+  .fc { font-family: var(--mono); color: var(--warn); flex-shrink: 0; font-size: 0.68rem; }
+
+  /* === BOTTOM STATUS BAR === */
+  .status-bar {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 7px 20px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+  .sb-item { display: flex; gap: 6px; align-items: center; }
+  .sb-val { color: var(--accent); }
+  .sb-val.g { color: var(--accent3); }
+  .sb-val.y { color: var(--accent4); }
+  .sb-val.r { color: var(--warn); }
+
+  /* click instruction */
+  .click-hint {
+    font-family: var(--mono);
+    font-size: 0.63rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 6px;
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.05em;
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  @media(max-width: 900px) {
+    .main { grid-template-columns: 1fr; grid-template-rows: auto; height: auto; }
+    .sidebar-left, .sidebar-right { max-height: 280px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Anaesthesia Machine <span>Engineering Visualiser</span></div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="badge">IEC 60601-1 · ISO 80601-2-13</div>
+    <div class="badge">EBME SERVICE REF</div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar-left">
+    <div class="sys-label">Subsystems</div>
+    <div class="sys-btn active" data-comp="pipeline" onclick="selectSys(this,'pipeline')">
+      <div class="sys-icon" style="background:rgba(0,200,255,0.12);">🔵</div>
+      <div class="sys-info">
+        <div class="sys-name">Gas Pipeline Supply</div>
+        <div class="sys-sub">O₂ · N₂O · Air · WAGD</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="cylinder" onclick="selectSys(this,'cylinder')">
+      <div class="sys-icon" style="background:rgba(255,215,0,0.12);">🟡</div>
+      <div class="sys-info">
+        <div class="sys-name">Cylinder Reserve</div>
+        <div class="sys-sub">Pin-index · O₂ · N₂O</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="regulator" onclick="selectSys(this,'regulator')">
+      <div class="sys-icon" style="background:rgba(0,200,255,0.08);">⚙️</div>
+      <div class="sys-info">
+        <div class="sys-name">Pressure Regulators</div>
+        <div class="sys-sub">1st/2nd stage · 400 → 50 kPa</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="flowmeter" onclick="selectSys(this,'flowmeter')">
+      <div class="sys-icon" style="background:rgba(0,200,255,0.08);">📊</div>
+      <div class="sys-info">
+        <div class="sys-name">Flowmeters / FCV</div>
+        <div class="sys-sub">Rotameter · Link-25 · O₂ last</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="vaporiser" onclick="selectSys(this,'vaporiser')">
+      <div class="sys-icon" style="background:rgba(255,107,53,0.12);">🟠</div>
+      <div class="sys-info">
+        <div class="sys-name">Vaporiser (TEC)</div>
+        <div class="sys-sub">Agent · Temp-comp · Interlock</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="circuit" onclick="selectSys(this,'circuit')">
+      <div class="sys-icon" style="background:rgba(57,255,20,0.10);">🟢</div>
+      <div class="sys-info">
+        <div class="sys-name">Circle Breathing Circuit</div>
+        <div class="sys-sub">Unidirectional valves · CO₂ absorber</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="ventilator" onclick="selectSys(this,'ventilator')">
+      <div class="sys-icon" style="background:rgba(0,200,255,0.08);">💨</div>
+      <div class="sys-info">
+        <div class="sys-name">Ventilator / Bellows</div>
+        <div class="sys-sub">VCV · PCV · driving gas</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="apl" onclick="selectSys(this,'apl')">
+      <div class="sys-icon" style="background:rgba(255,215,0,0.10);">🔧</div>
+      <div class="sys-info">
+        <div class="sys-name">APL & PEEP Valve</div>
+        <div class="sys-sub">Pop-off · Manual mode</div>
+      </div>
+      <div class="status-dot warn"></div>
+    </div>
+    <div class="sys-btn" data-comp="scavenging" onclick="selectSys(this,'scavenging')">
+      <div class="sys-icon" style="background:rgba(170,204,255,0.10);">🌀</div>
+      <div class="sys-info">
+        <div class="sys-name">Scavenging (WAGD)</div>
+        <div class="sys-sub">AGS · passive/active</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="monitor" onclick="selectSys(this,'monitor')">
+      <div class="sys-icon" style="background:rgba(255,68,68,0.10);">🖥️</div>
+      <div class="sys-info">
+        <div class="sys-name">Monitoring & Alarms</div>
+        <div class="sys-sub">O₂ analyser · spirometry · agent</div>
+      </div>
+      <div class="status-dot ok"></div>
+    </div>
+    <div class="sys-btn" data-comp="failsafe" onclick="selectSys(this,'failsafe')">
+      <div class="sys-icon" style="background:rgba(255,68,68,0.10);">🛡️</div>
+      <div class="sys-info">
+        <div class="sys-name">Fail-Safe Systems</div>
+        <div class="sys-sub">O₂ cutoff · Hypoxic guard</div>
+      </div>
+      <div class="status-dot fault"></div>
+    </div>
+
+    <div style="height:16px;"></div>
+    <div class="gas-legend">
+      <div class="leg"><div class="leg-line" style="color:#00c8ff;"></div><span>O₂</span></div>
+      <div class="leg"><div class="leg-line" style="color:#ffd700;"></div><span>N₂O</span></div>
+      <div class="leg"><div class="leg-line" style="color:#aaccff;"></div><span>Air</span></div>
+      <div class="leg"><div class="leg-line" style="color:#ff6b35;"></div><span>Agent</span></div>
+      <div class="leg"><div class="leg-line" style="color:#39ff14;"></div><span>Exhaled</span></div>
+    </div>
+  </div>
+
+  <!-- CENTRE DIAGRAM -->
+  <div class="centre">
+    <div class="diagram-area">
+      <svg id="machine" viewBox="0 0 620 620" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+          </filter>
+          <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#00c8ff" opacity="0.7"/>
+          </marker>
+        </defs>
+
+        <!-- BACKGROUND GRID -->
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M20,0 L0,0 L0,20" fill="none" stroke="#1a2535" stroke-width="0.5"/>
+        </pattern>
+        <rect width="620" height="620" fill="url(#grid)"/>
+
+        <!-- ========= GAS SUPPLY BLOCK ========= -->
+        <!-- Pipeline block -->
+        <rect x="20" y="20" width="130" height="70" rx="4" fill="#0f1c2e" stroke="#00c8ff" stroke-width="1.2" id="blk-pipeline"/>
+        <text x="85" y="42" text-anchor="middle" font-family="'Barlow Condensed'" font-size="11" fill="#00c8ff" font-weight="700" letter-spacing="0.1em">PIPELINE</text>
+        <text x="85" y="56" text-anchor="middle" font-family="'Share Tech Mono'" font-size="9" fill="#4a6080">400 kPa (4 bar)</text>
+        <!-- Gas labels -->
+        <rect x="26" y="62" width="22" height="14" rx="2" fill="rgba(0,200,255,0.15)" stroke="#00c8ff" stroke-width="0.8"/>
+        <text x="37" y="73" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#00c8ff">O₂</text>
+        <rect x="52" y="62" width="22" height="14" rx="2" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-width="0.8"/>
+        <text x="63" y="73" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#ffd700">N₂O</text>
+        <rect x="78" y="62" width="22" height="14" rx="2" fill="rgba(170,204,255,0.1)" stroke="#aaccff" stroke-width="0.8"/>
+        <text x="89" y="73" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#aaccff">Air</text>
+        <!-- Clickable hitbox -->
+        <rect x="20" y="20" width="130" height="70" rx="4" class="comp-hitbox" onclick="showDetail('pipeline')"/>
+
+        <!-- Cylinder reserve -->
+        <rect x="20" y="105" width="130" height="55" rx="4" fill="#0f1c2e" stroke="#ffd700" stroke-width="1" id="blk-cylinder"/>
+        <text x="85" y="125" text-anchor="middle" font-family="'Barlow Condensed'" font-size="10" fill="#ffd700" font-weight="700" letter-spacing="0.08em">CYLINDERS</text>
+        <text x="85" y="139" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#4a6080">Pin-index · Backup reserve</text>
+        <!-- cylinder icons -->
+        <ellipse cx="38" cy="149" rx="10" ry="5" fill="none" stroke="#00c8ff" stroke-width="1"/>
+        <rect x="28" y="120" width="20" height="29" rx="3" fill="none" stroke="#00c8ff" stroke-width="1"/>
+        <ellipse cx="65" cy="149" rx="10" ry="5" fill="none" stroke="#ffd700" stroke-width="1"/>
+        <rect x="55" y="120" width="20" height="29" rx="3" fill="none" stroke="#ffd700" stroke-width="1"/>
+        <rect x="20" y="105" width="130" height="55" rx="4" class="comp-hitbox" onclick="showDetail('cylinder')"/>
+
+        <!-- ========= REGULATORS ========= -->
+        <rect x="185" y="20" width="110" height="55" rx="4" fill="#0f1c2e" stroke="#4a80aa" stroke-width="1" id="blk-regulator"/>
+        <text x="240" y="40" text-anchor="middle" font-family="'Barlow Condensed'" font-size="10" fill="#aaccff" font-weight="700" letter-spacing="0.08em">REGULATORS</text>
+        <text x="240" y="53" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#4a6080">1st: 400→175 kPa</text>
+        <text x="240" y="65" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#4a6080">2nd: 175→50 kPa</text>
+        <rect x="185" y="20" width="110" height="55" rx="4" class="comp-hitbox" onclick="showDetail('regulator')"/>
+
+        <!-- ========= FLOWMETERS ========= -->
+        <rect x="185" y="100" width="110" height="110" rx="4" fill="#0f1c2e" stroke="#00c8ff" stroke-width="1.2" id="blk-flowmeter"/>
+        <text x="240" y="120" text-anchor="middle" font-family="'Barlow Condensed'" font-size="10" fill="#00c8ff" font-weight="700" letter-spacing="0.08em">FLOWMETERS</text>
+        <text x="240" y="133" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#4a6080">Link-25 proportioning</text>
+
+        <!-- Rotameter tubes -->
+        <rect x="198" y="140" width="14" height="55" rx="7" fill="none" stroke="#00c8ff" stroke-width="1"/>
+        <ellipse cx="205" cy="170" rx="5" ry="3" fill="#00c8ff" opacity="0.6"/>
+        <text x="205" y="203" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#00c8ff">O₂</text>
+
+        <rect x="220" y="140" width="14" height="55" rx="7" fill="none" stroke="#ffd700" stroke-width="1"/>
+        <ellipse cx="227" cy="175" rx="5" ry="3" fill="#ffd700" opacity="0.6"/>
+        <text x="227" y="203" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#ffd700">N₂O</text>
+
+        <rect x="242" y="140" width="14" height="55" rx="7" fill="none" stroke="#aaccff" stroke-width="1"/>
+        <ellipse cx="249" cy="168" rx="5" ry="3" fill="#aaccff" opacity="0.5"/>
+        <text x="249" y="203" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#aaccff">Air</text>
+
+        <rect x="264" y="140" width="14" height="55" rx="7" fill="none" stroke="#ff6b35" stroke-width="1"/>
+        <ellipse cx="271" cy="160" rx="5" ry="3" fill="#ff6b35" opacity="0.5"/>
+        <text x="271" y="203" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#ff6b35">Aux</text>
+
+        <rect x="185" y="100" width="110" height="110" rx="4" class="comp-hitbox" onclick="showDetail('flowmeter')"/>
+
+        <!-- ========= VAPORISER ========= -->
+        <rect x="330" y="20" width="130" height="100" rx="4" fill="#0f1c2e" stroke="#ff6b35" stroke-width="1.5" id="blk-vaporiser"/>
+        <text x="395" y="43" text-anchor="middle" font-family="'Barlow Condensed'" font-size="11" fill="#ff6b35" font-weight="700" letter-spacing="0.08em">VAPORISER</text>
+        <text x="395" y="56" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#4a6080">TEC 5 / TEC 7 · Agent-specific</text>
+        <!-- Vaporiser body -->
+        <rect x="350" y="65" width="90" height="42" rx="3" fill="#1a1000" stroke="#ff6b35" stroke-width="1"/>
+        <text x="395" y="82" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#ff6b35">Bypass chamber</text>
+        <text x="395" y="95" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">Wick · Bimetallic strip</text>
+        <!-- dial indicator -->
+        <circle cx="420" cy="50" r="8" fill="none" stroke="#ff6b35" stroke-width="1"/>
+        <line x1="420" y1="50" x2="425" y2="44" stroke="#ff6b35" stroke-width="1.5"/>
+        <text x="420" y="36" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#ff6b35">%</text>
+        <rect x="330" y="20" width="130" height="100" rx="4" class="comp-hitbox" onclick="showDetail('vaporiser')"/>
+
+        <!-- ========= FAIL-SAFE ========= -->
+        <rect x="330" y="140" width="130" height="45" rx="4" fill="#1a0505" stroke="#ff4444" stroke-width="1.2" id="blk-failsafe"/>
+        <text x="395" y="158" text-anchor="middle" font-family="'Barlow Condensed'" font-size="10" fill="#ff4444" font-weight="700" letter-spacing="0.08em">FAIL-SAFE · O₂ GUARD</text>
+        <text x="395" y="172" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#4a6080">Hypoxic guard · O₂ cutoff valve</text>
+        <rect x="330" y="140" width="130" height="45" rx="4" class="comp-hitbox" onclick="showDetail('failsafe')"/>
+
+        <!-- ========= CIRCLE CIRCUIT ========= -->
+        <rect x="160" y="270" width="300" height="200" rx="6" fill="#050f05" stroke="#39ff14" stroke-width="1.5" id="blk-circuit"/>
+        <text x="310" y="292" text-anchor="middle" font-family="'Barlow Condensed'" font-size="12" fill="#39ff14" font-weight="700" letter-spacing="0.1em">CIRCLE BREATHING CIRCUIT</text>
+
+        <!-- CO2 absorber -->
+        <rect x="260" y="305" width="100" height="55" rx="4" fill="#0a1a0a" stroke="#39ff14" stroke-width="1"/>
+        <text x="310" y="323" text-anchor="middle" font-family="'Barlow Condensed'" font-size="9" fill="#39ff14" font-weight="600">CO₂ ABSORBER</text>
+        <text x="310" y="335" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#4a6080">Soda lime / Amsorb</text>
+        <!-- granules visual -->
+        <circle cx="278" cy="348" r="3" fill="#39ff14" opacity="0.4"/>
+        <circle cx="288" cy="344" r="3" fill="#39ff14" opacity="0.4"/>
+        <circle cx="298" cy="350" r="3" fill="#39ff14" opacity="0.4"/>
+        <circle cx="308" cy="345" r="3" fill="#39ff14" opacity="0.4"/>
+        <circle cx="318" cy="350" r="3" fill="#39ff14" opacity="0.4"/>
+        <circle cx="328" cy="344" r="3" fill="#39ff14" opacity="0.4"/>
+        <circle cx="338" cy="349" r="3" fill="#39ff14" opacity="0.4"/>
+
+        <!-- Unidirectional valves -->
+        <polygon points="185,360 200,350 200,370" fill="#39ff14" opacity="0.6"/>
+        <text x="192" y="385" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#39ff14">Insp</text>
+        <polygon points="420,370 420,350 435,360" fill="#39ff14" opacity="0.6"/>
+        <text x="427" y="385" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#39ff14">Exp</text>
+
+        <!-- Y-piece patient connection -->
+        <circle cx="310" cy="450" r="15" fill="none" stroke="#39ff14" stroke-width="1.5"/>
+        <text x="310" y="455" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#39ff14">PT</text>
+
+        <!-- APL valve -->
+        <circle cx="440" cy="430" r="12" fill="#1a1200" stroke="#ffd700" stroke-width="1.5" id="blk-apl" style="animation: apl 3s ease-in-out infinite;"/>
+        <text x="440" y="434" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#ffd700">APL</text>
+        <rect x="428" y="418" width="24" height="24" rx="12" fill="transparent" class="comp-hitbox" onclick="showDetail('apl')"/>
+
+        <!-- Circle circuit clickable -->
+        <rect x="160" y="270" width="300" height="200" rx="6" fill="transparent" class="comp-hitbox" onclick="showDetail('circuit')"/>
+
+        <!-- ========= BELLOWS / VENTILATOR ========= -->
+        <rect x="490" y="270" width="110" height="160" rx="4" fill="#050b14" stroke="#00c8ff" stroke-width="1.2" id="blk-ventilator"/>
+        <text x="545" y="290" text-anchor="middle" font-family="'Barlow Condensed'" font-size="10" fill="#00c8ff" font-weight="700" letter-spacing="0.08em">VENTILATOR</text>
+        <!-- Bellows visual -->
+        <g class="bellows-anim">
+          <rect x="512" y="305" width="65" height="70" rx="3" fill="none" stroke="#00c8ff" stroke-width="1"/>
+          <line x1="512" y1="320" x2="577" y2="320" stroke="#00c8ff" stroke-width="0.5" opacity="0.5"/>
+          <line x1="512" y1="335" x2="577" y2="335" stroke="#00c8ff" stroke-width="0.5" opacity="0.5"/>
+          <line x1="512" y1="350" x2="577" y2="350" stroke="#00c8ff" stroke-width="0.5" opacity="0.5"/>
+          <line x1="512" y1="365" x2="577" y2="365" stroke="#00c8ff" stroke-width="0.5" opacity="0.5"/>
+        </g>
+        <text x="545" y="395" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">Driving gas: O₂</text>
+        <text x="545" y="407" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">VCV / PCV / SIMV</text>
+        <text x="545" y="419" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">PEEP valve</text>
+        <rect x="490" y="270" width="110" height="160" rx="4" class="comp-hitbox" onclick="showDetail('ventilator')"/>
+
+        <!-- ========= SCAVENGING ========= -->
+        <rect x="490" y="450" width="110" height="55" rx="4" fill="#05101a" stroke="#aaccff" stroke-width="1" id="blk-scavenging"/>
+        <text x="545" y="470" text-anchor="middle" font-family="'Barlow Condensed'" font-size="10" fill="#aaccff" font-weight="700" letter-spacing="0.08em">SCAVENGING</text>
+        <text x="545" y="484" text-anchor="middle" font-family="'Share Tech Mono'" font-size="8" fill="#4a6080">AGS · WAGD</text>
+        <text x="545" y="496" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">Interface · Relief valve</text>
+        <rect x="490" y="450" width="110" height="55" rx="4" class="comp-hitbox" onclick="showDetail('scavenging')"/>
+
+        <!-- ========= MONITORING ========= -->
+        <rect x="20" y="270" width="130" height="130" rx="4" fill="#0f1520" stroke="#aaccff" stroke-width="1" id="blk-monitor"/>
+        <text x="85" y="290" text-anchor="middle" font-family="'Barlow Condensed'" font-size="10" fill="#aaccff" font-weight="700" letter-spacing="0.06em">MONITORING</text>
+        <!-- mini waveform -->
+        <polyline points="30,320 40,320 45,305 50,335 55,320 65,320 70,308 75,332 80,320 90,320 95,310 100,330 105,320 115,320 120,312 125,328 130,320 140,320" fill="none" stroke="#39ff14" stroke-width="1.2"/>
+        <text x="85" y="350" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">SpO₂ · EtCO₂</text>
+        <text x="85" y="362" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">Agent conc. · FiO₂</text>
+        <text x="85" y="374" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">Airway pressure · Vt</text>
+        <text x="85" y="386" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#4a6080">Respiratory rate</text>
+        <rect x="20" y="270" width="130" height="130" rx="4" class="comp-hitbox" onclick="showDetail('monitor')"/>
+
+        <!-- ========= FLOW PATHS ========= -->
+
+        <!-- Pipeline → Regulators (O₂) -->
+        <path d="M150,40 L185,40" class="flow-o2"/>
+        <!-- Pipeline → Regulators (N₂O) -->
+        <path d="M150,55 Q165,55 185,50" class="flow-n2o"/>
+        <!-- Cylinders → Regulators -->
+        <path d="M150,125 Q170,125 185,80" class="flow-o2" opacity="0.4"/>
+
+        <!-- Regulators → Flowmeters -->
+        <path d="M240,75 L240,100" class="flow-o2"/>
+
+        <!-- Flowmeters → Vaporiser -->
+        <path d="M295,155 L330,70" class="flow-agent"/>
+        <!-- O₂ last in manifold -->
+        <path d="M295,170 Q312,170 330,150" class="flow-o2" opacity="0.7"/>
+
+        <!-- Vaporiser → fresh gas outlet → circuit -->
+        <path d="M395,120 L395,200 Q395,250 310,270" class="flow-agent"/>
+
+        <!-- Fail-safe inline -->
+        <path d="M330,160 L295,160" class="flow-o2" opacity="0.6"/>
+
+        <!-- Ventilator driving gas -->
+        <path d="M460,280 L490,310" class="flow-o2" opacity="0.5"/>
+
+        <!-- Circuit → ventilator -->
+        <path d="M460,350 L490,350" class="flow-exhale"/>
+
+        <!-- APL → scavenging -->
+        <path d="M452,434 L490,470" class="flow-exhale" opacity="0.7"/>
+
+        <!-- Patient port label -->
+        <text x="310" y="475" text-anchor="middle" font-family="'Barlow Condensed'" font-size="9" fill="#39ff14" opacity="0.7">↕ Patient</text>
+
+        <!-- Monitoring connections -->
+        <path d="M150,310 L160,340" stroke="#aaccff" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+        <path d="M150,330 L160,360" stroke="#aaccff" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+
+        <!-- Labels for flow direction -->
+        <text x="165" y="38" font-family="'Share Tech Mono'" font-size="7" fill="#00c8ff" opacity="0.7">→</text>
+        <text x="238" y="95" font-family="'Share Tech Mono'" font-size="7" fill="#00c8ff" opacity="0.7">↓</text>
+        <text x="390" y="140" font-family="'Share Tech Mono'" font-size="7" fill="#ff6b35" opacity="0.7">↓ FGF</text>
+
+        <!-- Pressure annotations -->
+        <rect x="185" y="80" width="55" height="14" rx="2" fill="rgba(0,0,0,0.5)"/>
+        <text x="212" y="91" text-anchor="middle" font-family="'Share Tech Mono'" font-size="7" fill="#ffd700">50 kPa</text>
+
+      </svg>
+    </div>
+    <div class="click-hint">▶ CLICK ANY BLOCK TO VIEW SERVICE DETAILS, SPECS & FAULT CODES</div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="sb-item">PIPELINE O₂ <span class="sb-val g">400 kPa ✓</span></div>
+      <div class="sb-item">FiO₂ <span class="sb-val g">0.21–1.00</span></div>
+      <div class="sb-item">AGENT <span class="sb-val" style="color:#ff6b35">Sevo 2.0%</span></div>
+      <div class="sb-item">Vt <span class="sb-val">500 mL</span></div>
+      <div class="sb-item">RR <span class="sb-val">12/min</span></div>
+      <div class="sb-item">APL <span class="sb-val y">30 cmH₂O</span></div>
+      <div class="sb-item">CO₂ <span class="sb-val g">Absorber OK</span></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="sidebar-right">
+    <div class="panel-title">Component Detail</div>
+    <div id="detail-area">
+      <div class="detail-empty" id="detail-empty">
+        ← Select a subsystem from the list<br>or click a block on the diagram<br><br>
+        <span style="font-family:'Share Tech Mono';font-size:0.65rem;color:#2a3a50;">
+          IEC 60601-1 · ISO 80601-2-13<br>
+          AS/NZS 4187 · HTM 02-01
+        </span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const details = {
+  pipeline: {
+    name: "Gas Pipeline Supply",
+    std: "HTM 02-01 · ISO 7396-1 · BS EN ISO 9170",
+    principle: "Medical gas pipeline systems (MGPS) deliver O₂, N₂O, and medical air at 400 kPa (4 bar) gauge via colour-coded, gas-specific Schrader probe connectors on the machine wall. NIST (Non-Interchangeable Screw Thread) connectors prevent cross-connection. Each gas enters through a Schrader probe with a check valve to prevent backflow. A pipeline pressure gauge should read 400 ± 50 kPa.",
+    specs: [
+      ["O₂ Pressure","400 kPa"],["N₂O Pressure","400 kPa"],["Air Pressure","400 kPa"],["Connector","NIST / Schrader"],["Purity O₂","≥ 99.5%"],["WAGD","−75 kPa"],
+    ],
+    checks: [
+      {t:"ok", c:"Verify pipeline supply pressure 400 kPa on machine gauges at start of session"},
+      {t:"ok", c:"Cross-check hose colours: O₂ white, N₂O blue, Air grey (UK HTM)"},
+      {t:"ok", c:"Tug-test each Schrader probe — should resist gentle pull"},
+      {t:"ok", c:"Inspect probe O-rings annually for cracks or deformation"},
+      {t:"w", c:"Annual pipeline pressure survey by estate team (HTM 02-01 Part B)"},
+      {t:"ok", c:"Record N₂O pipeline Trichloroethylene test results"},
+    ],
+    faults: [
+      {c:"P001", d:"Low pipeline pressure alarm — check MGPS plant room, manifold changeover"},
+      {c:"P002", d:"Cross-connection suspected — immediate shutdown, call medical gas engineer"},
+      {c:"P003", d:"Schrader probe sticking — replace valve body; use correct NIST"},
+    ]
+  },
+  cylinder: {
+    name: "Cylinder Reserve Supply",
+    std: "BS EN ISO 10524 · The Medicines Act 1968 · HTM 02-01",
+    principle: "Cylinder reserves use the pin-index safety system (PISS) to prevent wrong gas connection. Each cylinder has a unique pin pattern matching the yoke. O₂ cylinders (black + white) connect via a two-pin index; N₂O (blue) via a different index. Cylinders attach via a Bodok seal (washer). Pressure: O₂ full ~13,700 kPa; N₂O full ~5,150 kPa (gauge reflects liquid phase). A cylinder check valve prevents pipeline gas from entering and contaminating the cylinder.",
+    specs: [
+      ["O₂ Full Pressure","13,700 kPa"],["N₂O Full Pressure","5,150 kPa"],["O₂ Pin-index","2,5"],["N₂O Pin-index","3,5"],["Seal","Bodok (neoprene)"],["Cylinder Test","10 yearly"],
+    ],
+    checks: [
+      {t:"ok", c:"Check Bodok seal condition each cylinder change — replace if flattened/cracked"},
+      {t:"ok", c:"Open cylinder one full turn; read gauge before use"},
+      {t:"ok", c:"Ensure cylinder check valve prevents pipeline backflow (listen/feel)"},
+      {t:"w", c:"N₂O gauge reads pressure of vapour — weight is the only reliable fullness indicator"},
+      {t:"ok", c:"Cylinders must be chained/secured to machine frame at all times"},
+      {t:"ok", c:"Inspect cylinder shoulder markings: test date, gas type, batch"},
+    ],
+    faults: [
+      {c:"C001", d:"Cylinder pressure low — N₂O gauge may read 5000 kPa even when nearly empty; weigh"},
+      {c:"C002", d:"Leaking Bodok seal — replace seal; do not overtighten yoke"},
+      {c:"C003", d:"Pin-index damage — send to manufacturer; never file or modify pins"},
+    ]
+  },
+  regulator: {
+    name: "Pressure Regulators",
+    std: "ISO 10524-1 · IEC 60601-1",
+    principle: "Regulators reduce high pipeline or cylinder pressure to a stable working pressure for the flowmeters. First-stage regulators reduce cylinder pressure (~13,700 kPa) to intermediate (~175–400 kPa). Second-stage regulators reduce to 50–100 kPa for flowmeter operation. Regulators incorporate a diaphragm and spring mechanism. An overpressure relief valve (PRV) protects downstream components. Pipeline gas enters directly at 400 kPa and may pass through a second stage before the flowmeters.",
+    specs: [
+      ["Inlet (cylinder)","~13,700 kPa"],["After 1st stage","~175 kPa"],["After 2nd stage","~50 kPa"],["PRV set pressure","60–80 kPa"],["Diaphragm mat.","PTFE/Buna-N"],["Service interval","5 yearly"],
+    ],
+    checks: [
+      {t:"ok", c:"Check PRV function: briefly exceed set pressure using test rig; valve should open and reseat"},
+      {t:"ok", c:"Inspect regulator body for corrosion, cracks, or oxygen-incompatible grease"},
+      {t:"ok", c:"Verify outlet pressure with calibrated gauge at inlet and outlet test ports"},
+      {t:"w", c:"Use only oxygen-compatible lubricants (PTFE-based) — hydrocarbon grease ignites in O₂"},
+      {t:"ok", c:"Replace diaphragm and seat every 5 years or as per OEM schedule"},
+    ],
+    faults: [
+      {c:"R001", d:"Regulator creep — output pressure rises slowly; seat worn, replace regulator"},
+      {c:"R002", d:"PRV continuously venting — downstream blockage or regulator set pressure too low"},
+      {c:"R003", d:"Regulator freezing (N₂O) — moisture ingress; replace and improve gas quality"},
+    ]
+  },
+  flowmeter: {
+    name: "Flowmeters & FCV",
+    std: "ISO 15002 · EN 740",
+    principle: "Variable-area rotameters (Thorpe tubes) measure gas flow. A float (bobbin) rises in a tapered glass tube as flow increases. Each tube is calibrated for a specific gas (density and viscosity differ). O₂ must be positioned last (downstream) in the manifold to ensure a hypoxic mixture cannot form if a flowmeter leaks — any O₂ leaking from an upstream position flows into the fresh gas stream. The Link-25 proportioning system mechanically links O₂ and N₂O flowmeter controls via a sprocket chain to maintain a minimum ~25% O₂ in the mixture (1:3 N₂O:O₂ ratio). Flow control valves (FCVs) are needle valves with non-detachable knobs.",
+    specs: [
+      ["O₂ range","0–12 L/min"],["N₂O range","0–12 L/min"],["Air range","0–15 L/min"],["Min FiO₂ guard","21–25%"],["Link-25 chain","Sprocket 1:3"],["Tube material","Borosilicate glass"],
+    ],
+    checks: [
+      {t:"ok", c:"Check float moves freely: tap tube lightly; float should spin (spherical bobbin reads centre; bobbin reads top)"},
+      {t:"ok", c:"Verify O₂ tube is downstream (last in manifold)"},
+      {t:"ok", c:"Test Link-25: increasing N₂O should automatically increase O₂ minimum"},
+      {t:"ok", c:"Inspect flowmeter scale legibility; replace cracked tubes"},
+      {t:"w", c:"Annual calibration of all flow tubes with traceable flow standard"},
+      {t:"ok", c:"Ensure FCV knobs are non-detachable and controls smooth with no backlash"},
+    ],
+    faults: [
+      {c:"F001", d:"Float sticking — contamination or static; clean tube with IPA, dry thoroughly"},
+      {c:"F002", d:"Cracked tube — gas bypass, hypoxic risk; replace immediately"},
+      {c:"F003", d:"Link-25 slip — chain worn or sprocket teeth damaged; replace chain assembly"},
+    ]
+  },
+  vaporiser: {
+    name: "Vaporiser (TEC Series)",
+    std: "IEC 60601-2-13 · ISO 8835-3",
+    principle: "Vaporisers (e.g. Datex-Ohmeda TEC 5/7) deliver a precise agent concentration regardless of temperature and flow rate. Fresh gas splits: most bypasses the vaporising chamber; a fraction enters the wick chamber where it saturates with vapour. A bimetallic temperature-compensating valve adjusts the bypass ratio — increasing agent delivery as temperature drops (vapour pressure falls). Agent-specific filling systems (AFF/Quik-Fil) prevent the wrong agent being loaded. An interlock (e.g. Selectatec) ensures only one vaporiser is active. Output concentration is adjusted by a rotary dial calibrated in vol%.",
+    specs: [
+      ["O/P range Sevo","0–8 vol%"],["O/P range Iso","0–5 vol%"],["O/P range Des","0–18 vol%"],["Temp comp range","15–35°C"],["Tipping angle","<45°"],["Calibration tol.","±15% of set"],
+    ],
+    checks: [
+      {t:"ok", c:"Annual calibration: connect agent analyser downstream; check output at 1%, 2%, 4% and midflow"},
+      {t:"ok", c:"Check agent level window — fill only with correct agent via AFF port"},
+      {t:"ok", c:"Test interlock: second vaporiser should not turn on when first is active"},
+      {t:"w", c:"Never tip TEC vaporiser >45° — liquid agent contaminates bypass chamber"},
+      {t:"ok", c:"Inspect dial O-ring and control spindle for wear; tighten to spec torque"},
+      {t:"ok", c:"Verify Selectatec mounting latch engages firmly on backbar"},
+    ],
+    faults: [
+      {c:"V001", d:"High agent output — vaporiser tipped or overfilled; drain, stand upright 30 min, flush"},
+      {c:"V002", d:"Low agent output — wick dry or temperature-compensating valve stuck; return for OEM service"},
+      {c:"V003", d:"Interlock failure — replace interlock latch assembly; do not bypass"},
+    ]
+  },
+  circuit: {
+    name: "Circle Breathing Circuit",
+    std: "ISO 8835-2 · IEC 60601-2-13",
+    principle: "The circle system recirculates exhaled gas after removing CO₂, conserving agent and heat. Components: inspiratory and expiratory unidirectional valves (check valves) prevent reverse flow; CO₂ absorber (soda lime or Amsorb) contains Ca(OH)₂ which reacts with CO₂ (CO₂ + Ca(OH)₂ → CaCO₃ + H₂O); fresh gas inlet (FGI) adds fresh gas; reservoir bag or bellows buffer flows; Y-piece connects to patient airway. Unidirectional valves are held open by gas flow and snap shut on reversal. Soda lime changes colour (white→violet) when exhausted and may revert on rest — check for CO₂ breakthrough.",
+    specs: [
+      ["Valve open pressure","<0.3 cmH₂O"],["Absorber capacity","~1 hr at 0.5 MAC"],["Soda lime comps","Ca(OH)₂ · NaOH · KOH"],["Circuit compliance","~2.5 mL/cmH₂O"],["CO₂ indicator","White→violet"],["Max EtCO₂ rise","5 mmHg over 1 min"],
+    ],
+    checks: [
+      {t:"ok", c:"Check inspiratory and expiratory valves: place hand at Y-piece; exhale — expiratory disc should lift only"},
+      {t:"ok", c:"Inspect soda lime colour and granule integrity; replace if >50% coloured or after ~8 hours use"},
+      {t:"ok", c:"Leak test circuit at 30 cmH₂O: occlude Y-piece, pressurize; should hold for 10 s"},
+      {t:"ok", c:"Check all circuit connections are push-fit and locked (22mm fittings)"},
+      {t:"w", c:"Compound A (sevorane + dried soda lime) risk — maintain soda lime moisture, use fresh absorbent"},
+      {t:"ok", c:"Inspect corrugated tubing for cracks, condensation, and incorrect assembly"},
+    ],
+    faults: [
+      {c:"CC001", d:"Incompetent inspiratory valve — CO₂ rebreathing, EtCO₂ rising; replace valve disc"},
+      {c:"CC002", d:"CO₂ absorber exhausted — EtCO₂ not clearing; replace granules"},
+      {c:"CC003", d:"Circuit leak — Vt lost, high FGF needed; systematic pressure test to locate"},
+    ]
+  },
+  ventilator: {
+    name: "Ventilator / Bellows",
+    std: "ISO 80601-2-12 · IEC 60601-1",
+    principle: "Most anaesthetic ventilators use a bag-in-bottle (BIB) design. A bellows (collapsible bag) sits inside a rigid canister. Driving gas (usually O₂ from pipeline) enters the canister during inspiration, compressing the bellows and delivering tidal volume to the patient. During expiration, the canister pressure drops, bellows refills from patient exhaled gas. Modes include VCV (volume-controlled), PCV (pressure-controlled), and SIMV. A PEEP valve on the expiratory limb maintains positive end-expiratory pressure. Bellows ascent during expiration (Mapleson D-like behaviour) confirms spontaneous breathing. Drive gas consumption can be 3–4 L/min.",
+    specs: [
+      ["Tidal volume","20–1500 mL"],["RR range","1–100 bpm"],["I:E ratio","4:1–1:4"],["PEEP range","0–20 cmH₂O"],["Drive gas","O₂ (100%)"],["Drive gas use","~3.5 L/min"],
+    ],
+    checks: [
+      {t:"ok", c:"Check bellows for holes: pressurize bellows with driving gas; submerge in water, check for bubbles"},
+      {t:"ok", c:"Verify Vt accuracy with calibrated spirometer at Y-piece"},
+      {t:"ok", c:"Test PEEP valve at 5, 10, 15 cmH₂O with manometer"},
+      {t:"ok", c:"Inspect driving gas solenoid valve for sticking (audible click, response time)"},
+      {t:"w", c:"Bellows colour change indicates damage — replace latex/silicone bellows annually"},
+      {t:"ok", c:"Verify fresh gas compensation if applicable (GE Aisys, Dräger Fabius)"},
+    ],
+    faults: [
+      {c:"VT001", d:"Bellows not filling — exhalation valve obstruction or PEEP too high; inspect valve"},
+      {c:"VT002", d:"Vt delivery low — bellows hole, circuit leak, or drive gas failure"},
+      {c:"VT003", d:"PEEP unstable — PEEP valve diaphragm worn; replace valve assembly"},
+    ]
+  },
+  apl: {
+    name: "APL & PEEP Valve",
+    std: "ISO 8835-2 · IEC 60601-2-13",
+    principle: "The Adjustable Pressure Limiting (APL) valve — also called the pop-off valve — vents excess gas from the circuit during spontaneous or manually assisted ventilation. It is spring-loaded; turning the knob adjusts spring tension and therefore the pressure at which the valve opens (0–70 cmH₂O). In manual/bag mode: APL is active and must be open enough to prevent barotrauma. In ventilator mode: APL is bypassed (closed by machine interlock). The valve should be set to the lowest pressure that allows adequate ventilation. Gas vented through the APL passes to the scavenging system.",
+    specs: [
+      ["Pressure range","0–70 cmH₂O"],["Cracking pressure","~0.3 cmH₂O (open)"],["Mode","Manual / Spont"],["Interface","Scavenging AGS"],["Diameter","22mm push-fit"],["Standard","ISO 8835-2 §8"],
+    ],
+    checks: [
+      {t:"ok", c:"Test APL opens at correct pressures with manometer in circuit"},
+      {t:"ok", c:"Verify APL fully closes (vent mode interlock) when ventilator is enabled"},
+      {t:"ok", c:"Inspect valve disc for warping, contamination, or sticking to seat"},
+      {t:"w", c:"Ensure APL connects to AGS interface — open APL to atmosphere is a pollution hazard"},
+      {t:"ok", c:"Spring check: should be smooth across full range without jumping"},
+    ],
+    faults: [
+      {c:"A001", d:"APL stuck open — zero circuit pressure in vent mode; replace disc and seat"},
+      {c:"A002", d:"APL stuck closed — high circuit pressure build-up, barotrauma risk; replace immediately"},
+      {c:"A003", d:"APL not bypassed in vent mode — interlock fault; check solenoid or mechanical linkage"},
+    ]
+  },
+  scavenging: {
+    name: "Scavenging System (AGS/WAGD)",
+    std: "ISO 8835-6 · HTM 02-01 Part D · COSHH",
+    principle: "Waste anaesthetic gas disposal (WAGD) systems remove excess gas from APL and ventilator relief valves to prevent theatre pollution and protect staff (COSHH). Two types: active (WAGD — sub-atmospheric suction from hospital vacuum, typically −75 kPa) and passive (uses positive pressure to push gas to outside). The scavenging interface contains a reservoir bag and two pressure-relief valves: one opens to atmosphere if suction is too high (negative pressure protection), and one vents excess gas if the scavenging system is blocked (positive pressure protection). The interface prevents suction from being transmitted back to the patient circuit.",
+    specs: [
+      ["WAGD pressure","−75 kPa"],["Interface bag","3 L"],["Positive relief","+10 cmH₂O"],["Negative relief","−0.5 cmH₂O"],["N₂O threshold","100 ppm (TWA)"],["O₂ threshold","2 ppm (NIOSH)"],
+    ],
+    checks: [
+      {t:"ok", c:"Verify WAGD flow active: feel for suction at interface inlet; check flow indicator if fitted"},
+      {t:"ok", c:"Test positive relief valve: occlude WAGD outlet; interface bag should empty via PRV"},
+      {t:"ok", c:"Test negative relief valve: disconnect WAGD suction; valve should open to atmosphere"},
+      {t:"ok", c:"Check all connecting tubing between APL, ventilator relief and interface for disconnection"},
+      {t:"w", c:"Annual room air monitoring for N₂O — HSE limits 100 ppm 8hr TWA (nitrous oxide)"},
+    ],
+    faults: [
+      {c:"S001", d:"No WAGD suction — hospital vacuum failure; switch to passive scavenging (open window)"},
+      {c:"S002", d:"Interface bag not deflating — WAGD flow blocked; check tubing, clean interface"},
+      {c:"S003", d:"Negative pressure to patient circuit — negative relief valve stuck; replace interface"},
+    ]
+  },
+  monitor: {
+    name: "Monitoring & Alarm Systems",
+    std: "IEC 60601-1-8 · ISO 9703 · AAGBI Guidelines",
+    principle: "Integrated monitors measure: FiO₂ (paramagnetic or galvanic fuel cell O₂ sensor); inhaled/exhaled agent concentration (infrared analyser); EtCO₂ (capnography — IR absorption at 4.26μm); airway pressure (pressure transducer); tidal volume and minute volume (flow sensor — pneumotachograph or ultrasonic); respiratory rate; SpO₂ (pulse oximetry). Alarms are classified Priority 1 (red, high), Priority 2 (yellow, medium), Priority 3 (cyan, low). Minimum monitoring required by AAGBI: FiO₂ analyser with alarm, capnography, O₂ saturation.",
+    specs: [
+      ["O₂ sensor life","12–24 months"],["CO₂ detection","IR 4.26 μm"],["Agent detection","IR multigas"],["Alarm latency","< 10 s (P1)"],["FiO₂ alarm","< 0.18 default"],["Pressure alarm","High/low/disconn."],
+    ],
+    checks: [
+      {t:"ok", c:"Test O₂ sensor: expose to 100% O₂ and room air; verify readings 100% and ~21%"},
+      {t:"ok", c:"Calibrate capnography with known CO₂ concentration (usually 5% span gas)"},
+      {t:"ok", c:"Test all alarms: trigger each condition and verify correct Priority level and tone"},
+      {t:"ok", c:"Check O₂ cell expiry date — galvanic cells fail abruptly; note voltage output trend"},
+      {t:"w", c:"Multigas agent sensor calibration annually with traceable span gas"},
+      {t:"ok", c:"Inspect airway pressure transducer zero — occlude at atmospheric pressure"},
+    ],
+    faults: [
+      {c:"M001", d:"O₂ sensor reading low/zero — cell exhausted or disconnected; replace cell"},
+      {c:"M002", d:"Capnograph waveform absent — sampling tube blocked; check water trap, replace sample line"},
+      {c:"M003", d:"Alarm silence not timing out — alarm software fault; check IEC 60601-1-8 silence duration (120 s max)"},
+    ]
+  },
+  failsafe: {
+    name: "Fail-Safe & Hypoxic Guard",
+    std: "IEC 60601-2-13 · ISO 80601-2-13 § 201.12",
+    principle: "If O₂ pipeline pressure fails, an O₂ pressure failure valve (cutoff valve) interrupts N₂O supply, preventing delivery of a hypoxic gas mixture. The valve is pressure-operated: O₂ pressure holds a diaphragm that keeps the N₂O path open; when O₂ pressure drops below ~170 kPa, the diaphragm moves and closes N₂O flow. Additionally, an audible O₂ failure alarm (powered by O₂ pressure alone — not electrical) sounds. The Link-25 proportioning system provides secondary protection at the flowmeter level. Oxygen flush (bypass) delivers 35–75 L/min of 100% O₂ directly to the common gas outlet, bypassing flowmeters and vaporiser.",
+    specs: [
+      ["O₂ cutoff threshold","~170 kPa"],["Alarm type","Pneumatic (O₂ powered)"],["O₂ flush flow","35–75 L/min"],["O₂ flush pressure","Line pressure"],["Guard standard","≥25% O₂ in mix"],["Alarm delay","< 5 s after failure"],
+    ],
+    checks: [
+      {t:"ok", c:"Test O₂ failure alarm: close O₂ cylinder and pipeline; alarm must sound within 5 s"},
+      {t:"ok", c:"Verify N₂O cuts off simultaneously when O₂ pressure drops"},
+      {t:"ok", c:"Test O₂ flush: confirm 35–75 L/min delivery; check flush bypasses vaporiser"},
+      {t:"w", c:"O₂ flush used during ventilation → Vt increase → barotrauma risk; use with caution"},
+      {t:"ok", c:"Inspect O₂ cutoff valve diaphragm condition annually; clean valve body"},
+    ],
+    faults: [
+      {c:"FS001", d:"O₂ failure alarm not sounding — check O₂ pilot line to alarm device; replace alarm"},
+      {c:"FS002", d:"N₂O not cutting off on O₂ failure — cutoff valve diaphragm failed; replace valve"},
+      {c:"FS003", d:"O₂ flush stuck on — flush button mechanism jammed; replace button assembly urgently"},
+    ]
+  }
+};
+
+let currentSys = null;
+
+function selectSys(el, key) {
+  document.querySelectorAll('.sys-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  showDetail(key);
+}
+
+function showDetail(key) {
+  const d = details[key];
+  if (!d) return;
+  currentSys = key;
+
+  const specsHtml = d.specs.map(([k,v]) =>
+    `<div class="spec-item"><div class="spec-key">${k}</div><div class="spec-val">${v}</div></div>`
+  ).join('');
+
+  const checksHtml = d.checks.map(c =>
+    `<li><span class="chk ${c.t==='w'?'w':''}">${c.t==='w'?'⚠':'✓'}</span><span>${c.c}</span></li>`
+  ).join('');
+
+  const faultsHtml = d.faults.map(f =>
+    `<li><span class="fc">${f.c}</span><span>${f.d}</span></li>`
+  ).join('');
+
+  document.getElementById('detail-area').innerHTML = `
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="detail-name">${d.name}</div>
+        <div class="detail-std">${d.std}</div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-section">
+          <div class="det-sec-title">Engineering Principle</div>
+          <div class="det-text">${d.principle}</div>
+        </div>
+        <div class="detail-section">
+          <div class="det-sec-title">Key Specifications</div>
+          <div class="spec-grid">${specsHtml}</div>
+        </div>
+        <div class="detail-section">
+          <div class="det-sec-title">Service / PM Checks</div>
+          <ul class="check-list">${checksHtml}</ul>
+        </div>
+        <div class="detail-section">
+          <div class="det-sec-title">Common Fault Codes</div>
+          <ul class="fault-list">${faultsHtml}</ul>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Sync sidebar highlight
+  document.querySelectorAll('.sys-btn').forEach(b => {
+    if (b.dataset.comp === key) b.classList.add('active');
+    else b.classList.remove('active');
+  });
+}
+</script>
+</body>
+</html>

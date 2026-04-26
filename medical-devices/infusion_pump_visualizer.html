@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infusion Pump — Clinical Engineering Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --panel: #111720;
+    --panel2: #161e2a;
+    --border: #1e2d3d;
+    --accent: #00d4ff;
+    --accent2: #00ff88;
+    --accent3: #ff6b35;
+    --warn: #ffb347;
+    --text: #c8d8e8;
+    --text2: #6a8099;
+    --red: #ff4466;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--panel);
+  }
+  .header-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    background: var(--accent);
+    color: #000;
+    padding: 2px 8px;
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+  .header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .header span { color: var(--text2); font-size: 12px; margin-left: auto; font-family: 'IBM Plex Mono', monospace; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    height: calc(100vh - 51px);
+  }
+
+  /* LEFT NAV */
+  .sidenav {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 12px 0;
+  }
+  .nav-section {
+    padding: 6px 16px 2px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text2);
+    text-transform: uppercase;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .nav-item {
+    padding: 9px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: var(--panel2); }
+  .nav-item.active {
+    background: rgba(0,212,255,0.08);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+  .nav-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* MAIN CANVAS */
+  .main {
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .canvas-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .canvas-subtitle {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  /* SVG DIAGRAM */
+  .diagram-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    position: relative;
+  }
+  svg text { font-family: 'IBM Plex Mono', monospace; }
+
+  /* PERISTALTIC ANIMATION */
+  @keyframes flowDots {
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -60; }
+  }
+  @keyframes rollerSpin {
+    0% { transform: rotate(0deg); transform-origin: 50% 50%; }
+    100% { transform: rotate(360deg); transform-origin: 50% 50%; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes alarm {
+    0%, 100% { fill: var(--red); }
+    50% { fill: rgba(255,68,102,0.2); }
+  }
+  @keyframes flowLine {
+    0% { stroke-dashoffset: 200; }
+    100% { stroke-dashoffset: 0; }
+  }
+  .flow-anim { animation: flowDots 1.2s linear infinite; }
+  .pulse-anim { animation: pulse 2s ease-in-out infinite; }
+
+  /* INFO CARDS */
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+  }
+  .card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .card-value {
+    font-size: 22px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+  }
+  .card-unit { font-size: 12px; color: var(--text2); margin-left: 4px; }
+  .card-desc { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+  /* ALARM TABLE */
+  .alarm-table { width: 100%; border-collapse: collapse; }
+  .alarm-table th {
+    text-align: left;
+    padding: 6px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  .alarm-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(30,45,61,0.5);
+    font-size: 11px;
+  }
+  .alarm-table tr:hover td { background: var(--panel2); }
+  .tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .tag-high { background: rgba(255,68,102,0.2); color: var(--red); border: 1px solid var(--red); }
+  .tag-med { background: rgba(255,179,71,0.15); color: var(--warn); border: 1px solid var(--warn); }
+  .tag-low { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid var(--accent); }
+  .tag-ok { background: rgba(0,255,136,0.1); color: var(--accent2); border: 1px solid var(--accent2); }
+
+  /* RIGHT PANEL */
+  .infopanel {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .info-section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(30,45,61,0.5);
+    gap: 8px;
+  }
+  .info-key { color: var(--text2); font-size: 11px; flex-shrink: 0; }
+  .info-val { color: var(--text); font-size: 11px; text-align: right; font-family: 'IBM Plex Mono', monospace; }
+
+  .fault-block {
+    background: rgba(255,68,102,0.05);
+    border: 1px solid rgba(255,68,102,0.3);
+    border-radius: 3px;
+    padding: 10px;
+  }
+  .fault-title {
+    color: var(--red);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .fault-item {
+    font-size: 11px;
+    color: var(--text2);
+    padding: 3px 0;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .fault-item::before { content: '→'; color: var(--red); flex-shrink: 0; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .tab {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 1px;
+    color: var(--text2);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* COMPONENT LIST */
+  .component-list { display: flex; flex-direction: column; gap: 8px; }
+  .component-item {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .component-item:hover { border-color: var(--accent); }
+  .component-item.highlighted { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+  .comp-name {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .comp-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+  /* PPM SCHEDULE */
+  .ppm-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(30,45,61,0.5);
+    align-items: center;
+  }
+  .ppm-task { font-size: 11px; }
+  .ppm-freq { font-size: 10px; color: var(--text2); font-family: 'IBM Plex Mono', monospace; }
+
+  .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* HIDDEN SECTIONS */
+  .section { display: none; }
+  .section.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">EBME</div>
+  <h1>Infusion Pump — Clinical Engineering Reference</h1>
+  <span>IEC 60601-2-24 &nbsp;|&nbsp; Volumetric Peristaltic</span>
+</div>
+
+<div class="layout">
+
+  <!-- SIDENAV -->
+  <div class="sidenav scrollbar-thin">
+    <div class="nav-section">System Modules</div>
+    <div class="nav-item active" data-section="mechanism" onclick="showSection('mechanism', this)">
+      <div class="nav-dot" style="background:var(--accent)"></div> Drive Mechanism
+    </div>
+    <div class="nav-item" data-section="fluidics" onclick="showSection('fluidics', this)">
+      <div class="nav-dot" style="background:var(--accent2)"></div> Fluidic Pathway
+    </div>
+    <div class="nav-item" data-section="electronics" onclick="showSection('electronics', this)">
+      <div class="nav-dot" style="background:var(--warn)"></div> Electronics & Control
+    </div>
+    <div class="nav-item" data-section="sensors" onclick="showSection('sensors', this)">
+      <div class="nav-dot" style="background:#aa88ff)"></div> Sensor Array
+    </div>
+    <div class="nav-section" style="margin-top:8px">Safety Systems</div>
+    <div class="nav-item" data-section="alarms" onclick="showSection('alarms', this)">
+      <div class="nav-dot" style="background:var(--red)"></div> Alarm Logic
+    </div>
+    <div class="nav-item" data-section="occlusion" onclick="showSection('occlusion', this)">
+      <div class="nav-dot" style="background:var(--accent3)"></div> Occlusion Detection
+    </div>
+    <div class="nav-section" style="margin-top:8px">Servicing</div>
+    <div class="nav-item" data-section="ppm" onclick="showSection('ppm', this)">
+      <div class="nav-dot" style="background:var(--accent2)"></div> PPM Schedule
+    </div>
+    <div class="nav-item" data-section="faults" onclick="showSection('faults', this)">
+      <div class="nav-dot" style="background:var(--red)"></div> Fault Diagnosis
+    </div>
+    <div class="nav-item" data-section="accuracy" onclick="showSection('accuracy', this)">
+      <div class="nav-dot" style="background:var(--accent)"></div> Accuracy & Testing
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main scrollbar-thin">
+
+    <!-- MECHANISM -->
+    <div id="sec-mechanism" class="section visible">
+      <div class="canvas-title">Drive Mechanism</div>
+      <div class="canvas-subtitle">Linear Peristaltic Finger Pump</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 320" width="100%" style="max-height:320px">
+          <!-- Background grid -->
+          <defs>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#00d4ff"/>
+            </marker>
+            <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#00ff88"/>
+            </marker>
+          </defs>
+          <rect width="700" height="320" fill="url(#grid)"/>
+
+          <!-- MOTOR -->
+          <rect x="30" y="120" width="80" height="80" rx="4" fill="#111720" stroke="#00d4ff" stroke-width="1.5"/>
+          <text x="70" y="152" fill="#00d4ff" font-size="9" text-anchor="middle">STEPPER</text>
+          <text x="70" y="164" fill="#00d4ff" font-size="9" text-anchor="middle">MOTOR</text>
+          <text x="70" y="178" fill="#6a8099" font-size="8" text-anchor="middle">200 steps/rev</text>
+          <!-- Motor shaft -->
+          <line x1="110" y1="160" x2="140" y2="160" stroke="#00d4ff" stroke-width="2"/>
+
+          <!-- GEARBOX -->
+          <rect x="140" y="130" width="60" height="60" rx="3" fill="#111720" stroke="#1e2d3d" stroke-width="1.5"/>
+          <text x="170" y="157" fill="#c8d8e8" font-size="9" text-anchor="middle">GEAR</text>
+          <text x="170" y="169" fill="#c8d8e8" font-size="9" text-anchor="middle">REDUCTION</text>
+          <text x="170" y="181" fill="#6a8099" font-size="8" text-anchor="middle">1:20</text>
+          <line x1="200" y1="160" x2="230" y2="160" stroke="#c8d8e8" stroke-width="1.5"/>
+
+          <!-- CAM SHAFT -->
+          <rect x="230" y="140" width="20" height="40" rx="3" fill="#1e2d3d" stroke="#6a8099" stroke-width="1"/>
+          <text x="240" y="165" fill="#6a8099" font-size="8" text-anchor="middle">CAM</text>
+
+          <!-- FINGER ARRAY -->
+          <text x="310" y="82" fill="#00d4ff" font-size="9" text-anchor="middle" letter-spacing="1">FINGER ARRAY (6 CAMS)</text>
+          <!-- Tubing channel -->
+          <rect x="272" y="118" width="200" height="24" rx="2" fill="rgba(0,212,255,0.08)" stroke="#00d4ff" stroke-width="1" stroke-dasharray="4,2"/>
+          <!-- Fingers -->
+          <g id="fingers">
+            <rect id="f1" x="275" y="96" width="16" height="28" rx="2" fill="#1e2d3d" stroke="#00d4ff" stroke-width="1.5"/>
+            <rect id="f2" x="298" y="100" width="16" height="24" rx="2" fill="#1e2d3d" stroke="#00d4ff" stroke-width="1"/>
+            <rect id="f3" x="321" y="98" width="16" height="26" rx="2" fill="#00d4ff" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/>
+            <rect id="f4" x="344" y="96" width="16" height="28" rx="2" fill="#1e2d3d" stroke="#00d4ff" stroke-width="1"/>
+            <rect id="f5" x="367" y="100" width="16" height="24" rx="2" fill="#1e2d3d" stroke="#00d4ff" stroke-width="1"/>
+            <rect id="f6" x="390" y="96" width="16" height="28" rx="2" fill="#00d4ff" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"/>
+          </g>
+          <!-- Tubing path with flow animation -->
+          <path d="M200,230 L270,230 L270,142 M472,142 L530,142 L530,230 L600,230"
+                fill="none" stroke="rgba(0,212,255,0.2)" stroke-width="8" stroke-linecap="round"/>
+          <!-- Inner flow indicator -->
+          <path d="M200,230 L270,230 L270,142 M472,142 L530,142 L530,230 L600,230"
+                fill="none" stroke="#00d4ff" stroke-width="2" stroke-dasharray="8,8"
+                class="flow-anim" opacity="0.7"/>
+          <!-- Tubing labels -->
+          <text x="235" y="225" fill="#6a8099" font-size="9">IV bag inlet</text>
+          <text x="540" y="225" fill="#00ff88" font-size="9">to patient</text>
+
+          <!-- Platen / backing plate -->
+          <rect x="270" y="152" width="204" height="12" rx="2" fill="#1e2d3d" stroke="#6a8099" stroke-width="1"/>
+          <text x="372" y="162" fill="#6a8099" font-size="8" text-anchor="middle">PLATEN</text>
+
+          <!-- LABELS -->
+          <line x1="283" y1="92" x2="283" y2="72" stroke="#6a8099" stroke-width="0.8"/>
+          <text x="283" y="68" fill="#6a8099" font-size="8" text-anchor="middle">depressed</text>
+          <line x1="329" y1="92" x2="329" y2="72" stroke="#00d4ff" stroke-width="0.8"/>
+          <text x="329" y="68" fill="#00d4ff" font-size="8" text-anchor="middle">occluding</text>
+
+          <!-- ENCODER -->
+          <rect x="30" y="230" width="70" height="40" rx="3" fill="#111720" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="65" y="247" fill="#ffb347" font-size="9" text-anchor="middle">ENCODER</text>
+          <text x="65" y="260" fill="#6a8099" font-size="8" text-anchor="middle">1000 PPR</text>
+          <line x1="70" y1="230" x2="70" y2="200" stroke="#ffb347" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="70" y1="200" x2="110" y2="160" stroke="#ffb347" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- FLOW RATE CALC -->
+          <rect x="560" y="90" width="120" height="70" rx="4" fill="#111720" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="620" y="107" fill="#00ff88" font-size="9" text-anchor="middle">FLOW RATE</text>
+          <text x="620" y="122" fill="#c8d8e8" font-size="12" text-anchor="middle" font-weight="600">V = f × d × A</text>
+          <text x="620" y="138" fill="#6a8099" font-size="8" text-anchor="middle">f = step freq</text>
+          <text x="620" y="150" fill="#6a8099" font-size="8" text-anchor="middle">d = displacement/step</text>
+
+          <!-- Arrow labels -->
+          <text x="70" y="118" fill="#00d4ff" font-size="9" text-anchor="middle">DRIVE</text>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Drive Type</div>
+          <div style="font-size:16px;font-weight:600;color:var(--accent)">Linear Peristaltic</div>
+          <div class="card-desc">Sequential finger compression propagates fluid bolus along tubing without contact with fluid</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Accuracy (IEC 60601-2-24)</div>
+          <div class="card-value">±2%<span class="card-unit">of set rate</span></div>
+          <div class="card-desc">Steady state; excludes startup bolus and KVO mode</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Flow Range</div>
+          <div class="card-value">0.1–999<span class="card-unit">mL/hr</span></div>
+          <div class="card-desc">Resolved by stepper frequency and cam profile</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Bolus on Start</div>
+          <div class="card-value" style="color:var(--warn)">~0.04<span class="card-unit">mL</span></div>
+          <div class="card-desc">Free-flow from tubing slack before fingers engage — clinically significant for potent drugs</div>
+        </div>
+      </div>
+
+      <div class="diagram-wrap" style="margin-top:0">
+        <div style="font-size:11px;color:var(--text2);font-family:'IBM Plex Mono',monospace;letter-spacing:1px;margin-bottom:12px;text-transform:uppercase">Cam Sequence — Peristaltic Action</div>
+        <svg viewBox="0 0 680 100" width="100%" style="max-height:100px">
+          <defs>
+            <pattern id="grid2" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="680" height="100" fill="url(#grid2)"/>
+          <!-- Step sequence for 6 fingers across time -->
+          <g id="camseq">
+            <!-- Time axis -->
+            <line x1="40" y1="90" x2="650" y2="90" stroke="#1e2d3d"/>
+            <text x="345" y="100" fill="#6a8099" font-size="8" text-anchor="middle">time →  (1 full peristaltic cycle)</text>
+            <!-- Finger labels -->
+            <text x="35" y="18" fill="#6a8099" font-size="8" text-anchor="end">F1</text>
+            <text x="35" y="30" fill="#6a8099" font-size="8" text-anchor="end">F2</text>
+            <text x="35" y="42" fill="#6a8099" font-size="8" text-anchor="end">F3</text>
+            <text x="35" y="54" fill="#6a8099" font-size="8" text-anchor="end">F4</text>
+            <text x="35" y="66" fill="#6a8099" font-size="8" text-anchor="end">F5</text>
+            <text x="35" y="78" fill="#6a8099" font-size="8" text-anchor="end">F6</text>
+            <!-- Bars: staggered peristalsis -->
+            <rect x="40"  y="10" width="100" height="10" rx="1" fill="#00d4ff" opacity="0.85"/>
+            <rect x="140" y="10" width="510" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="140" y="22" width="100" height="10" rx="1" fill="#00d4ff" opacity="0.85"/>
+            <rect x="40"  y="22" width="100" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="240" y="22" width="410" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="240" y="34" width="100" height="10" rx="1" fill="#00d4ff" opacity="0.85"/>
+            <rect x="40"  y="34" width="200" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="340" y="34" width="310" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="340" y="46" width="100" height="10" rx="1" fill="#00d4ff" opacity="0.85"/>
+            <rect x="40"  y="46" width="300" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="440" y="46" width="210" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="440" y="58" width="100" height="10" rx="1" fill="#00d4ff" opacity="0.85"/>
+            <rect x="40"  y="58" width="400" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="540" y="58" width="110" height="10" rx="1" fill="#1e2d3d"/>
+            <rect x="540" y="70" width="110" height="10" rx="1" fill="#00d4ff" opacity="0.85"/>
+            <rect x="40"  y="70" width="500" height="10" rx="1" fill="#1e2d3d"/>
+            <!-- legend -->
+            <rect x="580" y="8" width="10" height="8" rx="1" fill="#00d4ff" opacity="0.85"/>
+            <text x="594" y="16" fill="#c8d8e8" font-size="8">occluding</text>
+            <rect x="580" y="20" width="10" height="8" rx="1" fill="#1e2d3d"/>
+            <text x="594" y="28" fill="#6a8099" font-size="8">released</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- FLUIDICS -->
+    <div id="sec-fluidics" class="section">
+      <div class="canvas-title">Fluidic Pathway</div>
+      <div class="canvas-subtitle">From IV Bag to Patient</div>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 280" width="100%" style="max-height:280px">
+          <defs>
+            <pattern id="grid3" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+            <linearGradient id="fluidGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#00d4ff" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#00ff88" stop-opacity="0.3"/>
+            </linearGradient>
+          </defs>
+          <rect width="700" height="280" fill="url(#grid3)"/>
+
+          <!-- IV BAG -->
+          <path d="M 40,40 Q50,20 70,20 Q90,20 100,40 L 105,100 Q100,115 70,115 Q40,115 35,100 Z" fill="rgba(0,212,255,0.1)" stroke="#00d4ff" stroke-width="1.5"/>
+          <text x="70" y="70" fill="#00d4ff" font-size="9" text-anchor="middle">IV BAG</text>
+          <text x="70" y="83" fill="#6a8099" font-size="8" text-anchor="middle">0.9% NaCl</text>
+          <line x1="70" y1="115" x2="70" y2="135" stroke="#c8d8e8" stroke-width="2"/>
+
+          <!-- SPIKE/DRIP CHAMBER -->
+          <rect x="52" y="135" width="36" height="50" rx="3" fill="rgba(0,212,255,0.05)" stroke="#6a8099" stroke-width="1.5"/>
+          <text x="70" y="153" fill="#6a8099" font-size="8" text-anchor="middle">DRIP</text>
+          <text x="70" y="163" fill="#6a8099" font-size="8" text-anchor="middle">CHAMBER</text>
+          <circle cx="70" cy="173" r="3" fill="#00d4ff" class="pulse-anim"/>
+          <line x1="70" y1="185" x2="70" y2="210" stroke="#c8d8e8" stroke-width="2"/>
+
+          <!-- AIR DETECTOR -->
+          <rect x="48" y="210" width="44" height="24" rx="3" fill="#111720" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="70" y="221" fill="#ffb347" font-size="8" text-anchor="middle">AIR</text>
+          <text x="70" y="231" fill="#ffb347" font-size="8" text-anchor="middle">DETECT</text>
+          <line x1="70" y1="234" x2="70" y2="255" stroke="#c8d8e8" stroke-width="2"/>
+
+          <!-- FLOW indicator line going right -->
+          <path d="M70,255 L180,255" fill="none" stroke="#c8d8e8" stroke-width="3" stroke-linecap="round"/>
+          <!-- Main tubing segment in pump -->
+          <path d="M180,255 L180,130 L300,130 L300,255 L420,255" fill="none" stroke="#00d4ff" stroke-width="3" opacity="0.4"/>
+          <path d="M180,255 L180,130 L300,130 L300,255 L420,255" fill="none" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="8,6" class="flow-anim"/>
+
+          <!-- PUMP BOX -->
+          <rect x="160" y="100" width="160" height="170" rx="4" fill="rgba(0,212,255,0.03)" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <text x="240" y="120" fill="#00d4ff" font-size="10" text-anchor="middle" letter-spacing="1">PUMP HEAD</text>
+
+          <!-- PRESSURE SENSOR upstream -->
+          <rect x="400" y="240" width="60" height="30" rx="3" fill="#111720" stroke="#aa88ff" stroke-width="1.5"/>
+          <text x="430" y="254" fill="#aa88ff" font-size="8" text-anchor="middle">PRESSURE</text>
+          <text x="430" y="264" fill="#aa88ff" font-size="8" text-anchor="middle">SENSOR</text>
+          <line x1="420" y1="255" x2="400" y2="255" stroke="#aa88ff" stroke-width="1.5"/>
+
+          <!-- LINE downstream -->
+          <path d="M460,255 L560,255" fill="none" stroke="#00ff88" stroke-width="3" stroke-linecap="round"/>
+          <path d="M460,255 L560,255" fill="none" stroke="#00ff88" stroke-width="1.5" stroke-dasharray="8,6" class="flow-anim"/>
+
+          <!-- ANTI-SYPHON / CLAMP -->
+          <rect x="460" y="240" width="50" height="30" rx="3" fill="#111720" stroke="#ff6b35" stroke-width="1.5"/>
+          <text x="485" y="254" fill="#ff6b35" font-size="8" text-anchor="middle">ANTI-</text>
+          <text x="485" y="264" fill="#ff6b35" font-size="8" text-anchor="middle">SYPHON</text>
+
+          <!-- PATIENT connector -->
+          <rect x="570" y="237" width="50" height="36" rx="3" fill="rgba(0,255,136,0.08)" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="595" y="253" fill="#00ff88" font-size="9" text-anchor="middle">PATIENT</text>
+          <text x="595" y="265" fill="#00ff88" font-size="8" text-anchor="middle">cannula</text>
+
+          <!-- Labels -->
+          <text x="130" y="250" fill="#6a8099" font-size="8">upstream</text>
+          <text x="430" y="230" fill="#6a8099" font-size="8" text-anchor="middle">downstream</text>
+        </svg>
+      </div>
+
+      <div class="component-list">
+        <div class="component-item">
+          <div class="comp-name">Drip Chamber <span class="tag tag-ok">PASSIVE</span></div>
+          <div class="comp-desc">Visual flow confirmation + primary air trap. Inspect for cloudiness (contamination), cracks, and partial fill level. Should be ~50% full.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Pump Segment Tubing <span class="tag tag-med">CONSUMABLE</span></div>
+          <div class="comp-desc">Single-use PVC segment contacts finger array. Wall thickness tolerance ±0.05 mm critical for accuracy. Tubing ID defines stroke volume per cam cycle.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Anti-Syphon Valve <span class="tag tag-high">SAFETY</span></div>
+          <div class="comp-desc">Prevents retrograde flow and free-flow gravity siphon when cassette removed. Test with free-flow test on every PPM. Failure = patient bolus risk.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Downstream Pressure Sensor <span class="tag tag-high">SAFETY</span></div>
+          <div class="comp-desc">Piezo strain gauge measures line pressure. Rising pressure = downstream occlusion. Falling pressure = upstream occlusion or empty bag. Calibrate against manometer reference during PPM.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELECTRONICS -->
+    <div id="sec-electronics" class="section">
+      <div class="canvas-title">Electronics & Control Architecture</div>
+      <div class="canvas-subtitle">Closed-Loop Delivery System</div>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 300" width="100%" style="max-height:300px">
+          <defs>
+            <pattern id="grid4" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="700" height="300" fill="url(#grid4)"/>
+
+          <!-- Main MCU -->
+          <rect x="270" y="110" width="160" height="100" rx="4" fill="#161e2a" stroke="#00d4ff" stroke-width="2"/>
+          <text x="350" y="132" fill="#00d4ff" font-size="10" text-anchor="middle" letter-spacing="1">MAIN CPU</text>
+          <text x="350" y="147" fill="#c8d8e8" font-size="8" text-anchor="middle">ARM Cortex-M4</text>
+          <text x="350" y="160" fill="#6a8099" font-size="8" text-anchor="middle">PID flow control</text>
+          <text x="350" y="172" fill="#6a8099" font-size="8" text-anchor="middle">drug library</text>
+          <text x="350" y="184" fill="#6a8099" font-size="8" text-anchor="middle">dose error reduction</text>
+
+          <!-- Safety CPU -->
+          <rect x="270" y="30" width="160" height="60" rx="4" fill="#161e2a" stroke="#ff4466" stroke-width="2"/>
+          <text x="350" y="52" fill="#ff4466" font-size="10" text-anchor="middle">SAFETY CPU</text>
+          <text x="350" y="66" fill="#c8d8e8" font-size="8" text-anchor="middle">watchdog · IEC 62304</text>
+          <text x="350" y="80" fill="#6a8099" font-size="8" text-anchor="middle">independent alarm path</text>
+          <line x1="350" y1="90" x2="350" y2="110" stroke="#ff4466" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+          <!-- Motor driver -->
+          <rect x="80" y="110" width="120" height="60" rx="3" fill="#161e2a" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="140" y="135" fill="#ffb347" font-size="9" text-anchor="middle">STEPPER</text>
+          <text x="140" y="148" fill="#ffb347" font-size="9" text-anchor="middle">DRIVER</text>
+          <text x="140" y="162" fill="#6a8099" font-size="8" text-anchor="middle">microstepping 1/16</text>
+          <!-- connect to MCU -->
+          <line x1="200" y1="140" x2="270" y2="150" stroke="#ffb347" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+          <!-- Sensor interface -->
+          <rect x="500" y="110" width="120" height="80" rx="3" fill="#161e2a" stroke="#aa88ff" stroke-width="1.5"/>
+          <text x="560" y="133" fill="#aa88ff" font-size="9" text-anchor="middle">SENSOR</text>
+          <text x="560" y="146" fill="#aa88ff" font-size="9" text-anchor="middle">INTERFACE</text>
+          <text x="560" y="162" fill="#6a8099" font-size="8" text-anchor="middle">ADC 16-bit</text>
+          <text x="560" y="175" fill="#6a8099" font-size="8" text-anchor="middle">pressure · air · door</text>
+          <line x1="500" y1="150" x2="430" y2="155" stroke="#aa88ff" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+          <!-- Power supply -->
+          <rect x="80" y="220" width="120" height="55" rx="3" fill="#161e2a" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="140" y="243" fill="#00ff88" font-size="9" text-anchor="middle">POWER MGMT</text>
+          <text x="140" y="258" fill="#6a8099" font-size="8" text-anchor="middle">AC/DC + battery</text>
+          <text x="140" y="270" fill="#6a8099" font-size="8" text-anchor="middle">IEC 60601-1 MOOP</text>
+          <line x1="140" y1="220" x2="140" y2="170" stroke="#00ff88" stroke-width="1" stroke-dasharray="3,3"/>
+          <line x1="200" y1="240" x2="270" y2="180" stroke="#00ff88" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- Display/UI -->
+          <rect x="500" y="220" width="120" height="55" rx="3" fill="#161e2a" stroke="#c8d8e8" stroke-width="1.5"/>
+          <text x="560" y="243" fill="#c8d8e8" font-size="9" text-anchor="middle">UI / DISPLAY</text>
+          <text x="560" y="258" fill="#6a8099" font-size="8" text-anchor="middle">TFT touchscreen</text>
+          <text x="560" y="270" fill="#6a8099" font-size="8" text-anchor="middle">drug library UI</text>
+          <line x1="560" y1="220" x2="430" y2="210" stroke="#c8d8e8" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- Comms -->
+          <rect x="270" y="240" width="160" height="45" rx="3" fill="#161e2a" stroke="#00ff88" stroke-width="1"/>
+          <text x="350" y="260" fill="#00ff88" font-size="9" text-anchor="middle">COMMS</text>
+          <text x="350" y="274" fill="#6a8099" font-size="8" text-anchor="middle">RS-232 · USB · Ethernet · Wi-Fi</text>
+          <line x1="350" y1="240" x2="350" y2="210" stroke="#00ff88" stroke-width="1" stroke-dasharray="3,3"/>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Control Loop</div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent)">PID + Encoder Feedback</div>
+          <div class="card-desc">Encoder PPR → actual speed → PID error correction. Integral windup guard prevents overshoot on flow resumption.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Safety Architecture</div>
+          <div style="font-size:14px;font-weight:600;color:var(--red)">Dual-CPU + Watchdog</div>
+          <div class="card-desc">Independent safety CPU monitors main CPU heartbeat. Failure → immediate clamp actuation. Compliant with IEC 62304 SIL-2.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Power Classes</div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent2)">Class I + Internal Battery</div>
+          <div class="card-desc">Mains + LiPo battery ≥4 hr autonomy. Leakage current &lt;10 µA (CF applied part). Earth continuity tested at PPM.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Software Class</div>
+          <div style="font-size:14px;font-weight:600;color:var(--warn)">IEC 62304 Class C</div>
+          <div class="card-desc">Highest risk class. All firmware updates require validation. Document version with device asset record.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENSORS -->
+    <div id="sec-sensors" class="section">
+      <div class="canvas-title">Sensor Array</div>
+      <div class="canvas-subtitle">Detection, Feedback & Interlock Sensors</div>
+      <div class="component-list">
+        <div class="component-item">
+          <div class="comp-name">Ultrasonic Air-in-Line Detector <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Piezoelectric transceiver pair across tubing. Air attenuates ultrasound signal. Threshold typically 50 µL bubble. Test with air injection during PPM. Contamination with fluid on ultrasonic face causes false negatives.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Downstream Occlusion Pressure Sensor <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Piezoresistive strain gauge. Alarm threshold typically 300–900 mmHg (user configurable). Verify calibration with dead-weight tester or reference manometer. Check O-ring seals for fluid ingress.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Door / Cassette Presence Switch <span class="tag tag-med">INTERLOCK</span></div>
+          <div class="comp-desc">Microswitch or Hall effect sensor. Prevents pump run with door open. Verify actuation force and contact bounce during PPM. Worn actuator = intermittent alarm without true door fault.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Rotary Encoder (Motor Feedback) <span class="tag tag-med">PERFORMANCE</span></div>
+          <div class="comp-desc">1000 PPR optical encoder on motor shaft. Validates actual vs commanded step count. Discrepancy triggers motor fault. Clean encoder disc from contamination; check phototransistor alignment.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Upstream / Empty Bag Sensor <span class="tag tag-low">ADVISORY</span></div>
+          <div class="comp-desc">Either pressure-drop method (vacuum forms upstream) or dedicated optical drop detector on drip chamber. False empty-bag alarms: damaged drop detector, too-low drip chamber fill, very viscous fluids.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Temperature Sensor (NTC/PT100) <span class="tag tag-low">MONITORING</span></div>
+          <div class="comp-desc">Motor and PCB thermal monitoring. Overtemperature shuts pump to prevent fluid warming. Relevant for neonatal and ICU warming applications.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALARMS -->
+    <div id="sec-alarms" class="section">
+      <div class="canvas-title">Alarm Logic</div>
+      <div class="canvas-subtitle">IEC 60601-1-8 Alarm Classification</div>
+      <div class="diagram-wrap" style="padding:12px">
+        <table class="alarm-table">
+          <thead>
+            <tr>
+              <th>Alarm</th>
+              <th>Priority</th>
+              <th>Trigger Condition</th>
+              <th>Pump Response</th>
+              <th>Service Check</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Air-in-Line</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Air bubble &gt;50 µL detected</td>
+              <td>Immediate halt + clamp</td>
+              <td>Air detector face clean; tubing seated</td>
+            </tr>
+            <tr>
+              <td>Downstream Occlusion</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Line pressure &gt; threshold</td>
+              <td>Halt pump</td>
+              <td>Calibrate pressure sensor; test at PPM</td>
+            </tr>
+            <tr>
+              <td>Upstream Occlusion / Empty</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Upstream pressure drop / no drip</td>
+              <td>Halt pump</td>
+              <td>Clean drip sensor; check bag spike</td>
+            </tr>
+            <tr>
+              <td>Door Open</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Door sensor not engaged</td>
+              <td>Halt or prevent start</td>
+              <td>Microswitch actuation; wear on door latch</td>
+            </tr>
+            <tr>
+              <td>Motor Fault</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Encoder/motor mismatch</td>
+              <td>Halt + error code</td>
+              <td>Check encoder alignment, motor brushes</td>
+            </tr>
+            <tr>
+              <td>Near End of Infusion</td>
+              <td><span class="tag tag-med">MED</span></td>
+              <td>Volume remaining &lt; user-set</td>
+              <td>Audio/visual alert; continue</td>
+              <td>Verify VTBI logic in pre-use check</td>
+            </tr>
+            <tr>
+              <td>Battery Low</td>
+              <td><span class="tag tag-med">MED</span></td>
+              <td>Battery &lt;20% capacity</td>
+              <td>Alert; continue on mains</td>
+              <td>Battery capacity test; replace at threshold</td>
+            </tr>
+            <tr>
+              <td>KVO (Keep Vein Open)</td>
+              <td><span class="tag tag-low">LOW</span></td>
+              <td>VTBI complete</td>
+              <td>Reduce to KVO rate (~1 mL/hr)</td>
+              <td>Verify KVO rate setting per policy</td>
+            </tr>
+            <tr>
+              <td>Free Flow Detected</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Anti-syphon valve failed or door open</td>
+              <td>Halt + clamp</td>
+              <td>Free-flow test mandatory at every PPM</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- OCCLUSION -->
+    <div id="sec-occlusion" class="section">
+      <div class="canvas-title">Occlusion Detection</div>
+      <div class="canvas-subtitle">Pressure-Time Signature Analysis</div>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 220" width="100%" style="max-height:220px">
+          <defs>
+            <pattern id="grid5" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="700" height="220" fill="url(#grid5)"/>
+          <!-- Axes -->
+          <line x1="60" y1="180" x2="660" y2="180" stroke="#1e2d3d" stroke-width="1.5"/>
+          <line x1="60" y1="180" x2="60" y2="20" stroke="#1e2d3d" stroke-width="1.5"/>
+          <text x="360" y="198" fill="#6a8099" font-size="9" text-anchor="middle">Time →</text>
+          <text x="20" y="100" fill="#6a8099" font-size="9" text-anchor="middle" transform="rotate(-90,20,100)">Pressure</text>
+          <!-- Y gridlines & labels -->
+          <line x1="60" y1="140" x2="660" y2="140" stroke="#1e2d3d" stroke-width="0.5" stroke-dasharray="4,4"/>
+          <line x1="60" y1="100" x2="660" y2="100" stroke="#1e2d3d" stroke-width="0.5" stroke-dasharray="4,4"/>
+          <line x1="60" y1="60" x2="660" y2="60" stroke="#ff4466" stroke-width="1" stroke-dasharray="6,4" opacity="0.6"/>
+          <text x="55" y="64" fill="#ff4466" font-size="8" text-anchor="end">ALARM</text>
+          <text x="55" y="144" fill="#6a8099" font-size="8" text-anchor="end">normal</text>
+          <!-- Normal infusion line -->
+          <path d="M60,145 C100,140 200,142 300,138 C400,134 500,136 660,140" fill="none" stroke="#00ff88" stroke-width="2"/>
+          <text x="350" y="128" fill="#00ff88" font-size="9">Normal infusion</text>
+          <!-- Occlusion pressure rise -->
+          <path d="M60,145 C100,140 200,142 300,138 C380,135 420,100 460,70 L480,57" fill="none" stroke="#ff4466" stroke-width="2"/>
+          <circle cx="480" cy="57" r="5" fill="#ff4466" class="pulse-anim"/>
+          <text x="500" y="55" fill="#ff4466" font-size="9">Occlusion alarm</text>
+          <!-- Time annotation -->
+          <line x1="300" y1="180" x2="300" y2="200" stroke="#6a8099" stroke-width="1"/>
+          <text x="300" y="212" fill="#6a8099" font-size="8" text-anchor="middle">occlusion onset</text>
+          <!-- Bolus marker -->
+          <line x1="480" y1="57" x2="540" y2="57" stroke="#ff4466" stroke-width="1" stroke-dasharray="2,2"/>
+          <text x="545" y="61" fill="#6a8099" font-size="8">pump halts</text>
+          <!-- Accumulation band -->
+          <path d="M300,138 L300,145 L480,145 L480,138 Z" fill="rgba(255,68,102,0.1)"/>
+          <text x="390" y="158" fill="#ff4466" font-size="8" text-anchor="middle">pressure accumulation period</text>
+          <!-- Rate labels -->
+          <text x="160" y="115" fill="#6a8099" font-size="8">dP/dt ~ proportional</text>
+          <text x="160" y="125" fill="#6a8099" font-size="8">to pump rate & compliance</text>
+        </svg>
+      </div>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Time-to-Alarm (TTA)</div>
+          <div class="card-value" style="font-size:16px;color:var(--warn)">Rate-Dependent</div>
+          <div class="card-desc">At 1 mL/hr, TTA can exceed 30 min. At 500 mL/hr, seconds. Clinically critical for low-rate vasopressors — patient may receive a bolus when occlusion clears.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Stored Energy (Bolus Risk)</div>
+          <div class="card-value" style="color:var(--red)">E = ½kx²</div>
+          <div class="card-desc">Compliant tubing stores elastic energy during occlusion. On clearance → bolus delivery. Stiffer tubing = less stored energy = safer, but higher TTA.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PPM -->
+    <div id="sec-ppm" class="section">
+      <div class="canvas-title">Planned Preventive Maintenance</div>
+      <div class="canvas-subtitle">Typical Annual PPM Schedule</div>
+      <div class="diagram-wrap" style="padding:12px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text2);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase">Ref: Manufacturer Service Manual + MHRA Device Bulletin</div>
+        <div class="ppm-row" style="border-bottom:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase">TASK</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase">FREQUENCY</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase">STATUS</div>
+        </div>
+        <div class="ppm-row"><div class="ppm-task">Visual inspection — casing, door, keypad, display</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">PASS</span></div>
+        <div class="ppm-row"><div class="ppm-task">Electrical safety test — earth continuity, leakage current</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">PASS</span></div>
+        <div class="ppm-row"><div class="ppm-task">Flow accuracy test — 3 rates (low/mid/high) gravimetric method</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Occlusion alarm test — upstream & downstream</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Air-in-line alarm test — inject known air bolus</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Free-flow test — confirm anti-syphon clamp function</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Battery capacity test — load test to 80% DoD</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Alarm audio level (IEC 60601-1-8 ≥65 dBA)</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Door latch and interlock switch function</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Firmware version verification + update if applicable</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">VERIFY</span></div>
+        <div class="ppm-row"><div class="ppm-task">Clean finger array, cam mechanism, tubing channel</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">CLEAN</span></div>
+        <div class="ppm-row"><div class="ppm-task">Pressure sensor calibration (dead-weight or reference)</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CALIBRATE</span></div>
+        <div class="ppm-row"><div class="ppm-task">Replace worn door seals, O-rings</div><div class="ppm-freq">As needed</div><span class="tag tag-low">CONDITION</span></div>
+        <div class="ppm-row"><div class="ppm-task">Motor brush inspection (brushed types only)</div><div class="ppm-freq">2–3 years</div><span class="tag tag-low">CONDITION</span></div>
+      </div>
+    </div>
+
+    <!-- FAULTS -->
+    <div id="sec-faults" class="section">
+      <div class="canvas-title">Fault Diagnosis</div>
+      <div class="canvas-subtitle">Systematic Fault Tree</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="fault-block">
+          <div class="fault-title">⚠ SYMPTOM: Persistent Occlusion Alarm — No Obvious Blockage</div>
+          <div class="fault-item">Pressure sensor drift or offset — recalibrate against reference manometer</div>
+          <div class="fault-item">Tubing kinked inside cassette door — inspect routing; replace tubing</div>
+          <div class="fault-item">Alarm threshold set too low by user — review clinical settings</div>
+          <div class="fault-item">O-ring on pressure port degraded — replace, check for fluid ingress into sensor</div>
+        </div>
+        <div class="fault-block" style="border-color:rgba(255,179,71,0.3);background:rgba(255,179,71,0.03)">
+          <div class="fault-title" style="color:var(--warn)">⚠ SYMPTOM: Inaccurate Flow Rate (gravimetric failure &gt;±5%)</div>
+          <div class="fault-item">Worn cam mechanism — inspect cam profile for flat spots; replace drive assembly</div>
+          <div class="fault-item">Non-compliant tubing (wrong brand/lot) — verify tubing compatibility with pump model</div>
+          <div class="fault-item">Encoder signal degraded — clean optical encoder disc; verify PPR count</div>
+          <div class="fault-item">Backlash in gearbox — test for motor steps without cam movement</div>
+        </div>
+        <div class="fault-block" style="border-color:rgba(170,136,255,0.3);background:rgba(170,136,255,0.03)">
+          <div class="fault-title" style="color:#aa88ff">⚠ SYMPTOM: Nuisance Air-in-Line Alarms</div>
+          <div class="fault-item">Ultrasonic face contaminated with condensation or fluid — dry carefully with IPA wipe</div>
+          <div class="fault-item">Tubing not fully seated against ultrasonic sensor face</div>
+          <div class="fault-item">Microbubbles from cold IV bag warming — prime tubing fully before connecting</div>
+          <div class="fault-item">Transducer coupling degraded — replacement of air-detector assembly</div>
+        </div>
+        <div class="fault-block" style="border-color:rgba(0,255,136,0.2);background:rgba(0,255,136,0.02)">
+          <div class="fault-title" style="color:var(--accent2)">⚠ SYMPTOM: Battery Not Holding Charge</div>
+          <div class="fault-item">LiPo cell aging — capacity test; replace if &lt;80% rated Ah at 2C discharge</div>
+          <div class="fault-item">BMS (Battery Management System) fault — error code on service menu</div>
+          <div class="fault-item">Charge circuit PCB failure — measure charge voltage at battery terminals during mains operation</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCURACY -->
+    <div id="sec-accuracy" class="section">
+      <div class="canvas-title">Accuracy Testing & Verification</div>
+      <div class="canvas-subtitle">Gravimetric Method — IEC 60601-2-24 Compliant</div>
+      <div class="card-grid" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-label">Method</div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent)">Gravimetric</div>
+          <div class="card-desc">Analytical balance (±0.001 g resolution). Water density = 1 g/mL. Weigh output over defined period. Volume = mass ÷ density.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Standard Requirement</div>
+          <div class="card-value">±2%<span class="card-unit">steady state</span></div>
+          <div class="card-desc">IEC 60601-2-24 §201.12.1. Excludes first 30 min warm-up, KVO mode, and bolus delivery phase.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Test Rates</div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent2)">3 Points Minimum</div>
+          <div class="card-desc">Low (5 mL/hr), mid (100 mL/hr), high (500 mL/hr). Each measured ≥30 min after startup. Repeat ×3 and average.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">VTBI Accuracy</div>
+          <div class="card-value">±5%<span class="card-unit">of set volume</span></div>
+          <div class="card-desc">Total volume delivered vs. programmed. Important for chemotherapy and paediatric applications. Log in device record.</div>
+        </div>
+      </div>
+      <div class="diagram-wrap" style="padding:12px">
+        <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--accent);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase">Acceptance Criteria Decision Tree</div>
+        <svg viewBox="0 0 680 160" width="100%" style="max-height:160px">
+          <defs><pattern id="grid6" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/></pattern></defs>
+          <rect width="680" height="160" fill="url(#grid6)"/>
+          <!-- Start -->
+          <rect x="270" y="10" width="140" height="36" rx="20" fill="#161e2a" stroke="#00d4ff" stroke-width="1.5"/>
+          <text x="340" y="26" fill="#00d4ff" font-size="9" text-anchor="middle">Gravimetric Result</text>
+          <text x="340" y="38" fill="#c8d8e8" font-size="9" text-anchor="middle">% error vs. set rate</text>
+          <line x1="340" y1="46" x2="340" y2="66" stroke="#6a8099" stroke-width="1"/>
+          <!-- Diamond -->
+          <polygon points="340,66 380,90 340,114 300,90" fill="#161e2a" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="340" y="87" fill="#ffb347" font-size="8" text-anchor="middle">within</text>
+          <text x="340" y="98" fill="#ffb347" font-size="8" text-anchor="middle">±2% ?</text>
+          <!-- YES -->
+          <line x1="380" y1="90" x2="470" y2="90" stroke="#00ff88" stroke-width="1.5"/>
+          <rect x="470" y="72" width="90" height="36" rx="3" fill="rgba(0,255,136,0.1)" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="515" y="88" fill="#00ff88" font-size="9" text-anchor="middle">PASS</text>
+          <text x="515" y="100" fill="#6a8099" font-size="8" text-anchor="middle">Return to service</text>
+          <text x="425" y="84" fill="#00ff88" font-size="8">YES</text>
+          <!-- NO -->
+          <line x1="340" y1="114" x2="340" y2="134" stroke="#ff4466" stroke-width="1.5"/>
+          <line x1="300" y1="90" x2="200" y2="90" stroke="#ff4466" stroke-width="1.5"/>
+          <text x="245" y="84" fill="#ff4466" font-size="8">NO</text>
+          <rect x="100" y="72" width="100" height="36" rx="3" fill="rgba(255,68,102,0.1)" stroke="#ff4466" stroke-width="1.5"/>
+          <text x="150" y="86" fill="#ff4466" font-size="9" text-anchor="middle">FAIL</text>
+          <text x="150" y="99" fill="#6a8099" font-size="8" text-anchor="middle">Investigate &amp; repair</text>
+          <rect x="270" y="134" width="140" height="24" rx="3" fill="#161e2a" stroke="#6a8099" stroke-width="1"/>
+          <text x="340" y="150" fill="#6a8099" font-size="8" text-anchor="middle">Log in asset management (Equatrace/Insite)</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT INFO PANEL -->
+  <div class="infopanel scrollbar-thin">
+    <div>
+      <div class="info-section-title">Quick Specs</div>
+      <div class="info-row"><span class="info-key">Mechanism</span><span class="info-val">Linear peristaltic</span></div>
+      <div class="info-row"><span class="info-key">Flow range</span><span class="info-val">0.1–999 mL/hr</span></div>
+      <div class="info-row"><span class="info-key">Accuracy</span><span class="info-val">±2% steady state</span></div>
+      <div class="info-row"><span class="info-key">Occlusion alarm</span><span class="info-val">300–900 mmHg</span></div>
+      <div class="info-row"><span class="info-key">Air detect</span><span class="info-val">≥50 µL bubble</span></div>
+      <div class="info-row"><span class="info-key">Battery</span><span class="info-val">≥4 hr autonomy</span></div>
+      <div class="info-row"><span class="info-key">Leakage</span><span class="info-val">&lt;10 µA (CF)</span></div>
+      <div class="info-row"><span class="info-key">Applied part class</span><span class="info-val">CF (cardiac safe)</span></div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Key Standards</div>
+      <div class="info-row"><span class="info-key">Safety</span><span class="info-val">IEC 60601-1</span></div>
+      <div class="info-row"><span class="info-key">Infusion pumps</span><span class="info-val">IEC 60601-2-24</span></div>
+      <div class="info-row"><span class="info-key">Alarms</span><span class="info-val">IEC 60601-1-8</span></div>
+      <div class="info-row"><span class="info-key">Software</span><span class="info-val">IEC 62304 Class C</span></div>
+      <div class="info-row"><span class="info-key">Risk mgmt</span><span class="info-val">ISO 14971</span></div>
+      <div class="info-row"><span class="info-key">Usability</span><span class="info-val">IEC 62366-1</span></div>
+      <div class="info-row"><span class="info-key">EMC</span><span class="info-val">IEC 60601-1-2</span></div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Clinical Risk Notes</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.7">
+        <div style="margin-bottom:6px">⚠ <span style="color:var(--red)">Free-flow:</span> Always test anti-syphon on PPM. Door-open free-flow is a Never Event category risk.</div>
+        <div style="margin-bottom:6px">⚠ <span style="color:var(--warn)">Occlusion bolus:</span> Document occ. pressure threshold changes in device record. ICU vasopressors most at risk.</div>
+        <div style="margin-bottom:6px">⚠ <span style="color:var(--accent)">Drug library:</span> Verify library version matches pharmacy formulary. DERS bypass events are reportable under MHRA Yellow Card.</div>
+        <div>⚠ <span style="color:var(--accent2)">Tubing:</span> Only approved tubing per IFU. Non-compliant sets invalidate accuracy spec.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Asset Management</div>
+      <div class="info-row"><span class="info-key">CMMS</span><span class="info-val">Equatrace / Insite</span></div>
+      <div class="info-row"><span class="info-key">Label</span><span class="info-val">Asset + PPM date</span></div>
+      <div class="info-row"><span class="info-key">Retirement</span><span class="info-val">Per OEM hours/cycles</span></div>
+      <div class="info-row"><span class="info-key">Incidents</span><span class="info-val">MHRA StEIS / Datix</span></div>
+      <div class="info-row"><span class="info-key">UDI</span><span class="info-val">Record per EUDAMED</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.getElementById('sec-' + id).classList.add('visible');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>

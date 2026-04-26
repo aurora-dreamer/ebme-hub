@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EBME Clinical Engineering Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --white: #ffffff;
+  --off-white: #f7f9fc;
+  --surface: #eef3fb;
+  --blue-50: #eff6ff;
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e3a8a;
+  --blue-900: #1e2d5a;
+  --ink: #0f1f3d;
+  --ink2: #2d4270;
+  --ink3: #6b84b0;
+  --ink4: #9bafc8;
+  --line: #d1def5;
+  --line2: #e8eef8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--white);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND ──────────────────── */
+.bg-pattern {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(59,130,246,0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 40% at 100% 80%, rgba(37,99,235,0.05) 0%, transparent 60%);
+}
+
+/* subtle grid */
+.bg-pattern::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(59,130,246,0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(59,130,246,0.045) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* ── TOP NAV ─────────────────────── */
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--line2);
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  height: 62px;
+  gap: 32px;
+}
+.nav-logo {
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--blue-600);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.nav-logo span { color: var(--ink3); }
+.nav-links {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.nav-link {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink2);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.nav-link:hover {
+  background: var(--blue-50);
+  color: var(--blue-600);
+}
+.nav-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  background: var(--blue-600);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+/* ── HERO ────────────────────────── */
+.hero {
+  position: relative;
+  z-index: 1;
+  padding: 80px 48px 60px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-200);
+  color: var(--blue-700);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  font-weight: 400;
+}
+.hero-kicker::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue-500);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+.hero-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(36px, 5vw, 60px);
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--ink);
+  letter-spacing: -1px;
+  margin-bottom: 8px;
+}
+.hero-title em {
+  font-style: italic;
+  color: var(--blue-600);
+}
+.hero-sub {
+  font-size: 17px;
+  color: var(--ink3);
+  font-weight: 300;
+  max-width: 520px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+.hero-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.stat {
+  border-left: 2px solid var(--blue-200);
+  padding-left: 16px;
+}
+.stat-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px;
+  color: var(--blue-600);
+  display: block;
+  line-height: 1;
+  margin-bottom: 3px;
+}
+.stat-label {
+  font-size: 11px;
+  color: var(--ink4);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ── DIVIDER ─────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--line2);
+  max-width: 1320px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── SECTION ─────────────────────── */
+.section {
+  position: relative;
+  z-index: 1;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 48px 48px 16px;
+}
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line2);
+}
+.section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 4px;
+  display: block;
+}
+.section-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.section-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+/* ── CARD GRIDS ──────────────────── */
+.cards-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+.cards-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+.cards-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+/* ── BASE CARD ───────────────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 24px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  transition: all 0.22s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: transparent;
+  transition: background 0.22s;
+  border-radius: 10px 10px 0 0;
+}
+.card:hover {
+  border-color: var(--blue-300, #93c5fd);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.1), 0 1px 4px rgba(37,99,235,0.06);
+  transform: translateY(-3px);
+}
+.card:hover::after {
+  background: var(--card-accent, var(--blue-500));
+}
+
+/* accent variants */
+.card-blue { --card-accent: #2563eb; }
+.card-blue:hover { border-color: #93c5fd; }
+
+.card-teal { --card-accent: #0891b2; }
+.card-teal:hover { border-color: #67e8f9; }
+
+.card-violet { --card-accent: #7c3aed; }
+.card-violet:hover { border-color: #c4b5fd; }
+
+.card-red { --card-accent: #dc2626; }
+.card-red:hover { border-color: #fca5a5; }
+
+.card-green { --card-accent: #059669; }
+.card-green:hover { border-color: #6ee7b7; }
+
+.card-amber { --card-accent: #d97706; }
+.card-amber:hover { border-color: #fcd34d; }
+
+/* ── CARD INTERNALS ──────────────── */
+.card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--blue-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  transition: background 0.22s;
+}
+.card:hover .card-icon { background: var(--blue-100); }
+
+.card-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+  display: block;
+}
+.card-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+  line-height: 1.25;
+  letter-spacing: -0.2px;
+}
+.card-desc {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.55;
+  flex: 1;
+}
+.card-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-path {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 0.3px;
+}
+.card-arrow {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--blue-50);
+  color: var(--blue-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.22s;
+  flex-shrink: 0;
+}
+.card:hover .card-arrow {
+  background: var(--blue-500);
+  color: white;
+}
+
+/* ── FEATURED (wide) CARD ────────── */
+.card-wide {
+  grid-column: span 2;
+  flex-direction: row;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 28px 32px;
+}
+.card-wide .card-icon {
+  width: 52px;
+  height: 52px;
+  font-size: 22px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.card-wide .card-body { flex: 1; }
+.card-wide .card-name { font-size: 18px; }
+.card-wide .card-desc { font-size: 14px; }
+
+/* ── SUB-LINKS ───────────────────── */
+.sub-links {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.sub-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  background: var(--blue-50);
+  border: 1px solid var(--blue-100);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--blue-700);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.18s;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.3px;
+}
+.sub-link:hover {
+  background: var(--blue-600);
+  border-color: var(--blue-600);
+  color: white;
+}
+
+/* ── STATUS BADGE ────────────────── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+.status-ready {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+.status-coming {
+  background: var(--blue-50);
+  color: var(--blue-700);
+  border: 1px solid var(--blue-200);
+}
+.status-ready::before, .status-coming::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+.status-ready::before { background: #10b981; }
+.status-coming::before { background: var(--blue-400); animation: blink 1.5s ease-in-out infinite; }
+
+/* ── NOTICE BAR ──────────────────── */
+.notice-bar {
+  position: relative;
+  z-index: 1;
+  background: var(--blue-50);
+  border-top: 1px solid var(--blue-100);
+  border-bottom: 1px solid var(--blue-100);
+  padding: 13px 48px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.notice-icon { font-size: 16px; flex-shrink: 0; }
+.notice-text {
+  font-size: 13px;
+  color: var(--blue-800);
+  line-height: 1.5;
+}
+.notice-text strong { font-weight: 600; }
+
+/* ── FOOTER ──────────────────────── */
+footer {
+  position: relative;
+  z-index: 1;
+  background: var(--off-white);
+  border-top: 1px solid var(--line2);
+  padding: 32px 48px;
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+}
+.footer-brand {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.footer-standards {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.std-pill {
+  padding: 3px 10px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--ink3);
+  letter-spacing: 0.5px;
+}
+
+/* ── RESPONSIVE ──────────────────── */
+@media (max-width: 1100px) {
+  .cards-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 800px) {
+  .topnav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .hero, .section, .notice-bar { padding-left: 20px; padding-right: 20px; }
+  .cards-2, .cards-3, .cards-4 { grid-template-columns: 1fr; }
+  .card-wide { flex-direction: column; grid-column: span 1; }
+  footer { grid-template-columns: 1fr; padding: 24px 20px; }
+  .footer-standards { justify-content: flex-start; }
+}
+
+/* ── FADE-IN ANIMATION ───────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.hero { animation: fadeUp 0.5s ease both; }
+.section:nth-of-type(1) { animation: fadeUp 0.5s 0.1s ease both; }
+.section:nth-of-type(2) { animation: fadeUp 0.5s 0.18s ease both; }
+.section:nth-of-type(3) { animation: fadeUp 0.5s 0.26s ease both; }
+.section:nth-of-type(4) { animation: fadeUp 0.5s 0.34s ease both; }
+</style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a href="index.html" class="nav-logo">EBME <span>/</span> HUB</a>
+  <div class="nav-links">
+    <a href="#medical-devices" class="nav-link">Medical Devices</a>
+    <a href="#est" class="nav-link">EST</a>
+    <a href="#safety-hazards" class="nav-link">Safety & Hazards</a>
+    <a href="#regulations" class="nav-link">Regulations</a>
+  </div>
+  <span class="nav-badge">NHS EBME</span>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-kicker">Clinical Engineering Reference Platform</div>
+  <h1 class="hero-title">Medical Engineering<br><em>Central Hub</em></h1>
+  <p class="hero-sub">Interactive technical references, safety standards, and compliance documentation for NHS EBME departments.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-num">3</span>
+      <span class="stat-label">Device Visualisers</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">4</span>
+      <span class="stat-label">Hazard References</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">IEC 60601</span>
+      <span class="stat-label">Primary Standard</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num">ISO 14971</span>
+      <span class="stat-label">Risk Framework</span>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- NOTICE -->
+<div class="notice-bar">
+  <span class="notice-icon">📋</span>
+  <div class="notice-text">
+    <strong>Getting started:</strong> Click any card to open the relevant reference page. Subpages are being added progressively — cards marked <em>Coming Soon</em> will be linked as files are added to each folder.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SECTION 1 — MEDICAL DEVICES
+════════════════════════════════════════ -->
+<section class="section" id="medical-devices">
+  <div class="section-header">
+    <div>
+      <span class="section-label">Section 01 · Subsystem Visualisers</span>
+      <h2 class="section-title">Medical Devices</h2>
+    </div>
+    <span class="section-count">3 VISUALISERS · MORE COMING</span>
+  </div>
+
+  <!-- Featured wide card — Anaesthesia -->
+  <div class="cards-2">
+    <a href="medical-devices/anaesthesia-machine-visualiser.html" class="card card-blue card-wide">
+      <div class="card-icon">🫁</div>
+      <div class="card-body">
+        <span class="card-tag">Continuous Flow Workstation</span>
+        <div class="card-name">Anaesthesia Machine</div>
+        <div class="card-desc">Full gas pathway from cylinder to patient. Covers high-pressure supply, safety interlocks (Link-25, O₂ fail-safe), flowmeters, vaporiser mechanism, circle breathing system, CO₂ absorber, ventilator types, monitoring, scavenging, PPM schedule, and fault diagnosis.</div>
+        <div class="sub-links">
+          <a href="medical-devices/anaesthesia-machine-visualiser.html#hp-supply" class="sub-link">High Pressure</a>
+          <a href="medical-devices/anaesthesia-machine-visualiser.html#vaporiser" class="sub-link">Vaporiser</a>
+          <a href="medical-devices/anaesthesia-machine-visualiser.html#circle" class="sub-link">Circle System</a>
+          <a href="medical-devices/anaesthesia-machine-visualiser.html#ppm" class="sub-link">PPM Schedule</a>
+        </div>
+        <div class="card-footer">
+          <span class="card-path">medical-devices/anaesthesia-machine-visualiser.html</span>
+          <span class="status-badge status-ready">Ready</span>
+        </div>
+      </div>
+    </a>
+
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <a href="medical-devices/infusion-pump-visualiser.html" class="card card-teal" style="flex:1">
+        <div class="card-icon">💧</div>
+        <span class="card-tag">Volumetric Peristaltic</span>
+        <div class="card-name">Infusion Pump</div>
+        <div class="card-desc">Linear peristaltic finger mechanism, fluid pathway, alarm logic, occlusion detection, PPM schedule, fault trees.</div>
+        <div class="card-footer">
+          <span class="card-path">medical-devices/infusion-pump-visualiser.html</span>
+          <span class="status-badge status-ready">Ready</span>
+        </div>
+      </a>
+
+      <a href="medical-devices/syringe-pump-visualiser.html" class="card card-violet" style="flex:1">
+        <div class="card-icon">🔬</div>
+        <span class="card-tag">Lead-Screw Linear Drive</span>
+        <div class="card-name">Syringe Pump</div>
+        <div class="card-desc">Lead-screw mechanism, syringe interface, force-pressure chain, siphon risk, trumpet curve accuracy, fault diagnosis.</div>
+        <div class="card-footer">
+          <span class="card-path">medical-devices/syringe-pump-visualiser.html</span>
+          <span class="status-badge status-ready">Ready</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Placeholder cards for future devices -->
+  <div class="cards-4">
+    <div class="card card-blue" style="opacity:0.6;cursor:default;">
+      <div class="card-icon">❤️</div>
+      <span class="card-tag">Electrophysiology</span>
+      <div class="card-name">Patient Monitor</div>
+      <div class="card-desc">ECG, SpO₂, NIBP, temperature, and invasive pressure — coming soon.</div>
+      <div class="card-footer">
+        <span class="card-path">medical-devices/patient-monitor.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </div>
+
+    <div class="card card-teal" style="opacity:0.6;cursor:default;">
+      <div class="card-icon">⚡</div>
+      <span class="card-tag">High-Voltage Therapy</span>
+      <div class="card-name">Defibrillator</div>
+      <div class="card-desc">Capacitor charge/discharge, energy delivery, AED/manual modes — coming soon.</div>
+      <div class="card-footer">
+        <span class="card-path">medical-devices/defibrillator.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </div>
+
+    <div class="card card-amber" style="opacity:0.6;cursor:default;">
+      <div class="card-icon">🩻</div>
+      <span class="card-tag">Imaging</span>
+      <div class="card-name">X-Ray / Imaging</div>
+      <div class="card-desc">X-ray tube mechanics, kVp/mAs control, image receptor — coming soon.</div>
+      <div class="card-footer">
+        <span class="card-path">medical-devices/xray.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </div>
+
+    <div class="card card-blue" style="opacity:0.6;cursor:default;">
+      <div class="card-icon">🔊</div>
+      <span class="card-tag">Diagnostic</span>
+      <div class="card-name">Ultrasound</div>
+      <div class="card-desc">Piezoelectric transducer array, frequency modes, image formation — coming soon.</div>
+      <div class="card-footer">
+        <span class="card-path">medical-devices/ultrasound.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════
+     SECTION 2 — EST / ELECTRICAL SAFETY
+════════════════════════════════════════ -->
+<section class="section" id="est">
+  <div class="section-header">
+    <div>
+      <span class="section-label">Section 02 · Compliance & Testing</span>
+      <h2 class="section-title">Electrical Safety Testing (EST)</h2>
+    </div>
+    <span class="section-count">IEC 62353 · IEC 60601-1</span>
+  </div>
+
+  <div class="cards-3">
+    <a href="est/electrical-safety-overview.html" class="card card-green">
+      <div class="card-icon">⚡</div>
+      <span class="card-tag">Framework · IEC 62353</span>
+      <div class="card-name">EST Overview</div>
+      <div class="card-desc">Introduction to recurrent testing framework, applied part classes (B, BF, CF), acceptance criteria, and test sequencing.</div>
+      <div class="card-footer">
+        <span class="card-path">est/electrical-safety-overview.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="est/earth-bond-test.html" class="card card-green">
+      <div class="card-icon">🔩</div>
+      <span class="card-tag">IEC 62353 §8.5</span>
+      <div class="card-name">Earth Continuity / Bond</div>
+      <div class="card-desc">25 A test current, ≤ 0.1 Ω acceptance limit, measurement points, Class I devices, test leads and contact resistance compensation.</div>
+      <div class="card-footer">
+        <span class="card-path">est/earth-bond-test.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="est/insulation-resistance.html" class="card card-green">
+      <div class="card-icon">🛡️</div>
+      <span class="card-tag">IEC 62353 §8.6</span>
+      <div class="card-name">Insulation Resistance</div>
+      <div class="card-desc">500 V DC measurement between mains conductors and earth. ≥ 2 MΩ limit, temperature effects, moisture precautions.</div>
+      <div class="card-footer">
+        <span class="card-path">est/insulation-resistance.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="est/leakage-current.html" class="card card-green">
+      <div class="card-icon">〰️</div>
+      <span class="card-tag">IEC 60601-1 Table 1</span>
+      <div class="card-name">Leakage Current</div>
+      <div class="card-desc">Enclosure, earth, and patient (CF ≤ 10 µA) leakage — measurement configurations, normal condition and single-fault condition limits.</div>
+      <div class="card-footer">
+        <span class="card-path">est/leakage-current.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="est/applied-parts.html" class="card card-green">
+      <div class="card-icon">🩺</div>
+      <span class="card-tag">IEC 60601-1 §6</span>
+      <div class="card-name">Applied Part Classification</div>
+      <div class="card-desc">Type B, BF, and CF applied parts — isolation requirements, patient auxiliary current limits, defibrillator-proof classifications.</div>
+      <div class="card-footer">
+        <span class="card-path">est/applied-parts.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="est/pat-testing.html" class="card card-green">
+      <div class="card-icon">🔌</div>
+      <span class="card-tag">Portable Appliance</span>
+      <div class="card-name">PAT Testing Protocol</div>
+      <div class="card-desc">Visual inspection, earth continuity, insulation check sequence for portable ME equipment. Frequency, records, and labelling requirements.</div>
+      <div class="card-footer">
+        <span class="card-path">est/pat-testing.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════
+     SECTION 3 — SAFETY & HAZARDS
+════════════════════════════════════════ -->
+<section class="section" id="safety-hazards">
+  <div class="section-header">
+    <div>
+      <span class="section-label">Section 03 · Risk Management</span>
+      <h2 class="section-title">Safety & Hazards</h2>
+    </div>
+    <span class="section-count">ISO 14971 · IEC 60601-1-8</span>
+  </div>
+
+  <!-- Overview + cross-cutting (full width) -->
+  <div class="cards-2" style="margin-bottom:16px;">
+    <a href="safety-hazards/hazards-overview.html" class="card card-red card-wide">
+      <div class="card-icon">⚠️</div>
+      <div class="card-body">
+        <span class="card-tag">ISO 14971:2019 · Risk Framework</span>
+        <div class="card-name">Hazard & Safety Overview</div>
+        <div class="card-desc">ISO 14971 risk matrix, defence-in-depth model (Swiss cheese), stakeholder risk mapping (patient, clinical user, engineer), alarm priority framework (IEC 60601-1-8) and applicable standards table — applicable across all device types.</div>
+        <div class="sub-links">
+          <a href="safety-hazards/hazards-overview.html#risk-matrix" class="sub-link">ISO 14971 Matrix</a>
+          <a href="safety-hazards/hazards-overview.html#defence" class="sub-link">Defence-in-Depth</a>
+          <a href="safety-hazards/hazards-overview.html#alarms" class="sub-link">Alarm Framework</a>
+          <a href="safety-hazards/hazards-overview.html#standards" class="sub-link">Standards Table</a>
+        </div>
+        <div class="card-footer">
+          <span class="card-path">safety-hazards/hazards-overview.html</span>
+          <span class="status-badge status-coming">Coming Soon</span>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Per-device hazard references -->
+  <div class="cards-3">
+    <a href="safety-hazards/infusion-pump-hazards.html" class="card card-red">
+      <div class="card-icon">💧</div>
+      <span class="card-tag">Patient · User · Engineer</span>
+      <div class="card-name">Infusion Pump Hazards</div>
+      <div class="card-desc">Free-flow overdose, air embolism, occlusion detection, electrical micro-shock, DERS bypass, alarm logic, safety mechanisms, and IEC 60601-2-24 compliance.</div>
+      <div class="card-footer">
+        <span class="card-path">safety-hazards/infusion-pump-hazards.html</span>
+        <span class="status-badge status-ready">Ready</span>
+      </div>
+    </a>
+
+    <a href="safety-hazards/syringe-pump-hazards.html" class="card card-red">
+      <div class="card-icon">🔬</div>
+      <span class="card-tag">Patient · User · Engineer</span>
+      <div class="card-name">Syringe Pump Hazards</div>
+      <div class="card-desc">Siphon overdose, startup bolus, occlusion delay, force sensor calibration risk, post-service siphon, firmware rollback, and battery thermal events.</div>
+      <div class="card-footer">
+        <span class="card-path">safety-hazards/syringe-pump-hazards.html</span>
+        <span class="status-badge status-ready">Ready</span>
+      </div>
+    </a>
+
+    <a href="safety-hazards/anaesthesia-hazards.html" class="card card-red">
+      <div class="card-icon">🫁</div>
+      <span class="card-tag">Patient · User · Engineer</span>
+      <div class="card-name">Anaesthesia Machine Hazards</div>
+      <div class="card-desc">Hypoxic gas mixture, vaporiser agent errors, circuit disconnection, CO₂ absorber risks, AGSS failure, and occupational volatile agent exposure.</div>
+      <div class="card-footer">
+        <span class="card-path">safety-hazards/anaesthesia-hazards.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="safety-hazards/defibrillator-hazards.html" class="card card-red" style="opacity:0.6;cursor:default;">
+      <div class="card-icon">⚡</div>
+      <span class="card-tag">Patient · User · Engineer</span>
+      <div class="card-name">Defibrillator Hazards</div>
+      <div class="card-desc">High-voltage shock risk, energy delivery accuracy, arc flash, pad placement errors, and battery maintenance hazards — coming soon.</div>
+      <div class="card-footer">
+        <span class="card-path">safety-hazards/defibrillator-hazards.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="safety-hazards/patient-monitor-hazards.html" class="card card-red" style="opacity:0.6;cursor:default;">
+      <div class="card-icon">❤️</div>
+      <span class="card-tag">Patient · User · Engineer</span>
+      <div class="card-name">Patient Monitor Hazards</div>
+      <div class="card-desc">Alarm fatigue, SpO₂ interference, NIBP over-pressurisation, lead-off detection, and calibration drift — coming soon.</div>
+      <div class="card-footer">
+        <span class="card-path">safety-hazards/patient-monitor-hazards.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="safety-hazards/general-electrical-hazards.html" class="card card-amber" style="opacity:0.6;cursor:default;">
+      <div class="card-icon">🔋</div>
+      <span class="card-tag">Cross-Device · Engineer</span>
+      <div class="card-name">General Electrical Hazards</div>
+      <div class="card-desc">LOTO procedures, live working rules, isolation transformer use, CAT-rated test equipment, and battery thermal events — coming soon.</div>
+      <div class="card-footer">
+        <span class="card-path">safety-hazards/general-electrical-hazards.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════
+     SECTION 4 — NHS REGULATIONS
+════════════════════════════════════════ -->
+<section class="section" id="regulations">
+  <div class="section-header">
+    <div>
+      <span class="section-label">Section 04 · Legislative Framework</span>
+      <h2 class="section-title">NHS Regulations & Standards</h2>
+    </div>
+    <span class="section-count">UK MDR · MHRA · NHSE</span>
+  </div>
+
+  <div class="cards-4">
+    <a href="regulations/uk-mdr-2002.html" class="card card-amber">
+      <div class="card-icon">🇬🇧</div>
+      <span class="card-tag">Primary Legislation</span>
+      <div class="card-name">UK MDR 2002</div>
+      <div class="card-desc">UK Medical Devices Regulations 2002. UKCA marking, registration, incident reporting, and FSCA obligations for post-Brexit framework.</div>
+      <div class="card-footer">
+        <span class="card-path">regulations/uk-mdr-2002.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="regulations/mhra-guidance.html" class="card card-amber">
+      <div class="card-icon">🏛️</div>
+      <span class="card-tag">Regulator · Vigilance</span>
+      <div class="card-name">MHRA Guidance</div>
+      <div class="card-desc">Device bulletin DB2010(02), decontamination DB2006(06), Yellow Card reporting, Field Safety Notices, and the STEPs framework.</div>
+      <div class="card-footer">
+        <span class="card-path">regulations/mhra-guidance.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="regulations/htm-guidelines.html" class="card card-amber">
+      <div class="card-icon">📘</div>
+      <span class="card-tag">NHS Estates · Technical</span>
+      <div class="card-name">HTM Guidelines</div>
+      <div class="card-desc">HTM 02-01 medical gas pipeline systems, HTM 06-01 electrical services, and decontamination HTM 01-01 relevant to EBME departments.</div>
+      <div class="card-footer">
+        <span class="card-path">regulations/htm-guidelines.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="regulations/eu-mdr.html" class="card card-amber">
+      <div class="card-icon">🇪🇺</div>
+      <span class="card-tag">EU MDR 2017/745</span>
+      <div class="card-name">EU MDR & EUDAMED</div>
+      <div class="card-desc">EU MDR classification (Class IIa/IIb), UDI registration, EUDAMED, PMS/PMCF/PSUR obligations, and Notified Body role.</div>
+      <div class="card-footer">
+        <span class="card-path">regulations/eu-mdr.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="regulations/iso-standards.html" class="card card-amber">
+      <div class="card-icon">📐</div>
+      <span class="card-tag">ISO · IEC Standards</span>
+      <div class="card-name">Key ISO/IEC Standards</div>
+      <div class="card-desc">ISO 14971, IEC 60601-1, IEC 62353, IEC 60601-1-8, IEC 62304, IEC 62366, ISO 13485 — scope and key clauses for EBME engineers.</div>
+      <div class="card-footer">
+        <span class="card-path">regulations/iso-standards.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="regulations/coshh-sharps.html" class="card card-amber">
+      <div class="card-icon">🧪</div>
+      <span class="card-tag">Occupational Health</span>
+      <div class="card-name">COSHH & Sharps</div>
+      <div class="card-desc">COSHH 2002 risk assessments, Health & Safety (Sharp Instruments) Regulations 2013, PPE requirements, and post-exposure protocols.</div>
+      <div class="card-footer">
+        <span class="card-path">regulations/coshh-sharps.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="regulations/ipem-guidance.html" class="card card-amber">
+      <div class="card-icon">🎓</div>
+      <span class="card-tag">Professional Body</span>
+      <div class="card-name">IPEM & TOPRA</div>
+      <div class="card-desc">IPEM Report 98 medical device management, TOPRA regulatory affairs guidance, and CPD frameworks for clinical engineers.</div>
+      <div class="card-footer">
+        <span class="card-path">regulations/ipem-guidance.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+
+    <a href="regulations/asset-management.html" class="card card-amber">
+      <div class="card-icon">📊</div>
+      <span class="card-tag">CMMS · Lifecycle</span>
+      <div class="card-name">Asset Management</div>
+      <div class="card-desc">Equatrace/Insite CMMS documentation, PPM cycle management, device retirement criteria, incident logging on Datix, and UDI records.</div>
+      <div class="card-footer">
+        <span class="card-path">regulations/asset-management.html</span>
+        <span class="status-badge status-coming">Coming Soon</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     FOOTER
+════════════════════════════════════════ -->
+<footer>
+  <div>
+    <div class="footer-brand">EBME Clinical Engineering Hub · NHS Medical Engineering Reference Platform</div>
+    <div style="font-size:12px;color:var(--ink4);margin-top:5px;font-family:'DM Mono',monospace;">
+      Add your .html files to each folder · Cards activate automatically when files are present
+    </div>
+  </div>
+  <div class="footer-standards">
+    <span class="std-pill">IEC 60601-1</span>
+    <span class="std-pill">IEC 62353</span>
+    <span class="std-pill">ISO 14971</span>
+    <span class="std-pill">IEC 60601-1-8</span>
+    <span class="std-pill">IEC 62304</span>
+    <span class="std-pill">UK MDR 2002</span>
+    <span class="std-pill">HTM 02-01</span>
+    <span class="std-pill">ISO 80601-2-13</span>
+  </div>
+</footer>
+
+</body>
+</html>

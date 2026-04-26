@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Syringe Pump — Hazard, Alarm & Safety Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --surface2: #f3f1eb;
+  --ink: #1a1a1a;
+  --ink2: #4a4a4a;
+  --ink3: #8a8a8a;
+  --line: #e0ddd4;
+
+  --patient: #b91c1c;
+  --patient-bg: #fef2f2;
+  --patient-mid: #fca5a5;
+
+  --user: #1d4ed8;
+  --user-bg: #eff6ff;
+  --user-mid: #93c5fd;
+
+  --engineer: #15803d;
+  --engineer-bg: #f0fdf4;
+  --engineer-mid: #86efac;
+
+  --ochre: #a16207;
+  --ochre-bg: #fefce8;
+
+  --shadow: rgba(0,0,0,0.08);
+  --shadow2: rgba(0,0,0,0.12);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Fraunces', serif;
+  min-height: 100vh;
+  font-feature-settings: "ss01", "ss02";
+}
+
+/* ── HERO HEADER ───────────────────────── */
+.hero {
+  background:
+    radial-gradient(circle at 85% 20%, rgba(185,28,28,0.08), transparent 40%),
+    radial-gradient(circle at 15% 80%, rgba(29,78,216,0.06), transparent 40%),
+    var(--ink);
+  color: var(--bg);
+  padding: 32px 44px 28px;
+  position: relative;
+  border-bottom: 4px double rgba(250,250,247,0.15);
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: flex-end;
+}
+.hero-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(250,250,247,0.5);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.hero-kicker::before {
+  content: ''; width: 32px; height: 1px; background: rgba(250,250,247,0.4);
+}
+.hero h1 {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+  font-family: 'Fraunces', serif;
+}
+.hero h1 em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--patient-mid);
+}
+.hero-sub {
+  font-size: 14px;
+  color: rgba(250,250,247,0.55);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 8px;
+  letter-spacing: 0.5px;
+}
+.hero-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  padding-bottom: 4px;
+}
+.hero-pill {
+  padding: 5px 14px;
+  border-radius: 24px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 500;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.pill-p { border-color: var(--patient-mid); color: var(--patient-mid); }
+.pill-u { border-color: var(--user-mid); color: var(--user-mid); }
+.pill-e { border-color: var(--engineer-mid); color: var(--engineer-mid); }
+
+/* ── NAV TABS ─────────────────────────── */
+.nav-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 1px 0 var(--line), 0 4px 12px var(--shadow);
+}
+.nav-inner {
+  display: flex;
+  overflow-x: auto;
+  padding: 0 44px;
+  gap: 4px;
+}
+.nav-tab {
+  padding: 18px 18px 16px;
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink3);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s;
+  letter-spacing: 0.2px;
+}
+.nav-tab:hover { color: var(--ink); }
+.nav-tab.on-p { color: var(--patient); border-bottom-color: var(--patient); }
+.nav-tab.on-u { color: var(--user); border-bottom-color: var(--user); }
+.nav-tab.on-e { color: var(--engineer); border-bottom-color: var(--engineer); }
+.nav-tab.on-n { color: var(--ink); border-bottom-color: var(--ink); }
+.nav-glyph { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ── CONTENT ──────────────────────────── */
+.shell { padding: 44px; max-width: 1280px; }
+.section { display: none; }
+.section.on { display: block; animation: rise 0.35s ease both; }
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-head {
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: flex-end;
+}
+.section-marker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--ink3);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.section-sub {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink2);
+  max-width: 500px;
+  text-align: right;
+  line-height: 1.5;
+}
+
+/* ── OVERVIEW CARDS ──────────────────── */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 36px;
+}
+.ov-card {
+  background: var(--surface);
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  padding: 24px;
+  box-shadow: 0 1px 3px var(--shadow);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.ov-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+}
+.ov-card.p::before { background: var(--patient); }
+.ov-card.u::before { background: var(--user); }
+.ov-card.e::before { background: var(--engineer); }
+.ov-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px var(--shadow2);
+}
+.ov-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.ov-glyph {
+  width: 44px; height: 44px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.ov-title {
+  font-size: 22px;
+  font-weight: 800;
+  font-family: 'Fraunces', serif;
+  line-height: 1;
+}
+.ov-role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink3);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 3px;
+}
+.ov-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  align-items: center;
+}
+.ov-stat:last-child { border-bottom: none; }
+.ov-stat-label {
+  font-family: 'Fraunces', serif;
+  color: var(--ink2);
+}
+
+/* ── ISO 14971 MATRIX ─────────────────── */
+.matrix-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 28px;
+  margin-bottom: 28px;
+}
+.matrix-title {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.matrix-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink3);
+  margin-bottom: 20px;
+  letter-spacing: 1px;
+}
+.rm {
+  display: grid;
+  grid-template-columns: 130px repeat(5, 1fr);
+  gap: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+.rm-cell {
+  padding: 11px 6px;
+  text-align: center;
+  border-radius: 2px;
+  font-weight: 500;
+}
+.rm-hdr { background: var(--ink); color: var(--bg); font-size: 9px; letter-spacing: 1px; }
+.rm-side {
+  background: var(--surface2);
+  color: var(--ink2);
+  text-align: right;
+  padding-right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 10px;
+}
+.rm-neg { background: #dcfce7; color: #14532d; }
+.rm-acc { background: #fef9c3; color: #713f12; }
+.rm-alarp { background: #fed7aa; color: #7c2d12; }
+.rm-un { background: #fecaca; color: #7f1d1d; font-weight: 700; }
+.matrix-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+.legend-item { display: flex; align-items: center; gap: 6px; color: var(--ink2); }
+.legend-swatch { width: 14px; height: 14px; border-radius: 2px; }
+
+/* ── HAZARD CARDS ─────────────────────── */
+.hz-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.hz-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px var(--shadow);
+  transition: all 0.2s;
+}
+.hz-card:hover {
+  box-shadow: 0 6px 18px var(--shadow2);
+  transform: translateY(-2px);
+}
+.hz-top {
+  padding: 16px 20px;
+  border-bottom: 1px solid;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.hz-glyph {
+  font-size: 22px;
+  line-height: 1;
+  margin-top: 2px;
+}
+.hz-titles {
+  flex: 1;
+}
+.hz-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--ink3);
+  margin-bottom: 3px;
+}
+.hz-name {
+  font-size: 17px;
+  font-weight: 700;
+  font-family: 'Fraunces', serif;
+  line-height: 1.2;
+}
+.hz-sev {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  font-weight: 600;
+  border: 1px solid;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+.sev-crit { background: #fecaca; color: #7f1d1d; border-color: #f87171; }
+.sev-maj { background: #fed7aa; color: #7c2d12; border-color: #fb923c; }
+.sev-mod { background: #fef08a; color: #713f12; border-color: #facc15; }
+.sev-min { background: #bbf7d0; color: #14532d; border-color: #4ade80; }
+
+.hz-body { padding: 18px 20px 20px; }
+.hz-row {
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 12px;
+  align-items: flex-start;
+}
+.hz-row:last-child { border-bottom: none; padding-bottom: 0; }
+.hz-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  padding-top: 2px;
+  font-weight: 500;
+}
+.hz-val { color: var(--ink); line-height: 1.55; font-family: 'Fraunces', serif; font-size: 13px; }
+.hz-val strong { font-weight: 700; }
+
+/* ── ALARM TABLE ───────────────────────── */
+.alarm-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.alarm-tbl { width: 100%; border-collapse: collapse; }
+.alarm-tbl th {
+  text-align: left;
+  padding: 14px 16px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.alarm-tbl td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  vertical-align: top;
+  line-height: 1.5;
+}
+.alarm-tbl tr:last-child td { border-bottom: none; }
+.alarm-tbl tr:hover td { background: var(--surface2); }
+.alarm-tbl td:first-child {
+  font-weight: 700;
+  font-family: 'Fraunces', serif;
+}
+.p-high, .p-med, .p-low {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  font-weight: 600;
+  border: 1px solid;
+}
+.p-high { background: #fecaca; color: #7f1d1d; border-color: #f87171; }
+.p-med { background: #fed7aa; color: #7c2d12; border-color: #fb923c; }
+.p-low { background: #bbf7d0; color: #14532d; border-color: #4ade80; }
+
+/* ── SAFETY MECHANISM GRID ─────────────── */
+.sm-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.sm-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 22px;
+  position: relative;
+  transition: all 0.25s;
+  cursor: default;
+  overflow: hidden;
+}
+.sm-card:hover {
+  border-color: var(--ink);
+  box-shadow: 0 8px 20px var(--shadow2);
+}
+.sm-num {
+  position: absolute;
+  top: 16px; right: 18px;
+  font-family: 'Fraunces', serif;
+  font-size: 48px;
+  font-weight: 800;
+  opacity: 0.06;
+  line-height: 1;
+}
+.sm-glyph-wrap {
+  width: 42px; height: 42px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  margin-bottom: 14px;
+}
+.sm-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: var(--ink3);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.sm-name {
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 10px;
+  letter-spacing: -0.2px;
+}
+.sm-desc {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+.sm-std {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--ink3);
+  letter-spacing: 1px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+/* ── DEFENCE ──────────────────────────── */
+.defence-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 32px;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.defence-layer {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: 24px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.defence-layer:last-child { border-bottom: none; }
+.layer-roman {
+  font-family: 'Fraunces', serif;
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--ink3);
+  line-height: 1;
+  font-style: italic;
+}
+.layer-content h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: -0.2px;
+}
+.layer-content p {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+.layer-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.l-tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+}
+.l-tag-p { background: var(--patient-bg); color: var(--patient); border-color: var(--patient-mid); }
+.l-tag-u { background: var(--user-bg); color: var(--user); border-color: var(--user-mid); }
+.l-tag-e { background: var(--engineer-bg); color: var(--engineer); border-color: var(--engineer-mid); }
+
+/* ── STANDARDS TABLE ──────────────────── */
+.std-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.std-tbl { width: 100%; border-collapse: collapse; }
+.std-tbl th {
+  text-align: left;
+  padding: 14px 18px;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.std-tbl td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  font-family: 'Fraunces', serif;
+}
+.std-tbl tr:last-child td { border-bottom: none; }
+.std-tbl tr:hover td { background: var(--surface2); }
+.std-tbl td:first-child {
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+.std-tbl td { font-size: 12.5px; line-height: 1.5; color: var(--ink2); }
+
+/* ── BANNERS ──────────────────────────── */
+.banner {
+  display: flex;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 4px;
+  margin-bottom: 22px;
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  line-height: 1.5;
+  border-left: 4px solid;
+}
+.banner-e { background: var(--engineer-bg); border-color: var(--engineer); color: var(--engineer); }
+.banner strong { font-weight: 800; display: block; margin-bottom: 4px; }
+
+/* ── HELPERS ──────────────────────────── */
+.c-p { color: var(--patient); }
+.c-u { color: var(--user); }
+.c-e { color: var(--engineer); }
+.bg-p { background: var(--patient-bg); color: var(--patient); }
+.bg-u { background: var(--user-bg); color: var(--user); }
+.bg-e { background: var(--engineer-bg); color: var(--engineer); }
+.bor-p { border-color: var(--patient-mid); }
+.bor-u { border-color: var(--user-mid); }
+.bor-e { border-color: var(--engineer-mid); }
+
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .section-head { grid-template-columns: 1fr; }
+  .section-sub { text-align: left; }
+  .overview-grid, .hz-grid, .sm-grid { grid-template-columns: 1fr; }
+  .rm { grid-template-columns: 80px repeat(5, 1fr); font-size: 8px; }
+  .rm-cell { padding: 8px 3px; }
+  .shell, .hero { padding: 22px; }
+  .nav-inner { padding: 0 16px; }
+  .hero h1 { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-kicker">ISO 14971 · IEC 60601-2-24 · IEC 60601-1-8 · IEC 62366</div>
+      <h1>Syringe Pump<br><em>Hazard, Alarm & Safety</em></h1>
+      <div class="hero-sub">Risk characterisation across patient, clinician and engineer</div>
+    </div>
+    <div class="hero-side">
+      <span class="hero-pill pill-p">◉ Patient</span>
+      <span class="hero-pill pill-u">◉ Clinical User</span>
+      <span class="hero-pill pill-e">◉ Service Engineer</span>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <div class="nav-inner">
+    <div class="nav-tab on-n" id="t-over" onclick="go('over', this)">
+      <div class="nav-glyph" style="background:var(--ink)"></div> Overview
+    </div>
+    <div class="nav-tab" id="t-pat" onclick="go('pat', this)">
+      <div class="nav-glyph" style="background:var(--patient)"></div> Patient Hazards
+    </div>
+    <div class="nav-tab" id="t-usr" onclick="go('usr', this)">
+      <div class="nav-glyph" style="background:var(--user)"></div> User Hazards
+    </div>
+    <div class="nav-tab" id="t-eng" onclick="go('eng', this)">
+      <div class="nav-glyph" style="background:var(--engineer)"></div> Engineer Hazards
+    </div>
+    <div class="nav-tab" id="t-alarm" onclick="go('alarm', this)">
+      <div class="nav-glyph" style="background:var(--ink)"></div> Alarm System
+    </div>
+    <div class="nav-tab" id="t-safe" onclick="go('safe', this)">
+      <div class="nav-glyph" style="background:var(--ink)"></div> Safety Mechanisms
+    </div>
+    <div class="nav-tab" id="t-def" onclick="go('def', this)">
+      <div class="nav-glyph" style="background:var(--ink)"></div> Defence-in-Depth
+    </div>
+    <div class="nav-tab" id="t-std" onclick="go('std', this)">
+      <div class="nav-glyph" style="background:var(--ink)"></div> Standards
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+<div id="sec-over" class="section on">
+  <div class="section-head">
+    <div>
+      <div class="section-marker">§ 00 · Stakeholder Risk Map</div>
+      <div class="section-title">The Three Stakeholders</div>
+    </div>
+    <div class="section-sub">
+      Syringe pumps carry distinct risks for each stakeholder. The patient faces siphon and programming overdose; the clinician faces alarm fatigue and use error; the engineer faces post-service hazards that propagate forward to the patient.
+    </div>
+  </div>
+
+  <div class="overview-grid">
+    <div class="ov-card p" onclick="go('pat', document.getElementById('t-pat'))">
+      <div class="ov-header">
+        <div class="ov-glyph bg-p">🧑‍⚕️</div>
+        <div>
+          <div class="ov-title c-p">Patient</div>
+          <div class="ov-role">Direct physiological risk</div>
+        </div>
+      </div>
+      <div class="ov-stat"><span class="ov-stat-label">Siphon overdose</span><span class="hz-sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Programming error (10×)</span><span class="hz-sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Startup bolus</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Delayed occlusion detection</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Micro-shock (CF)</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Wrong syringe = wrong dose</span><span class="hz-sev sev-crit">CRITICAL</span></div>
+    </div>
+    <div class="ov-card u" onclick="go('usr', document.getElementById('t-usr'))">
+      <div class="ov-header">
+        <div class="ov-glyph bg-u">👩‍⚕️</div>
+        <div>
+          <div class="ov-title c-u">Clinical User</div>
+          <div class="ov-role">Use error & human factors</div>
+        </div>
+      </div>
+      <div class="ov-stat"><span class="ov-stat-label">Decimal / rate entry error</span><span class="hz-sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Wrong syringe brand</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Alarm fatigue</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Improper syringe loading</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Needlestick / sharps</span><span class="hz-sev sev-mod">MODERATE</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Height placement error</span><span class="hz-sev sev-crit">CRITICAL</span></div>
+    </div>
+    <div class="ov-card e" onclick="go('eng', document.getElementById('t-eng'))">
+      <div class="ov-header">
+        <div class="ov-glyph bg-e">🔧</div>
+        <div>
+          <div class="ov-title c-e">Service Engineer</div>
+          <div class="ov-role">Occupational & patient-forward</div>
+        </div>
+      </div>
+      <div class="ov-stat"><span class="ov-stat-label">Electric shock (mains)</span><span class="hz-sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Blood/fluid exposure</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Post-service siphon risk</span><span class="hz-sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Force sensor mis-calibration</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Firmware/library rollback</span><span class="hz-sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Lithium battery thermal</span><span class="hz-sev sev-maj">MAJOR</span></div>
+    </div>
+  </div>
+
+  <!-- ISO 14971 MATRIX -->
+  <div class="matrix-wrap">
+    <div class="matrix-title">ISO 14971:2019 — Risk Acceptability Matrix</div>
+    <div class="matrix-note">SEVERITY (COLUMNS) × PROBABILITY (ROWS) — APPLIED TO SYRINGE PUMP HAZARDS</div>
+
+    <div class="rm">
+      <div class="rm-cell rm-side" style="background:transparent"></div>
+      <div class="rm-cell rm-hdr">Negligible</div>
+      <div class="rm-cell rm-hdr">Minor</div>
+      <div class="rm-cell rm-hdr">Moderate</div>
+      <div class="rm-cell rm-hdr">Serious</div>
+      <div class="rm-cell rm-hdr">Catastrophic</div>
+
+      <div class="rm-cell rm-side">Improbable</div>
+      <div class="rm-cell rm-neg">Negligible</div>
+      <div class="rm-cell rm-neg">Negligible</div>
+      <div class="rm-cell rm-acc">Acceptable</div>
+      <div class="rm-cell rm-acc">Acceptable</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+
+      <div class="rm-cell rm-side">Remote</div>
+      <div class="rm-cell rm-neg">Negligible</div>
+      <div class="rm-cell rm-acc">Acceptable</div>
+      <div class="rm-cell rm-acc">Acceptable</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rm-cell rm-side">Occasional</div>
+      <div class="rm-cell rm-acc">Acceptable</div>
+      <div class="rm-cell rm-acc">Acceptable</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rm-cell rm-side">Probable</div>
+      <div class="rm-cell rm-acc">Acceptable</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rm-cell rm-side">Frequent</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+      <div class="rm-cell rm-un">⚠ UNACCEPTABLE</div>
+    </div>
+
+    <div class="matrix-legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:#dcfce7"></div>Negligible</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#fef9c3"></div>Acceptable</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#fed7aa"></div>ALARP — As Low As Reasonably Practicable</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#fecaca"></div>Unacceptable — Must Mitigate</div>
+    </div>
+
+    <div style="margin-top:16px;font-family:'Fraunces',serif;font-size:12px;color:var(--ink2);line-height:1.6;font-style:italic">
+      Pre-mitigation: <strong>Siphon overdose</strong> sits Catastrophic × Remote → Unacceptable, mitigated by plunger/flange sensors + anti-siphon valve. <strong>Programming 10× error</strong> sits Catastrophic × Occasional → Unacceptable, mitigated by DERS hard limits. <strong>Occlusion delay at low rate</strong> sits Serious × Occasional → Unacceptable, mitigated by force sensor threshold tuning + auto back-off.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PATIENT ═══════════════ -->
+<div id="sec-pat" class="section">
+  <div class="section-head">
+    <div>
+      <div class="section-marker">§ 01 · Patient Hazards</div>
+      <div class="section-title c-p">Direct Physiological Risk</div>
+    </div>
+    <div class="section-sub">
+      Patient-side hazards cluster around syringe-pump-specific failure modes: siphon, startup bolus, and dose errors from precision-critical deployments (ICU vasopressors, neonatal, PCA).
+    </div>
+  </div>
+
+  <div class="hz-grid">
+
+    <div class="hz-card">
+      <div class="hz-top bg-p bor-p">
+        <div class="hz-glyph">⬇️</div>
+        <div class="hz-titles">
+          <div class="hz-num">P.01</div>
+          <div class="hz-name">Siphon / Gravitational Overdose</div>
+        </div>
+        <div class="hz-sev sev-crit">CRITICAL</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Plunger disengaged from pusher + pump above patient → hydrostatic pressure (P = ρgh) drives uncontrolled flow. Also: cracked syringe, loose Luer, failed flange clip.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Lethal bolus of potent drug (opioid, vasopressor, propofol). Documented deaths in MHRA/FDA incident databases.</div></div>
+        <div class="hz-row"><div class="hz-key">Magnitude</div><div class="hz-val">1 m height ≈ 75 mmHg — exceeds venous pressure. Full syringe can empty in minutes.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Plunger-position sensor, flange clip sensor, anti-siphon valve in giving set, alarm on disengagement. Verify all at every PPM.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">IEC 60601-2-24 §201.12.1.103 (bolus volume during fault)</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-p bor-p">
+        <div class="hz-glyph">💉</div>
+        <div class="hz-titles">
+          <div class="hz-num">P.02</div>
+          <div class="hz-name">Programming / 10× Overdose</div>
+        </div>
+        <div class="hz-sev sev-crit">CRITICAL</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Decimal-point omission (0.5 → 5 mL/hr); wrong concentration selected; unit confusion (mcg vs mg); distraction during entry.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Massive over/underdose of vasopressor, insulin, opioid, chemotherapy. Commonest reported incident class for infusion devices.</div></div>
+        <div class="hz-row"><div class="hz-key">Likelihood</div><div class="hz-val">Without DERS: Occasional (high human error rate). With DERS hard limits: Remote.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Dose Error Reduction System (DERS) with hard limits; independent double-check; standardised drug concentrations; drug library updates.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">NPSA alert; NHS England DERS guidance</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-p bor-p">
+        <div class="hz-glyph">🎯</div>
+        <div class="hz-titles">
+          <div class="hz-num">P.03</div>
+          <div class="hz-name">Startup Bolus / Mechanical Slack</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Lead-screw backlash, pusher play, syringe plunger compression slack — all must be taken up before steady flow begins.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Delay of intended drug delivery (critical for ICU vasopressors during titration) or uncontrolled early bolus on some devices.</div></div>
+        <div class="hz-row"><div class="hz-key">Magnitude</div><div class="hz-val">Typically 0.01–0.1 mL delay; clinically significant at low flow rates and with potent drugs.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Fast-start / auto-prime feature advances pusher to contact; clinician awareness; gravimetric trumpet-curve testing at PPM captures this.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">IEC 60601-2-24 §201.12.1.101 trumpet curve</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-p bor-p">
+        <div class="hz-glyph">🚫</div>
+        <div class="hz-titles">
+          <div class="hz-num">P.04</div>
+          <div class="hz-name">Delayed Occlusion Detection</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">At low flow rates, plunger force builds slowly — occlusion alarm can take 10–60 min to trigger on 50 mL syringe at 1 mL/hr.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Drug underdose (vasopressor, sedation) causing haemodynamic instability. On clearance, stored energy releases as bolus.</div></div>
+        <div class="hz-row"><div class="hz-key">Special risk</div><div class="hz-val">Neonatal and paediatric infusions at very low rates — alarm delay can be multiple hours.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Low-threshold occlusion setting (3 levels); auto back-off to release stored energy; smaller-bore syringe (faster dP/dt).</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">IEC 60601-2-24 §201.12.5 occlusion alarm performance</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-p bor-p">
+        <div class="hz-glyph">⚡</div>
+        <div class="hz-titles">
+          <div class="hz-num">P.05</div>
+          <div class="hz-name">Electrical Micro-shock (CF Part)</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Leakage current conducted through IV fluid to intracardiac catheter / CVP line. Insulation breakdown, fluid ingress, or earth lift.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Ventricular fibrillation at currents as low as 10 µA in cardiac-vulnerable patients.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">CF applied part classification (≤10 µA normal, ≤50 µA single fault); IEC 60601-1 Class I earthing; annual ESR test; IEC 62353 after any mains-side repair.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">IEC 60601-1 Table 1 · IEC 62353 recurrent testing</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-p bor-p">
+        <div class="hz-glyph">📐</div>
+        <div class="hz-titles">
+          <div class="hz-num">P.06</div>
+          <div class="hz-name">Wrong Syringe Brand / Size — Dose Error</div>
+        </div>
+        <div class="hz-sev sev-crit">CRITICAL</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Pump uses barrel cross-section (A) from user-selected brand to compute flow (Q = A·v). Wrong brand = wrong A = wrong dose.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Up to ±5% dose error — clinically dangerous for potent drugs, neonatal infusions, chemotherapy.</div></div>
+        <div class="hz-row"><div class="hz-key">Example</div><div class="hz-val">BD vs Terumo 50 mL — different internal diameter; selecting wrong brand shifts actual delivered dose.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Barrel size sensor auto-detects diameter; drug library restricts to approved brand; ward-level syringe brand standardisation policy.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">Manufacturer IFU approved syringe list</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-p bor-p">
+        <div class="hz-glyph">🫧</div>
+        <div class="hz-titles">
+          <div class="hz-num">P.07</div>
+          <div class="hz-name">Air Embolism (Limited Risk)</div>
+        </div>
+        <div class="hz-sev sev-mod">MODERATE</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Syringe loaded with air pocket at plunger tip; tubing not primed; disconnection allowing air ingress.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Venous air embolism — though lower risk than volumetric pumps (no bag airspace, limited volume).</div></div>
+        <div class="hz-row"><div class="hz-key">Likelihood</div><div class="hz-val">Lower than volumetric pumps. No bag-level air source; syringe must be pre-primed.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Proper priming per ward protocol; some syringe pumps have optional air-in-line detector; visual inspection before start.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">Local clinical priming protocol</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-p bor-p">
+        <div class="hz-glyph">🦠</div>
+        <div class="hz-titles">
+          <div class="hz-num">P.08</div>
+          <div class="hz-name">Contamination / Infection</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Contaminated syringe; unclean pump surface; reused single-use sets; biofilm formation; breach of aseptic technique.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Catheter-related bloodstream infection (CRBSI); sepsis — especially in immunocompromised ICU patients.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Single-use syringes/giving sets; surface decontamination between patients; aseptic preparation; IPCT audits.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">MHRA DB2006(06) decontamination · local IPCT policy</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ USER ═══════════════ -->
+<div id="sec-usr" class="section">
+  <div class="section-head">
+    <div>
+      <div class="section-marker">§ 02 · Clinical User Hazards</div>
+      <div class="section-title c-u">Use Error & Human Factors</div>
+    </div>
+    <div class="section-sub">
+      Syringe pumps demand more cognitive load than volumetric pumps: brand selection, concentration, bolus dose, lockout interval. Human factors failures dominate the incident picture.
+    </div>
+  </div>
+
+  <div class="hz-grid">
+
+    <div class="hz-card">
+      <div class="hz-top bg-u bor-u">
+        <div class="hz-glyph">⌨️</div>
+        <div class="hz-titles">
+          <div class="hz-num">U.01</div>
+          <div class="hz-name">Decimal / Rate Entry Error</div>
+        </div>
+        <div class="hz-sev sev-crit">CRITICAL</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">10× errors (missed decimal); rate vs. dose confusion; unit mix-ups (mcg/min vs mg/hr); time pressure; distraction.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Order-of-magnitude over/underdose — patient harm from first minutes of infusion.</div></div>
+        <div class="hz-row"><div class="hz-key">Human factors</div><div class="hz-val">Small keypad, poor display visibility, inconsistent menu flows between pump models on same unit, shift handover gaps.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">DERS hard limits; confirmation screen before start; "five rights" double-check; unit standardisation; IEC 62366 usability.</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-u bor-u">
+        <div class="hz-glyph">🔀</div>
+        <div class="hz-titles">
+          <div class="hz-num">U.02</div>
+          <div class="hz-name">Wrong Syringe Brand Selected</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">User selects wrong brand in menu; ward stocks multiple brands; visual similarity between 50 mL syringes from different makers.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Up to ±5% flow rate error — clinically significant for potent/narrow therapeutic index drugs.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Ward-level single-brand policy; barrel auto-detection (where supported); drug library brand lock; training on syringe identification.</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-u bor-u">
+        <div class="hz-glyph">🔔</div>
+        <div class="hz-titles">
+          <div class="hz-num">U.03</div>
+          <div class="hz-name">Alarm Fatigue</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">ICU patient may have 4–8 syringe pumps simultaneously; frequent end-of-syringe and near-end alarms; low-threshold occlusion alarms.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Alarm silenced without investigation; real occlusion or disengagement missed; delayed response to clinical deterioration.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Three-priority alarm framework (IEC 60601-1-8); appropriate threshold setting; smart alarm management; PPM to reduce nuisance alarms.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">IEC 60601-1-8 · AAMI/ECRI alarm safety guidance</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-u bor-u">
+        <div class="hz-glyph">🔩</div>
+        <div class="hz-titles">
+          <div class="hz-num">U.04</div>
+          <div class="hz-name">Improper Syringe Loading</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Plunger not seated in pusher grip; flange not under clip; barrel not fully in clamp; syringe forced into wrong orientation.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Siphon if pump elevated; flow inaccuracy; nuisance alarms; plunger slippage during infusion.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Loading detection sensors (plunger, flange, barrel); visual/audio confirmation on successful load; staff training; pre-use checklist.</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-u bor-u">
+        <div class="hz-glyph">📏</div>
+        <div class="hz-titles">
+          <div class="hz-num">U.05</div>
+          <div class="hz-name">Pump Height Placement Error</div>
+        </div>
+        <div class="hz-sev sev-crit">CRITICAL</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Pump positioned high on drip stand above patient level; patient transported; stand tipped.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Hydrostatic pressure drives siphon if plunger disengages. 1 m above patient ≈ 75 mmHg driving force.</div></div>
+        <div class="hz-row"><div class="hz-key">Best practice</div><div class="hz-val">Pump at patient heart level; anti-siphon valve in giving set; regular clinical reinforcement.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Anti-siphon valve; engineering controls (plunger grip sensors); clinical protocol on pump positioning; ward-level height policy.</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-u bor-u">
+        <div class="hz-glyph">💊</div>
+        <div class="hz-titles">
+          <div class="hz-num">U.06</div>
+          <div class="hz-name">Wrong Drug / Concentration Selected</div>
+        </div>
+        <div class="hz-sev sev-crit">CRITICAL</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Busy workflow; similar drug names (LASA — Look-Alike-Sound-Alike); concentration variants (insulin 50 vs 100 U/mL); handover errors.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Delivery of wrong drug or wrong strength; potentially lethal for high-alert medications.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">DERS drug library matching the dispensed formulary; barcode scanning (where supported); independent check; ward-standard concentrations.</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-u bor-u">
+        <div class="hz-glyph">💉</div>
+        <div class="hz-titles">
+          <div class="hz-num">U.07</div>
+          <div class="hz-name">Needlestick / Sharps Exposure</div>
+        </div>
+        <div class="hz-sev sev-mod">MODERATE</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Line manipulation, disconnection under pressure, recapping, patient movement during line change.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Bloodborne virus transmission (HBV, HCV, HIV); occupational exposure incident.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Needleless connectors; Luer-lock fittings; safe sharps policy; PPE; post-exposure protocol.</div></div>
+        <div class="hz-row"><div class="hz-key">Standard</div><div class="hz-val">EU Sharps Directive 2010/32/EU · Health and Safety (Sharp Instruments) Regulations 2013</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-u bor-u">
+        <div class="hz-glyph">🔋</div>
+        <div class="hz-titles">
+          <div class="hz-num">U.08</div>
+          <div class="hz-name">Battery Failure During Transport</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Depleted battery during inter-hospital transfer or in-hospital transport; no mains backup in transit.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Infusion interruption of critical drug (vasopressor, sedation) during transport; clinical deterioration.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Pre-transport battery check; ≥6 hr autonomy spec; battery low alarm (medium priority); spare charged pump available.</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ ENGINEER ═══════════════ -->
+<div id="sec-eng" class="section">
+  <div class="section-head">
+    <div>
+      <div class="section-marker">§ 03 · Service Engineer Hazards</div>
+      <div class="section-title c-e">Occupational & Patient-Forward Risk</div>
+    </div>
+    <div class="section-sub">
+      The engineer carries dual responsibility: personal occupational safety and patient safety through quality of service. Post-service errors propagate forward to harm future patients.
+    </div>
+  </div>
+
+  <div class="banner banner-e">
+    <span style="font-size:20px">⚠</span>
+    <div>
+      <strong>Regulatory context</strong>
+      Any service activity that could affect safety performance is regulated under UK MDR 2002 / EU MDR 2017/745. Post-service verification is mandatory. Failure to re-test after repair is a potential MHRA reportable event if patient harm results.
+    </div>
+  </div>
+
+  <div class="hz-grid">
+
+    <div class="hz-card">
+      <div class="hz-top bg-e bor-e">
+        <div class="hz-glyph">⚡</div>
+        <div class="hz-titles">
+          <div class="hz-num">E.01</div>
+          <div class="hz-name">Electric Shock — Mains Voltage</div>
+        </div>
+        <div class="hz-sev sev-crit">CRITICAL</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Live PCB fault-finding; probing energised circuits; failed isolation; damaged test leads; capacitor discharge not waited out.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Electrocution; VF; flash burns; death. 230 V AC at &gt;100 mA lethal in under 1 second.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">LOTO (Lockout/Tagout); isolation transformer for live work; Category IV test leads per IEC 61010; competency training; two-person rule for live work.</div></div>
+        <div class="hz-row"><div class="hz-key">Regulation</div><div class="hz-val">Electricity at Work Regulations 1989 · IEC 61010-1</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-e bor-e">
+        <div class="hz-glyph">🩸</div>
+        <div class="hz-titles">
+          <div class="hz-num">E.02</div>
+          <div class="hz-name">Biological Exposure — Blood & Drug</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Fluid ingress into pump casing (blood, saline, drug); contaminated plunger pusher; residue on syringe clamp; handling devices without decontamination certificate.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Bloodborne pathogen transmission; contact with cytotoxic/chemotherapy drug residue; skin/mucous membrane exposure.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Decontamination certificate required before device reaches EBME; PPE (gloves, apron, eye protection); hand hygiene; universal precautions.</div></div>
+        <div class="hz-row"><div class="hz-key">Regulation</div><div class="hz-val">COSHH 2002 · MHRA DB2006(06)</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-e bor-e">
+        <div class="hz-glyph">⬇️</div>
+        <div class="hz-titles">
+          <div class="hz-num">E.03</div>
+          <div class="hz-name">Post-Service Siphon Risk (Patient Harm)</div>
+        </div>
+        <div class="hz-sev sev-crit">CRITICAL</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Plunger sensor not functionally tested post-repair; flange clip sensor bypassed during service; alarm silenced during bench testing and not restored; anti-siphon mechanism unverified.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Patient receives lethal siphon bolus when pump returned to clinical use.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Mandatory siphon test on every return to service; PPM checklist sign-off; two-stage verification for safety-critical sensors; CMMS asset record updated.</div></div>
+        <div class="hz-row"><div class="hz-key">Regulation</div><div class="hz-val">UK MDR 2002 · MHRA reportable if patient harmed</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-e bor-e">
+        <div class="hz-glyph">⚖️</div>
+        <div class="hz-titles">
+          <div class="hz-num">E.04</div>
+          <div class="hz-name">Force Sensor Mis-calibration</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Strain gauge drift; incorrect reference weight used in calibration; service rig not verified; environmental temperature compensation off.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Occlusion alarm at wrong pressure — either nuisance alarms (low threshold) or delayed alarm (high threshold) → patient harm.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Traceable calibration weights; OEM-specified test rig; calibration certificate retention; periodic rig verification; document serial number of rig used.</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-e bor-e">
+        <div class="hz-glyph">💾</div>
+        <div class="hz-titles">
+          <div class="hz-num">E.05</div>
+          <div class="hz-name">Firmware / Drug Library Rollback</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Repair replaces mainboard → old firmware; drug library overwritten during update; wrong library version loaded; incomplete update.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Outdated dose limits permit historical overdoses; missing new drug profiles force DERS bypass; alarm logic regression.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Firmware & library version verification before and after service; documented in asset record; OEM-authorised update path only; functional DERS test after update.</div></div>
+        <div class="hz-row"><div class="hz-key">Regulation</div><div class="hz-val">IEC 62304 software lifecycle · MHRA guidance</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-e bor-e">
+        <div class="hz-glyph">🔬</div>
+        <div class="hz-titles">
+          <div class="hz-num">E.06</div>
+          <div class="hz-name">Inadequate Electrical Safety Re-test</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">PSU replaced; mains components repaired; case opened and re-closed — without IEC 62353 re-test before return.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Undetected leakage current rise or earth fault → patient micro-shock via IV path (CF classification violated).</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">IEC 62353 tests after any mains-side repair: earth continuity ≤0.1 Ω; enclosure leakage; patient (CF) leakage ≤10 µA. Approved electrical safety analyser.</div></div>
+        <div class="hz-row"><div class="hz-key">Regulation</div><div class="hz-val">IEC 62353 · NHS HTM 06-01</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-e bor-e">
+        <div class="hz-glyph">🔥</div>
+        <div class="hz-titles">
+          <div class="hz-num">E.07</div>
+          <div class="hz-name">Lithium Battery Thermal Event</div>
+        </div>
+        <div class="hz-sev sev-maj">MAJOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Damaged Li-ion cell; internal short; puncture during disassembly; overcharge from faulty BMS; fire at aged cells.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Fire, burns, toxic gas release (HF). Occupational injury plus facility risk.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">Inspect for swelling/dents before work; discharge before disassembly; fire-safe battery storage; replace per OEM cycle limits; never force a damaged cell.</div></div>
+        <div class="hz-row"><div class="hz-key">Regulation</div><div class="hz-val">IEC 62133 · local dangerous goods policy</div></div>
+      </div>
+    </div>
+
+    <div class="hz-card">
+      <div class="hz-top bg-e bor-e">
+        <div class="hz-glyph">🧪</div>
+        <div class="hz-titles">
+          <div class="hz-num">E.08</div>
+          <div class="hz-name">Chemical Exposure (Cleaning & Cytotoxic)</div>
+        </div>
+        <div class="hz-sev sev-min">MINOR</div>
+      </div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-key">Cause</div><div class="hz-val">Chlorine, aldehyde, IPA cleaning agents; residual cytotoxic drug on chemotherapy pumps; splash during cleaning.</div></div>
+        <div class="hz-row"><div class="hz-key">Harm</div><div class="hz-val">Skin/eye irritation; respiratory irritation; contact dermatitis; cytotoxic exposure for oncology pumps.</div></div>
+        <div class="hz-row"><div class="hz-key">Control</div><div class="hz-val">COSHH risk assessment; PPE; ventilation; SDS available; dedicated cytotoxic handling protocol for oncology-returned devices.</div></div>
+        <div class="hz-row"><div class="hz-key">Regulation</div><div class="hz-val">COSHH 2002 · RIDDOR for significant events</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ ALARMS ═══════════════ -->
+<div id="sec-alarm" class="section">
+  <div class="section-head">
+    <div>
+      <div class="section-marker">§ 04 · Alarm System</div>
+      <div class="section-title">IEC 60601-1-8 Alarm Classification</div>
+    </div>
+    <div class="section-sub">
+      Three-tier alarm priority: high-priority (immediate risk, ≥65 dBA), medium (prompt attention), low (advisory). Independent alarm signal path ensures alarms fire even on main CPU fault.
+    </div>
+  </div>
+
+  <div class="alarm-wrap">
+    <table class="alarm-tbl">
+      <thead>
+        <tr>
+          <th style="width:22%">Alarm</th>
+          <th style="width:9%">Priority</th>
+          <th style="width:22%">Trigger Condition</th>
+          <th style="width:21%">Pump Response</th>
+          <th style="width:26%">Engineer's Service Check</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Occlusion (Downstream)</td>
+          <td><span class="p-high">HIGH</span></td>
+          <td>Plunger force exceeds user-set threshold (Low/Med/High)</td>
+          <td>Halt motor; auto back-off (where fitted) to reduce bolus</td>
+          <td>Calibrate force sensor with reference weights; verify 3 threshold levels; test at 1 and 500 mL/hr</td>
+        </tr>
+        <tr>
+          <td>Plunger Disengagement</td>
+          <td><span class="p-high">HIGH</span></td>
+          <td>Plunger position sensor loses contact / opens</td>
+          <td>Halt motor; visual + audible alarm</td>
+          <td>Verify switch actuation + contact bounce; clean optical path; test with known good & failed states</td>
+        </tr>
+        <tr>
+          <td>Flange Disengaged</td>
+          <td><span class="p-high">HIGH</span></td>
+          <td>Flange clip sensor opens during run</td>
+          <td>Halt motor; siphon-warning alarm</td>
+          <td>Test clip spring force; sensor actuation; latch integrity</td>
+        </tr>
+        <tr>
+          <td>Wrong Syringe / Size Mismatch</td>
+          <td><span class="p-high">HIGH</span></td>
+          <td>Barrel sensor reading incompatible with user-selected brand</td>
+          <td>Prevent start; display error code</td>
+          <td>Verify barrel sensor with reference syringes (multiple brands); clean optical path</td>
+        </tr>
+        <tr>
+          <td>Motor Stall / Step Loss</td>
+          <td><span class="p-high">HIGH</span></td>
+          <td>Encoder pulse count ≠ commanded steps</td>
+          <td>Halt motor; E-code; log event</td>
+          <td>Inspect lead-screw wear, bearings, encoder disc alignment; check motor current setting</td>
+        </tr>
+        <tr>
+          <td>Syringe Empty / End-of-Travel</td>
+          <td><span class="p-med">MED</span></td>
+          <td>Pusher reaches full-forward stop; end switch triggers</td>
+          <td>Stop infusion; advisory alarm</td>
+          <td>Test end-of-travel switch; verify pusher full-travel range</td>
+        </tr>
+        <tr>
+          <td>Near End of Infusion (NEI)</td>
+          <td><span class="p-med">MED</span></td>
+          <td>Remaining volume or time &lt; user-set threshold</td>
+          <td>Audio + visual advisory; continue infusing</td>
+          <td>Verify NEI threshold configuration; confirm calculation matches set volume</td>
+        </tr>
+        <tr>
+          <td>Battery Low</td>
+          <td><span class="p-med">MED</span></td>
+          <td>Battery capacity &lt;20% remaining</td>
+          <td>Alert; continue on mains (if connected)</td>
+          <td>Annual capacity test (discharge to 80% DoD); replace at capacity threshold</td>
+        </tr>
+        <tr>
+          <td>Battery Critical / Empty</td>
+          <td><span class="p-high">HIGH</span></td>
+          <td>Battery &lt;5% or depleted</td>
+          <td>Halt pump; loud alarm before shutdown</td>
+          <td>Battery health; charge circuit verification</td>
+        </tr>
+        <tr>
+          <td>KVO Mode Active</td>
+          <td><span class="p-low">LOW</span></td>
+          <td>VTBI complete, KVO rate running</td>
+          <td>Reduce to KVO rate (~0.1–1 mL/hr)</td>
+          <td>Verify KVO rate configuration matches ward policy</td>
+        </tr>
+        <tr>
+          <td>Standby Timeout</td>
+          <td><span class="p-low">LOW</span></td>
+          <td>Pump programmed but not started for X min</td>
+          <td>Reminder tone</td>
+          <td>Verify timeout parameter; clinical feedback on appropriateness</td>
+        </tr>
+        <tr>
+          <td>Mains Disconnect</td>
+          <td><span class="p-low">LOW</span></td>
+          <td>AC mains lost; running on battery</td>
+          <td>Brief audible notification; continue on battery</td>
+          <td>Check AC-detect circuit; mains cord integrity</td>
+        </tr>
+        <tr>
+          <td>Door / Syringe Clamp Open</td>
+          <td><span class="p-high">HIGH</span></td>
+          <td>Barrel clamp microswitch not engaged</td>
+          <td>Prevent start / halt if running</td>
+          <td>Clamp spring tension; microswitch actuation; anti-tamper sensor</td>
+        </tr>
+        <tr>
+          <td>System Fault / Internal Error</td>
+          <td><span class="p-high">HIGH</span></td>
+          <td>Safety CPU watchdog timeout; RAM/ROM check fail</td>
+          <td>Halt + persistent E-code; lock out use</td>
+          <td>Read event log; reference OEM manual for E-code; return to OEM if board-level fault</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="matrix-wrap">
+    <div class="matrix-title">Alarm Priority Characteristics (IEC 60601-1-8)</div>
+    <div class="matrix-note">AUDIO AND VISUAL SIGNAL REQUIREMENTS PER PRIORITY LEVEL</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:8px">
+      <div style="padding:18px;border:1px solid var(--patient-mid);border-radius:4px;background:var(--patient-bg)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--patient);letter-spacing:2px;margin-bottom:8px;font-weight:600">HIGH PRIORITY</div>
+        <div style="font-family:'Fraunces',serif;font-size:14px;font-weight:700;margin-bottom:10px">Immediate response required</div>
+        <div style="font-size:11px;color:var(--ink2);line-height:1.7">
+          · Red flashing visual<br>
+          · 10-pulse burst melody<br>
+          · ≥65 dBA at 1 m<br>
+          · Max 2 min silence<br>
+          · Examples: occlusion, plunger disengagement, motor stall
+        </div>
+      </div>
+      <div style="padding:18px;border:1px solid #fb923c;border-radius:4px;background:#fff7ed">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#9a3412;letter-spacing:2px;margin-bottom:8px;font-weight:600">MEDIUM PRIORITY</div>
+        <div style="font-family:'Fraunces',serif;font-size:14px;font-weight:700;margin-bottom:10px">Prompt response required</div>
+        <div style="font-size:11px;color:var(--ink2);line-height:1.7">
+          · Yellow flashing visual<br>
+          · 3-pulse burst melody<br>
+          · ≥45 dBA at 1 m<br>
+          · Max 15 min silence<br>
+          · Examples: near-end, battery low
+        </div>
+      </div>
+      <div style="padding:18px;border:1px solid var(--engineer-mid);border-radius:4px;background:var(--engineer-bg)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--engineer);letter-spacing:2px;margin-bottom:8px;font-weight:600">LOW PRIORITY</div>
+        <div style="font-family:'Fraunces',serif;font-size:14px;font-weight:700;margin-bottom:10px">Operator awareness</div>
+        <div style="font-size:11px;color:var(--ink2);line-height:1.7">
+          · Cyan / steady visual<br>
+          · Single pulse or chime<br>
+          · Audio optional<br>
+          · No time limit<br>
+          · Examples: KVO, mains disconnect, standby
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SAFETY MECHANISMS ═══════════════ -->
+<div id="sec-safe" class="section">
+  <div class="section-head">
+    <div>
+      <div class="section-marker">§ 05 · Engineered Controls</div>
+      <div class="section-title">Built-In Safety Mechanisms</div>
+    </div>
+    <div class="section-sub">
+      Protective features mandated or recommended by IEC 60601-2-24 and ISO 14971. These are the design-embedded defences before any human response is required.
+    </div>
+  </div>
+
+  <div class="sm-grid">
+
+    <div class="sm-card">
+      <div class="sm-num">01</div>
+      <div class="sm-glyph-wrap bg-p">🔒</div>
+      <div class="sm-kicker">Mechanical · Patient</div>
+      <div class="sm-name">Plunger Grip with Release Pads</div>
+      <div class="sm-desc">Claw mechanism holds plunger; disengagement requires deliberate two-point press of release pads. Prevents siphon by ensuring plunger stays gripped even when pusher stopped.</div>
+      <div class="sm-std">IEC 60601-2-24 · Design control per ISO 14971</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">02</div>
+      <div class="sm-glyph-wrap bg-p">📎</div>
+      <div class="sm-kicker">Mechanical · Patient</div>
+      <div class="sm-name">Flange Clip / Anti-Pullback</div>
+      <div class="sm-desc">Sprung clip captures rear flange of syringe. Prevents syringe being withdrawn from pump during infusion — a critical siphon prevention measure.</div>
+      <div class="sm-std">IEC 60601-2-24 · Tested on every PPM</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">03</div>
+      <div class="sm-glyph-wrap bg-p">⚖️</div>
+      <div class="sm-kicker">Electronic · Patient</div>
+      <div class="sm-name">Pusher Force Sensor</div>
+      <div class="sm-desc">Strain gauge on pusher measures plunger resistance directly. Three user-selectable occlusion thresholds (Low/Med/High). Primary occlusion detection mechanism — no tubing pressure sensor needed.</div>
+      <div class="sm-std">IEC 60601-2-24 §201.12.5</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">04</div>
+      <div class="sm-glyph-wrap bg-u">💊</div>
+      <div class="sm-kicker">Software · User</div>
+      <div class="sm-name">Dose Error Reduction Software (DERS)</div>
+      <div class="sm-desc">Drug library with hard limits (non-bypassable) and soft limits (warning + confirmation). Prevents 10× programming errors. DERS bypass is a MHRA reportable event.</div>
+      <div class="sm-std">NPSA alert · NHS England DERS guidance</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">05</div>
+      <div class="sm-glyph-wrap bg-p">🔄</div>
+      <div class="sm-kicker">Software · Patient</div>
+      <div class="sm-name">Auto Back-Off on Occlusion</div>
+      <div class="sm-desc">After occlusion alarm, pump briefly reverses to relieve stored energy in tubing compliance and plunger compression. Reduces post-occlusion bolus when line clears.</div>
+      <div class="sm-std">Advanced feature · verify per pump model</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">06</div>
+      <div class="sm-glyph-wrap bg-u">📐</div>
+      <div class="sm-kicker">Electronic · User</div>
+      <div class="sm-name">Barrel Size Sensor</div>
+      <div class="sm-desc">Optical array or linear potentiometer auto-detects syringe barrel diameter. Cross-checks user-selected brand. Prevents accidental wrong-brand selection causing dose error.</div>
+      <div class="sm-std">IEC 60601-2-24 accuracy requirements</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">07</div>
+      <div class="sm-glyph-wrap bg-e">🧠</div>
+      <div class="sm-kicker">Electronic · Safety Architecture</div>
+      <div class="sm-name">Dual-CPU / Watchdog</div>
+      <div class="sm-desc">Independent safety processor monitors main CPU via hardware watchdog. On main CPU fault, safety CPU halts motor through independent signal path regardless of main firmware state.</div>
+      <div class="sm-std">IEC 62304 Class C · IEC 61508 SIL-2</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">08</div>
+      <div class="sm-glyph-wrap bg-u">🔔</div>
+      <div class="sm-kicker">Software · User</div>
+      <div class="sm-name">Three-Priority Alarm System</div>
+      <div class="sm-desc">IEC 60601-1-8 compliant alarm framework: High / Medium / Low with distinct audio, visual, and silence-timeout characteristics. Separate alarm signal path from main CPU for fault tolerance.</div>
+      <div class="sm-std">IEC 60601-1-8 · audio ≥65 dBA high-priority</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">09</div>
+      <div class="sm-glyph-wrap bg-p">⚡</div>
+      <div class="sm-kicker">Electrical · Patient</div>
+      <div class="sm-name">CF Applied Part Isolation</div>
+      <div class="sm-desc">Patient circuit electrically isolated from mains via isolation transformer / optocouplers. Leakage current ≤10 µA normal, ≤50 µA single fault. Protects intracardiac catheter patients from micro-shock.</div>
+      <div class="sm-std">IEC 60601-1 Table 1 · CF classification</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">10</div>
+      <div class="sm-glyph-wrap bg-e">🔋</div>
+      <div class="sm-kicker">Electrical · Continuity</div>
+      <div class="sm-name">Battery with BMS</div>
+      <div class="sm-desc">Li-ion battery provides ≥6 hr autonomy. BMS prevents overcharge, deep discharge, cell imbalance, and thermal runaway. Maintains infusion through power loss and transport.</div>
+      <div class="sm-std">IEC 60601-1 §11 · IEC 62133</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">11</div>
+      <div class="sm-glyph-wrap bg-p">🔐</div>
+      <div class="sm-kicker">Software · User</div>
+      <div class="sm-name">Key Lock / Authorisation</div>
+      <div class="sm-desc">PIN or key-lock prevents unauthorised setting changes during infusion. Protects against accidental rate changes by patient / visitor, tampering in psychiatric settings.</div>
+      <div class="sm-std">IEC 62366 usability · site-specific config</div>
+    </div>
+
+    <div class="sm-card">
+      <div class="sm-num">12</div>
+      <div class="sm-glyph-wrap bg-e">📒</div>
+      <div class="sm-kicker">Software · Forensic</div>
+      <div class="sm-name">Event Log / Audit Trail</div>
+      <div class="sm-desc">Non-volatile log of &gt;1000 events: programmed rates, alarms, user actions, library version. Critical for incident investigation. EBME should download at PPM and after any reported incident.</div>
+      <div class="sm-std">IEC 62304 · MHRA incident investigation</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ DEFENCE-IN-DEPTH ═══════════════ -->
+<div id="sec-def" class="section">
+  <div class="section-head">
+    <div>
+      <div class="section-marker">§ 06 · Swiss Cheese Model</div>
+      <div class="section-title">Defence-in-Depth</div>
+    </div>
+    <div class="section-sub">
+      Multiple independent layers prevent hazard reaching patient. Each layer has holes — but holes must align across all layers simultaneously for harm to occur. This is how ISO 14971 and MHRA investigations frame root cause analysis.
+    </div>
+  </div>
+
+  <div class="defence-wrap">
+
+    <div class="defence-layer">
+      <div class="layer-roman">I</div>
+      <div class="layer-content">
+        <h3>Inherent Design Controls</h3>
+        <p>Hazard eliminated or reduced at the engineering design stage. The lead-screw is self-locking (no free-flow on power loss). CF isolation limits leakage below arrhythmia threshold. Hard dose limits cannot be bypassed. ISO 14971 risk analysis drives all design requirements.</p>
+        <div class="layer-tags">
+          <span class="l-tag l-tag-p">Self-locking lead-screw</span>
+          <span class="l-tag l-tag-p">CF isolation</span>
+          <span class="l-tag l-tag-p">Plunger grip mechanism</span>
+          <span class="l-tag l-tag-p">Dual-CPU safety</span>
+          <span class="l-tag l-tag-p">Hard dose limits</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="defence-layer">
+      <div class="layer-roman">II</div>
+      <div class="layer-content">
+        <h3>Automatic Protection Devices</h3>
+        <p>Sensors and control logic detect hazard and halt pump without requiring human action. Force sensor triggers occlusion halt. Watchdog halts motor on CPU fault. Barrel sensor prevents wrong-syringe start. Plunger sensor halts on disengagement.</p>
+        <div class="layer-tags">
+          <span class="l-tag l-tag-p">Force sensor halt</span>
+          <span class="l-tag l-tag-p">Plunger sensor halt</span>
+          <span class="l-tag l-tag-p">Watchdog reset</span>
+          <span class="l-tag l-tag-p">Auto back-off</span>
+          <span class="l-tag l-tag-p">End-of-travel switches</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="defence-layer">
+      <div class="layer-roman">III</div>
+      <div class="layer-content">
+        <h3>Warnings & Alarms</h3>
+        <p>Alarms and advisories that require clinician to diagnose and act. Effective only if alarm is heard, correctly interpreted, and responded to promptly. Alarm fatigue is the dominant failure mode of this layer in modern ICUs.</p>
+        <div class="layer-tags">
+          <span class="l-tag l-tag-u">High-priority audible</span>
+          <span class="l-tag l-tag-u">Visual red flash</span>
+          <span class="l-tag l-tag-u">Near-end warning</span>
+          <span class="l-tag l-tag-u">Battery low alert</span>
+          <span class="l-tag l-tag-u">Nurse call integration</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="defence-layer">
+      <div class="layer-roman">IV</div>
+      <div class="layer-content">
+        <h3>Clinical Procedures & Human Factors</h3>
+        <p>Ward protocols, independent double-checks, drug library governance, and standardised concentrations reduce use error probability. IEC 62366-1 usability engineering designs the interface for safe use under realistic clinical conditions.</p>
+        <div class="layer-tags">
+          <span class="l-tag l-tag-u">Five-rights check</span>
+          <span class="l-tag l-tag-u">Independent double-check</span>
+          <span class="l-tag l-tag-u">Standardised concentrations</span>
+          <span class="l-tag l-tag-u">Pump-at-heart-level policy</span>
+          <span class="l-tag l-tag-u">Shift handover protocol</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="defence-layer">
+      <div class="layer-roman">V</div>
+      <div class="layer-content">
+        <h3>Planned Preventive Maintenance (EBME)</h3>
+        <p>Annual PPM verifies all safety mechanisms remain functional. Gravimetric accuracy, siphon test, force sensor calibration, electrical safety re-test, and alarm verification restore confidence that layers I–III remain intact. PPM is the clinical engineer's primary patient safety contribution.</p>
+        <div class="layer-tags">
+          <span class="l-tag l-tag-e">Siphon test</span>
+          <span class="l-tag l-tag-e">Gravimetric trumpet curve</span>
+          <span class="l-tag l-tag-e">Force sensor calibration</span>
+          <span class="l-tag l-tag-e">IEC 62353 ESR test</span>
+          <span class="l-tag l-tag-e">Firmware & library check</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="defence-layer">
+      <div class="layer-roman">VI</div>
+      <div class="layer-content">
+        <h3>Post-Market Surveillance & Vigilance</h3>
+        <p>MHRA Yellow Card / MIR reporting of incidents. Manufacturers are required to conduct PMS, PMCF, and issue FSCAs. Sentinel events (siphon deaths, DERS failures) trigger field safety corrective actions across the whole fleet. EU MDR 2017/745 and UK MDR 2002 set obligations.</p>
+        <div class="layer-tags">
+          <span class="l-tag l-tag-e">MHRA Yellow Card</span>
+          <span class="l-tag l-tag-e">Datix incident report</span>
+          <span class="l-tag l-tag-e">Field Safety Notice</span>
+          <span class="l-tag l-tag-e">PSUR / PMCF</span>
+          <span class="l-tag l-tag-e">ECRI / AAMI alerts</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ STANDARDS ═══════════════ -->
+<div id="sec-std" class="section">
+  <div class="section-head">
+    <div>
+      <div class="section-marker">§ 07 · Normative Framework</div>
+      <div class="section-title">Applicable Standards & Regulations</div>
+    </div>
+    <div class="section-sub">
+      Standards governing syringe pump design, testing, servicing, and post-market oversight. These translate patient safety requirements into measurable, auditable obligations.
+    </div>
+  </div>
+
+  <div class="std-wrap">
+    <table class="std-tbl">
+      <thead>
+        <tr>
+          <th style="width:18%">Standard / Reg</th>
+          <th style="width:28%">Scope</th>
+          <th style="width:16%">Applies To</th>
+          <th style="width:38%">Key Requirements</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>IEC 60601-2-24</td>
+          <td>Particular requirements for infusion pumps and controllers</td>
+          <td>Manufacturer · EBME</td>
+          <td>Flow accuracy ±2%; occlusion alarm time; bolus during fault; trumpet curve methodology; free-flow protection</td>
+        </tr>
+        <tr>
+          <td>IEC 60601-1</td>
+          <td>General ME equipment safety — electrical, mechanical, environmental</td>
+          <td>Manufacturer · EBME</td>
+          <td>Leakage limits (CF ≤10 µA); earth continuity ≤0.1 Ω; creepage/clearance; mechanical strength; MOOP/MOPP</td>
+        </tr>
+        <tr>
+          <td>IEC 60601-1-8</td>
+          <td>Alarm systems for ME equipment</td>
+          <td>Manufacturer · Clinical User</td>
+          <td>High/medium/low alarm framework; audio ≥65 dBA high-priority; visual flashing; silence timeouts; redundant alarm path</td>
+        </tr>
+        <tr>
+          <td>IEC 62304</td>
+          <td>Medical device software lifecycle</td>
+          <td>Manufacturer · EBME</td>
+          <td>Class C classification (highest risk); change management; firmware update validation; SOUP management</td>
+        </tr>
+        <tr>
+          <td>IEC 62366-1</td>
+          <td>Usability engineering for ME devices</td>
+          <td>Manufacturer · Clinical User</td>
+          <td>Formative and summative usability testing; use-error risk analysis; UI design validation; clinician task analysis</td>
+        </tr>
+        <tr>
+          <td>ISO 14971:2019</td>
+          <td>Risk management for medical devices</td>
+          <td>Manufacturer · EBME</td>
+          <td>Hazard identification; risk estimation; ALARP; residual risk acceptability; benefit-risk analysis</td>
+        </tr>
+        <tr>
+          <td>IEC 62353</td>
+          <td>Recurrent test and test after repair of ME equipment</td>
+          <td>EBME</td>
+          <td>Electrical safety re-test after repair; acceptance criteria; competency requirements for testing personnel</td>
+        </tr>
+        <tr>
+          <td>IEC 62133</td>
+          <td>Secondary batteries containing alkaline or other non-acid electrolytes</td>
+          <td>Manufacturer · EBME</td>
+          <td>Li-ion cell safety; thermal runaway prevention; abuse testing; BMS requirements</td>
+        </tr>
+        <tr>
+          <td>IEC 60601-1-2</td>
+          <td>Electromagnetic disturbances — requirements and tests</td>
+          <td>Manufacturer · EBME</td>
+          <td>EMC immunity; radiated emissions; ESD; RF transmitter compatibility (mobile phones, RFID)</td>
+        </tr>
+        <tr>
+          <td>UK MDR 2002</td>
+          <td>UK medical device regulation (post-Brexit)</td>
+          <td>Manufacturer · EBME</td>
+          <td>UKCA marking; registration with MHRA; incident reporting; FSCA obligations; vigilance system</td>
+        </tr>
+        <tr>
+          <td>EU MDR 2017/745</td>
+          <td>EU Medical Device Regulation</td>
+          <td>Manufacturer</td>
+          <td>Class IIb classification; UDI / EUDAMED registration; PMS plan; PMCF; PSUR; Notified Body oversight</td>
+        </tr>
+        <tr>
+          <td>NHS HTM 06-01</td>
+          <td>Electrical services in healthcare premises</td>
+          <td>EBME · Estates</td>
+          <td>Safe isolation procedures; periodic inspection; PAT; supply system design; UPS requirements</td>
+        </tr>
+        <tr>
+          <td>Electricity at Work Regs 1989</td>
+          <td>Electrical safety at work</td>
+          <td>EBME Engineer</td>
+          <td>Competence for electrical work; safe systems of work; LOTO; CAT-rated test equipment</td>
+        </tr>
+        <tr>
+          <td>COSHH 2002</td>
+          <td>Control of substances hazardous to health</td>
+          <td>EBME Engineer</td>
+          <td>Risk assessment for cleaning agents and drug residue; PPE specification; exposure monitoring</td>
+        </tr>
+        <tr>
+          <td>Sharps Regulations 2013</td>
+          <td>Health and Safety (Sharp Instruments in Healthcare)</td>
+          <td>Clinical User</td>
+          <td>Needleless connectors; safe disposal; post-exposure protocol; mandatory training; provider-level risk assessment</td>
+        </tr>
+        <tr>
+          <td>MHRA DB2006(06)</td>
+          <td>Managing medical devices — decontamination of reusable medical devices</td>
+          <td>EBME · Clinical User</td>
+          <td>Decontamination certificate requirement; cleaning agent compatibility; device tracking</td>
+        </tr>
+        <tr>
+          <td>MHRA DB2010(02)</td>
+          <td>Managing medical devices — guidance on managing devices</td>
+          <td>EBME · Trust Management</td>
+          <td>Asset management; user training records; device-related incident management; maintenance records retention</td>
+        </tr>
+        <tr>
+          <td>NPSA / NHSE DERS Guidance</td>
+          <td>Smart pump and drug library policy</td>
+          <td>Manufacturer · Clinical User · Pharmacy</td>
+          <td>DERS adoption; drug library governance; DERS bypass monitoring; compliance reporting</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+<script>
+function go(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.getElementById('sec-' + id).classList.add('on');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    t.classList.remove('on-p','on-u','on-e','on-n');
+  });
+  const map = { pat: 'on-p', usr: 'on-u', eng: 'on-e' };
+  el.classList.add(map[id] || 'on-n');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

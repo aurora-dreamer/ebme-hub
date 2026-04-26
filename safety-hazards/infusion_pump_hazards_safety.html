@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infusion Device — Hazard & Safety Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2ec;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --border: #d8d2c6;
+  --patient: #c0392b;
+  --patient-light: #fdeaea;
+  --patient-mid: #e8a09a;
+  --user: #1a6b9a;
+  --user-light: #e6f2fa;
+  --user-mid: #7db8d8;
+  --engineer: #1e7a4a;
+  --engineer-light: #e6f5ed;
+  --engineer-mid: #7dc4a0;
+  --neutral: #5a4f3e;
+  --text: #2a2018;
+  --text2: #7a6e5e;
+  --text3: #a89e8e;
+  --accent: #c0392b;
+  --shadow: rgba(42,32,24,0.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── HEADER ───────────────────────────────────────────── */
+.header {
+  background: var(--text);
+  color: var(--bg);
+  padding: 28px 40px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  right: -60px; top: -60px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  border: 60px solid rgba(255,255,255,0.04);
+}
+.header::after {
+  content: '';
+  position: absolute;
+  right: 100px; bottom: -80px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  border: 40px solid rgba(255,255,255,0.03);
+}
+.header-kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: rgba(245,242,236,0.4);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+.header h1 span { color: var(--patient-mid); }
+.header-sub {
+  font-size: 13px;
+  color: rgba(245,242,236,0.5);
+  font-family: 'JetBrains Mono', monospace;
+}
+.header-pills {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.pill-patient { border-color: var(--patient-mid); color: var(--patient-mid); }
+.pill-user { border-color: var(--user-mid); color: var(--user-mid); }
+.pill-engineer { border-color: var(--engineer-mid); color: var(--engineer-mid); }
+
+/* ── NAV TABS ─────────────────────────────────────────── */
+.nav-wrap {
+  background: var(--surface);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.nav-tabs {
+  display: flex;
+  overflow-x: auto;
+  padding: 0 40px;
+}
+.nav-tab {
+  padding: 16px 24px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text2);
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active-patient { color: var(--patient); border-bottom-color: var(--patient); }
+.nav-tab.active-user { color: var(--user); border-bottom-color: var(--user); }
+.nav-tab.active-engineer { color: var(--engineer); border-bottom-color: var(--engineer); }
+.nav-tab.active-overview { color: var(--neutral); border-bottom-color: var(--neutral); }
+.nav-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── CONTENT ──────────────────────────────────────────── */
+.content { padding: 36px 40px; max-width: 1200px; }
+.section { display: none; }
+.section.visible { display: block; }
+
+/* ── OVERVIEW MATRIX ─────────────────────────────────── */
+.matrix-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.matrix-card {
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 2px 16px var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+.matrix-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px var(--shadow);
+}
+.matrix-card-header {
+  padding: 20px 22px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.matrix-icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.matrix-card-title { font-size: 16px; font-weight: 700; }
+.matrix-card-sub { font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-top: 2px; }
+.matrix-body { padding: 0 22px 20px; }
+.matrix-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.matrix-stat:last-child { border-bottom: none; }
+.stat-label { color: var(--text2); }
+.stat-val { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+
+/* ISO 14971 risk matrix */
+.risk-matrix-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 16px var(--shadow);
+}
+.risk-matrix-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+.risk-matrix-sub {
+  font-size: 11px;
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 20px;
+}
+.rm-grid {
+  display: grid;
+  grid-template-columns: auto repeat(5, 1fr);
+  gap: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+.rm-cell {
+  padding: 10px 6px;
+  text-align: center;
+  border-radius: 4px;
+}
+.rm-header { color: var(--text2); font-weight: 500; background: var(--surface2); }
+.rm-label { color: var(--text2); background: var(--surface2); display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; }
+.rm-negligible { background: #e8f5e9; color: #2e7d32; }
+.rm-acceptable { background: #fff9c4; color: #7a6000; }
+.rm-alarp { background: #ffe0b2; color: #b04000; }
+.rm-unacceptable { background: #ffcdd2; color: #b71c1c; }
+
+/* dot markers in RM */
+.rm-dot {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid;
+  vertical-align: middle;
+}
+
+/* ── HAZARD CARDS ────────────────────────────────────── */
+.section-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.section-desc {
+  font-size: 13px;
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 28px;
+}
+
+.hazard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.hazard-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 8px var(--shadow);
+}
+.hazard-header {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hazard-icon { font-size: 18px; }
+.hazard-name { font-size: 13px; font-weight: 700; }
+.hazard-class {
+  margin-left: auto;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+.hazard-body { padding: 0 18px 16px; }
+
+.hazard-row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  align-items: flex-start;
+}
+.hazard-row:last-child { border-bottom: none; }
+.hrow-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text3);
+  padding-top: 2px;
+}
+.hrow-val { color: var(--text); line-height: 1.5; }
+
+/* severity badges */
+.sev { padding: 1px 7px; border-radius: 3px; font-size: 9px; font-family: 'JetBrains Mono', monospace; font-weight: 500; display: inline-block; }
+.sev-critical { background: #ffcdd2; color: #b71c1c; }
+.sev-major { background: #ffe0b2; color: #b04000; }
+.sev-moderate { background: #fff9c4; color: #7a6000; }
+.sev-minor { background: #e8f5e9; color: #2e7d32; }
+
+/* ── SAFETY MECHANISMS ───────────────────────────────── */
+.safety-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.safety-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 1px 8px var(--shadow);
+  position: relative;
+}
+.safety-number {
+  position: absolute;
+  top: 14px; right: 16px;
+  font-size: 36px;
+  font-weight: 800;
+  opacity: 0.06;
+  font-family: 'JetBrains Mono', monospace;
+}
+.safety-icon-wrap {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+.safety-name { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.safety-desc { font-size: 11px; color: var(--text2); line-height: 1.6; margin-bottom: 10px; }
+.safety-standard {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 1px;
+}
+
+/* ── STANDARDS TABLE ─────────────────────────────────── */
+.std-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; }
+.std-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text2);
+  background: var(--surface2);
+  border-bottom: 2px solid var(--border);
+}
+.std-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  vertical-align: top;
+}
+.std-table tr:hover td { background: var(--surface2); }
+.std-table tr:last-child td { border-bottom: none; }
+
+/* ── DEFENCE-IN-DEPTH ────────────────────────────────── */
+.defence-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 28px;
+  box-shadow: 0 2px 16px var(--shadow);
+}
+.defence-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.defence-layers::before {
+  content: '';
+  position: absolute;
+  left: 19px; top: 20px; bottom: 20px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--patient), var(--user), var(--engineer));
+  opacity: 0.3;
+}
+.defence-layer {
+  display: flex;
+  gap: 20px;
+  padding: 14px 0;
+  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+}
+.defence-layer:last-child { border-bottom: none; }
+.layer-num {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  border: 2px solid;
+}
+.layer-body { flex: 1; }
+.layer-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+.layer-desc { font-size: 11px; color: var(--text2); line-height: 1.6; }
+.layer-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+.layer-tag {
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* ── ENGINEER HAZARD SPECIFIC ──────────────────────────── */
+.risk-banner {
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.6;
+  border: 1px solid;
+}
+
+/* ── COLOUR HELPERS ──────────────────────────────────── */
+.c-patient { color: var(--patient); }
+.c-user { color: var(--user); }
+.c-engineer { color: var(--engineer); }
+.bg-patient { background: var(--patient-light); }
+.bg-user { background: var(--user-light); }
+.bg-engineer { background: var(--engineer-light); }
+.border-patient { border-color: var(--patient-mid); }
+.border-user { border-color: var(--user-mid); }
+.border-engineer { border-color: var(--engineer-mid); }
+
+/* animation */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.section.visible > * { animation: fadeUp 0.3s ease both; }
+.section.visible > *:nth-child(2) { animation-delay: 0.05s; }
+.section.visible > *:nth-child(3) { animation-delay: 0.1s; }
+.section.visible > *:nth-child(4) { animation-delay: 0.15s; }
+
+@media (max-width: 800px) {
+  .matrix-grid, .safety-grid, .hazard-grid { grid-template-columns: 1fr; }
+  .content { padding: 20px; }
+  .header { padding: 20px; }
+  .nav-tabs { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-kicker">ISO 14971 · IEC 60601-2-24 · IEC 60601-1-8</div>
+  <h1>Infusion Device<br><span>Hazard & Safety Analysis</span></h1>
+  <div class="header-sub">Risk characterisation across all stakeholders · Clinical Engineering Reference</div>
+  <div class="header-pills">
+    <span class="pill pill-patient">🧑‍⚕️ Patient</span>
+    <span class="pill pill-user">👩‍⚕️ Clinical User</span>
+    <span class="pill pill-engineer">🔧 Service Engineer</span>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <div class="nav-tabs">
+    <div class="nav-tab active-overview" onclick="showTab('overview', this)" id="tab-overview">
+      <div class="nav-dot" style="background:var(--neutral)"></div> Overview
+    </div>
+    <div class="nav-tab" onclick="showTab('patient', this)" id="tab-patient">
+      <div class="nav-dot" style="background:var(--patient)"></div> Patient Hazards
+    </div>
+    <div class="nav-tab" onclick="showTab('user', this)" id="tab-user">
+      <div class="nav-dot" style="background:var(--user)"></div> User Hazards
+    </div>
+    <div class="nav-tab" onclick="showTab('engineer', this)" id="tab-engineer">
+      <div class="nav-dot" style="background:var(--engineer)"></div> Engineer Hazards
+    </div>
+    <div class="nav-tab" onclick="showTab('safety', this)" id="tab-safety">
+      <div class="nav-dot" style="background:var(--neutral)"></div> Safety Mechanisms
+    </div>
+    <div class="nav-tab" onclick="showTab('defence', this)" id="tab-defence">
+      <div class="nav-dot" style="background:var(--neutral)"></div> Defence-in-Depth
+    </div>
+    <div class="nav-tab" onclick="showTab('standards', this)" id="tab-standards">
+      <div class="nav-dot" style="background:var(--neutral)"></div> Standards
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══════════════════════ OVERVIEW ══════════════════════ -->
+<div id="sec-overview" class="section visible">
+  <div class="matrix-grid">
+    <div class="matrix-card" onclick="showTab('patient', document.getElementById('tab-patient'))">
+      <div class="matrix-card-header">
+        <div class="matrix-icon bg-patient" style="color:var(--patient)">🧑‍⚕️</div>
+        <div>
+          <div class="matrix-card-title c-patient">Patient</div>
+          <div class="matrix-card-sub" style="color:var(--patient-mid)">Direct physiological risk</div>
+        </div>
+      </div>
+      <div class="matrix-body">
+        <div class="matrix-stat"><span class="stat-label">Free-flow / overdose</span><span class="stat-val sev sev-critical">CRITICAL</span></div>
+        <div class="matrix-stat"><span class="stat-label">Air embolism</span><span class="stat-val sev sev-critical">CRITICAL</span></div>
+        <div class="matrix-stat"><span class="stat-label">Occlusion / underdose</span><span class="stat-val sev sev-major">MAJOR</span></div>
+        <div class="matrix-stat"><span class="stat-label">Micro-shock (CF)</span><span class="stat-val sev sev-major">MAJOR</span></div>
+        <div class="matrix-stat"><span class="stat-label">Infection / contamination</span><span class="stat-val sev sev-major">MAJOR</span></div>
+      </div>
+    </div>
+    <div class="matrix-card" onclick="showTab('user', document.getElementById('tab-user'))">
+      <div class="matrix-card-header">
+        <div class="matrix-icon bg-user" style="color:var(--user)">👩‍⚕️</div>
+        <div>
+          <div class="matrix-card-title c-user">Clinical User</div>
+          <div class="matrix-card-sub" style="color:var(--user-mid)">Use error & alarm fatigue</div>
+        </div>
+      </div>
+      <div class="matrix-body">
+        <div class="matrix-stat"><span class="stat-label">Programming error</span><span class="stat-val sev sev-critical">CRITICAL</span></div>
+        <div class="matrix-stat"><span class="stat-label">Alarm fatigue</span><span class="stat-val sev sev-major">MAJOR</span></div>
+        <div class="matrix-stat"><span class="stat-label">Wrong drug/concentration</span><span class="stat-val sev sev-critical">CRITICAL</span></div>
+        <div class="matrix-stat"><span class="stat-label">Free-flow on removal</span><span class="stat-val sev sev-major">MAJOR</span></div>
+        <div class="matrix-stat"><span class="stat-label">Needlestick injury</span><span class="stat-val sev sev-moderate">MODERATE</span></div>
+      </div>
+    </div>
+    <div class="matrix-card" onclick="showTab('engineer', document.getElementById('tab-engineer'))">
+      <div class="matrix-card-header">
+        <div class="matrix-icon bg-engineer" style="color:var(--engineer)">🔧</div>
+        <div>
+          <div class="matrix-card-title c-engineer">Service Engineer</div>
+          <div class="matrix-card-sub" style="color:var(--engineer-mid)">Electrical & biological risk</div>
+        </div>
+      </div>
+      <div class="matrix-body">
+        <div class="matrix-stat"><span class="stat-label">Electric shock (mains)</span><span class="stat-val sev sev-critical">CRITICAL</span></div>
+        <div class="matrix-stat"><span class="stat-label">Blood/fluid exposure</span><span class="stat-val sev sev-major">MAJOR</span></div>
+        <div class="matrix-stat"><span class="stat-label">Post-service free-flow</span><span class="stat-val sev sev-critical">CRITICAL</span></div>
+        <div class="matrix-stat"><span class="stat-label">Inadequate retest</span><span class="stat-val sev sev-major">MAJOR</span></div>
+        <div class="matrix-stat"><span class="stat-label">Firmware/software error</span><span class="stat-val sev sev-major">MAJOR</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ISO 14971 RISK MATRIX -->
+  <div class="risk-matrix-wrap">
+    <div class="risk-matrix-title">ISO 14971:2019 — Risk Acceptability Matrix</div>
+    <div class="risk-matrix-sub">Severity (columns) × Probability (rows) → Risk region applied to infusion device hazards</div>
+    <div class="rm-grid">
+      <div class="rm-cell rm-label"></div>
+      <div class="rm-cell rm-header">Negligible</div>
+      <div class="rm-cell rm-header">Minor</div>
+      <div class="rm-cell rm-header">Moderate</div>
+      <div class="rm-cell rm-header">Serious</div>
+      <div class="rm-cell rm-header">Catastrophic</div>
+
+      <div class="rm-cell rm-label">Improbable</div>
+      <div class="rm-cell rm-negligible">Negligible</div>
+      <div class="rm-cell rm-negligible">Negligible</div>
+      <div class="rm-cell rm-acceptable">Acceptable</div>
+      <div class="rm-cell rm-acceptable">Acceptable</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+
+      <div class="rm-cell rm-label">Remote</div>
+      <div class="rm-cell rm-negligible">Negligible</div>
+      <div class="rm-cell rm-acceptable">Acceptable</div>
+      <div class="rm-cell rm-acceptable">Acceptable</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+
+      <div class="rm-cell rm-label">Occasional</div>
+      <div class="rm-cell rm-acceptable">Acceptable</div>
+      <div class="rm-cell rm-acceptable">Acceptable</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+
+      <div class="rm-cell rm-label">Probable</div>
+      <div class="rm-cell rm-acceptable">Acceptable</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+
+      <div class="rm-cell rm-label">Frequent</div>
+      <div class="rm-cell rm-alarp">ALARP</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+      <div class="rm-cell rm-unacceptable" style="font-weight:600">⚠ Unacceptable</div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:12px">
+      Free-flow/overdose: Serious × Occasional → Unacceptable → mitigated by anti-syphon clamp (mandatory).
+      Air embolism: Catastrophic × Remote → Unacceptable → mitigated by ultrasonic air detector.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ PATIENT ══════════════════════ -->
+<div id="sec-patient" class="section">
+  <div class="section-title c-patient">Patient Hazards</div>
+  <div class="section-desc">Direct physiological risk to the patient from infusion device failure or misuse</div>
+
+  <div class="hazard-grid">
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-patient" style="border-bottom:2px solid var(--patient-mid)">
+        <div class="hazard-icon">💧</div>
+        <div class="hazard-name">Free-Flow / Gravitational Overdose</div>
+        <span class="hazard-class sev-critical sev">CRITICAL</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Anti-syphon valve failure; door opened with tubing loaded; set removed without clamping</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Rapid uncontrolled drug infusion → cardiac arrest (potassium, insulin, opioid), haemodynamic collapse</div></div>
+        <div class="hazard-row"><div class="hrow-key">Likelihood</div><div class="hrow-val">Low if maintained; High if free-flow test skipped at PPM</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Anti-syphon clamp; free-flow test on every PPM; door interlock; user training</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">IEC 60601-2-24 §201.11 free-flow requirement</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-patient" style="border-bottom:2px solid var(--patient-mid)">
+        <div class="hazard-icon">🫧</div>
+        <div class="hazard-name">Air Embolism</div>
+        <span class="hazard-class sev-critical sev">CRITICAL</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Air-in-line detector failure; unprimed set; empty bag run dry; tubing disconnection</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Venous air embolism → pulmonary obstruction, stroke (patent foramen ovale), death. Fatal bolus ~3–5 mL/kg in central venous line</div></div>
+        <div class="hazard-row"><div class="hrow-key">Likelihood</div><div class="hrow-val">Very low (protected by sensor); higher with cold IV bags (microbubbles)</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Ultrasonic air detector (≥50 µL threshold); empty-bag alarm; proper priming protocol</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">IEC 60601-2-24 §201.12.4 air-in-line detection</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-patient" style="border-bottom:2px solid var(--patient-mid)">
+        <div class="hazard-icon">🚫</div>
+        <div class="hazard-name">Occlusion / Underdose</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Kinked tubing, clotted cannula, patient movement, positional occlusion</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Drug underdose (vasopressors, insulin, sedation); rebound bolus on clearance; tissue ischaemia</div></div>
+        <div class="hazard-row"><div class="hrow-key">Special risk</div><div class="hrow-val">At low infusion rates (1 mL/hr), time-to-alarm can exceed 30 min — bolus stored in compliant tubing released on clearance</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Downstream pressure sensor + alarm; stiffer tubing reduces stored energy; appropriate occlusion threshold</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">IEC 60601-2-24 §201.12.5 occlusion alarm</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-patient" style="border-bottom:2px solid var(--patient-mid)">
+        <div class="hazard-icon">⚡</div>
+        <div class="hazard-name">Electrical Micro-shock (CF Applied Part)</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Leakage current conducted via IV fluid to intracardiac catheter or CVP line; single fault condition; earth lift</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Ventricular fibrillation with currents as low as 10 µA in cardiac patients</div></div>
+        <div class="hazard-row"><div class="hrow-key">Likelihood</div><div class="hrow-val">Very low in maintained device; higher after fluid ingress, PCB damage, or ageing insulation</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">CF applied part classification (≤10 µA leakage); earth continuity test at PPM; IEC 60601-1 Class I construction</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">IEC 60601-1 Table 1 CF leakage limits</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-patient" style="border-bottom:2px solid var(--patient-mid)">
+        <div class="hazard-icon">🧫</div>
+        <div class="hazard-name">Contamination / Infection</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Biofilm in reused tubing; contaminated IV bag; inadequate surface decontamination of pump; improper cassette handling</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Catheter-related bloodstream infection (CRBSI); sepsis; endocarditis; medication contamination</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Single-use tubing per IFU; surface decontamination between patients; pump cleaning per manufacturer guidance</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">MHRA DB2006(06) decontamination; local IPCT policy</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-patient" style="border-bottom:2px solid var(--patient-mid)">
+        <div class="hazard-icon">💊</div>
+        <div class="hazard-name">Drug Library / DERS Bypass</div>
+        <span class="hazard-class sev-critical sev">CRITICAL</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Outdated drug library; wrong drug profile selected; soft limit bypassed by user; library not loaded on device</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">10× overdose possible; concentration errors; incorrect dosing in paediatric/neonatal settings</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Dose Error Reduction Software (DERS); hard limits (unbypassable); regular library updates; pharmacist sign-off; DERS bypass events reportable to MHRA</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">NPSA alert; NHS England DERS guidance</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════ USER ══════════════════════ -->
+<div id="sec-user" class="section">
+  <div class="section-title c-user">Clinical User Hazards</div>
+  <div class="section-desc">Risks arising from use errors, alarm fatigue, and human factors in clinical settings</div>
+
+  <div class="hazard-grid">
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-user" style="border-bottom:2px solid var(--user-mid)">
+        <div class="hazard-icon">⌨️</div>
+        <div class="hazard-name">Programming / Keypad Entry Error</div>
+        <span class="hazard-class sev-critical sev">CRITICAL</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">10× errors (decimal point omission); wrong concentration selected; rate vs volume confusion; distraction during entry</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Massive drug overdose or underdose; most common reported infusion device incident type in MHRA/MAUDE databases</div></div>
+        <div class="hazard-row"><div class="hrow-key">Human factors</div><div class="hrow-val">Poor display contrast, small keypad, inconsistent menu flows across device models, time pressure on ward</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">DERS hard limits; IEC 62366-1 usability engineering; 5 rights double-check; standardised concentrations</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-user" style="border-bottom:2px solid var(--user-mid)">
+        <div class="hazard-icon">🔔</div>
+        <div class="hazard-name">Alarm Fatigue</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">High nuisance alarm rate (occlusion, air, near-end); multiple pumps per patient in ICU; alarm silencing without investigation</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Delayed response to genuine occlusion or air event; patient harm through missed clinical deterioration</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">IEC 60601-1-8 alarm priority system; smart alarm management; PPM to reduce nuisance alarm rate; staff training</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">IEC 60601-1-8 annunciator levels; AAMI/ECRI alarm safety guidance</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-user" style="border-bottom:2px solid var(--user-mid)">
+        <div class="hazard-icon">🪡</div>
+        <div class="hazard-name">Tubing Misload / Wrong Set</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Incompatible tubing brand loaded; tubing seated in wrong orientation; door closed on kinked tubing</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Inaccurate flow rate (up to 20% error with wrong tubing wall thickness); occlusion alarm failure</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Colour-coded sets per manufacturer; cassette design prevents incorrect loading; approved set list in ward policy</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">Manufacturer IFU approved tubing list</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-user" style="border-bottom:2px solid var(--user-mid)">
+        <div class="hazard-icon">💉</div>
+        <div class="hazard-name">Needlestick / Sharps Injury</div>
+        <span class="hazard-class sev-moderate sev">MODERATE</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Manipulation of line connections; disconnection under pressure; recapping needles; patient movement during line change</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Bloodborne virus transmission (HBV, HCV, HIV); occupational exposure incident; psychological impact</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Needleless connector systems; Luer-lock fittings; safe sharps policy; PPE; post-exposure protocol</div></div>
+        <div class="hazard-row"><div class="hrow-key">Standard</div><div class="hrow-val">EU Sharps Directive 2010/32/EU; Health and Safety (Sharp Instruments) Regulations 2013</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-user" style="border-bottom:2px solid var(--user-mid)">
+        <div class="hazard-icon">🔌</div>
+        <div class="hazard-name">Power Interruption / Battery Failure</div>
+        <span class="hazard-class sev-moderate sev">MODERATE</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Depleted battery during transfer; mains cable disconnection; unexpected power outage; battery not charged pre-use</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Infusion interruption; critical drug gap (vasopressors, insulin); delayed recognition if alarm silenced</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Battery pre-use check; ≥4 hr autonomy requirement; battery low alarm (IEC 60601-1-8 medium priority); annual capacity test</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-user" style="border-bottom:2px solid var(--user-mid)">
+        <div class="hazard-icon">🔄</div>
+        <div class="hazard-name">Syringe / Bag Change Interruption</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Dual-channel changeover gap; pump stop during bag exchange; failure to restart; delay in recognising empty</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Drug gap causing haemodynamic instability (ICU); hypoglycaemia; pain return in analgesia infusions</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Near-end-of-infusion alarm; tandem/piggyback infusion techniques; anticipatory bag changes; drug running low protocol</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════ ENGINEER ══════════════════════ -->
+<div id="sec-engineer" class="section">
+  <div class="section-title c-engineer">Service Engineer Hazards</div>
+  <div class="section-desc">Occupational and patient safety risks during maintenance, repair, and testing</div>
+
+  <div class="risk-banner bg-engineer border-engineer">
+    <span style="font-size:18px">⚠️</span>
+    <div><strong style="color:var(--engineer)">Regulatory note:</strong> Any service activity that could affect device safety performance constitutes a regulated activity under UK MDR 2002 / EU MDR 2017/745. Post-service verification is mandatory. Failure to perform safety tests after repair is a potential MHRA reportable event if patient harm results.</div>
+  </div>
+
+  <div class="hazard-grid">
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-engineer" style="border-bottom:2px solid var(--engineer-mid)">
+        <div class="hazard-icon">⚡</div>
+        <div class="hazard-name">Electric Shock — Mains Voltage</div>
+        <span class="hazard-class sev-critical sev">CRITICAL</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Live working during PCB fault-finding; probing energised circuits; inadequate isolation; faulty test leads</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Electrocution; ventricular fibrillation; flash burns; death. 230 V AC at >100 mA lethal in &lt;1 s</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Lockout/tagout (LOTO); isolated transformer use during live work; Category IV test leads (IEC 61010); electrical safety training; two-person rule for live work</div></div>
+        <div class="hazard-row"><div class="hrow-key">Regulation</div><div class="hrow-val">Electricity at Work Regulations 1989; IEC 61010-1 test equipment safety</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-engineer" style="border-bottom:2px solid var(--engineer-mid)">
+        <div class="hazard-icon">🩸</div>
+        <div class="hazard-name">Biological Exposure (Blood & Body Fluids)</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Fluid ingress in pump casing; contaminated tubing channel; aerosol from pressurised tubing; handling soiled devices without decontamination</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Bloodborne pathogen transmission; skin/mucous membrane contact with infectious material</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Device decontamination before delivery to EBME (decontamination certificate); PPE (gloves, apron, eyewear); hand hygiene; universal precautions</div></div>
+        <div class="hazard-row"><div class="hrow-key">Regulation</div><div class="hrow-val">Control of Substances Hazardous to Health (COSHH) 2002; MHRA DB2006(06)</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-engineer" style="border-bottom:2px solid var(--engineer-mid)">
+        <div class="hazard-icon">🚰</div>
+        <div class="hazard-name">Post-Service Free-Flow (Patient Risk)</div>
+        <span class="hazard-class sev-critical sev">CRITICAL</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Anti-syphon mechanism not tested post-repair; door interlock not reinstated; safety software not validated after firmware update</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Patient receives uncontrolled bolus when pump returned to clinical use — potentially fatal</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Mandatory free-flow test on every return to service; complete PPM checklist sign-off; witnessed re-verification; CMMS record update</div></div>
+        <div class="hazard-row"><div class="hrow-key">Regulation</div><div class="hrow-val">UK MDR 2002 Regulation 21 (device performance); MHRA reportable if patient harmed</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-engineer" style="border-bottom:2px solid var(--engineer-mid)">
+        <div class="hazard-icon">💾</div>
+        <div class="hazard-name">Firmware Update Error</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-val">Incorrect firmware version; update interrupted; drug library overwritten; update applied to incompatible hardware revision</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Drug library corruption (wrong dose limits); alarm logic disabled; inaccurate flow control; device unusable</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">Manufacturer-authorised update only; version verification pre/post update; functional test including DERS after update; document firmware version in asset record</div></div>
+        <div class="hazard-row"><div class="hrow-key">Regulation</div><div class="hrow-val">IEC 62304 software lifecycle; MHRA guidance on software modifications</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-engineer" style="border-bottom:2px solid var(--engineer-mid)">
+        <div class="hazard-icon">🔬</div>
+        <div class="hazard-name">Inadequate Electrical Safety Re-test</div>
+        <span class="hazard-class sev-major sev">MAJOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-key">Repair involving mains components; PCB replacement; power supply work not followed by formal ESR test</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Undetected leakage current increase or earth fault → micro-shock to patient via IV fluid path</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">IEC 60601-1 ESR tests after any mains-level repair: earth continuity ≤0.1 Ω; enclosure leakage ≤500 µA; patient (CF) leakage ≤10 µA; test with approved electrical safety analyser</div></div>
+        <div class="hazard-row"><div class="hrow-key">Regulation</div><div class="hrow-val">IEC 62353 re-test after service; NHS Estates HTM 06-01</div></div>
+      </div>
+    </div>
+
+    <div class="hazard-card">
+      <div class="hazard-header bg-engineer" style="border-bottom:2px solid var(--engineer-mid)">
+        <div class="hazard-icon">🧪</div>
+        <div class="hazard-name">Chemical Exposure (Cleaning Agents)</div>
+        <span class="hazard-class sev-minor sev">MINOR</span>
+      </div>
+      <div class="hazard-body">
+        <div class="hazard-row"><div class="hrow-key">Cause</div><div class="hrow-key">Decontamination fluids (chlorine-based, IPA, aldehyde) used in enclosed workshop; splashing during cleaning</div></div>
+        <div class="hazard-row"><div class="hrow-key">Harm</div><div class="hrow-val">Skin/eye irritation; respiratory irritation from vapour; contact dermatitis with repeated exposure</div></div>
+        <div class="hazard-row"><div class="hrow-key">Control</div><div class="hrow-val">COSHH assessment for each chemical; PPE (nitrile gloves, eye protection); adequate ventilation; SDS/MSDS available at workstation</div></div>
+        <div class="hazard-row"><div class="hrow-key">Regulation</div><div class="hrow-val">COSHH 2002; RIDDOR for significant exposures</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════ SAFETY MECHANISMS ══════════════ -->
+<div id="sec-safety" class="section">
+  <div class="section-title">Built-In Safety Mechanisms</div>
+  <div class="section-desc">Engineering controls and protective features mandated by IEC 60601-2-24 and ISO 14971</div>
+
+  <div class="safety-grid">
+
+    <div class="safety-card">
+      <div class="safety-number">01</div>
+      <div class="safety-icon-wrap" style="background:var(--patient-light);color:var(--patient)">🔒</div>
+      <div class="safety-name">Anti-Syphon / Free-Flow Protection</div>
+      <div class="safety-desc">Mechanical clamp or spring-loaded valve prevents gravitational free-flow when tubing is removed or door opened. Single most important passive safety feature. Mandatory per IEC 60601-2-24.</div>
+      <div class="safety-standard">IEC 60601-2-24 §201.11 · Tested at every PPM</div>
+    </div>
+
+    <div class="safety-card">
+      <div class="safety-number">02</div>
+      <div class="safety-icon-wrap" style="background:var(--patient-light);color:var(--patient)">🫧</div>
+      <div class="safety-name">Ultrasonic Air-in-Line Detector</div>
+      <div class="safety-desc">Piezoelectric transceiver across tubing detects bubbles ≥50 µL. Immediately halts pump and activates high-priority alarm. Threshold set to balance sensitivity vs nuisance alarms.</div>
+      <div class="safety-standard">IEC 60601-2-24 §201.12.4 · Threshold ≤50 µL</div>
+    </div>
+
+    <div class="safety-card">
+      <div class="safety-number">03</div>
+      <div class="safety-icon-wrap" style="background:var(--patient-light);color:var(--patient)">📊</div>
+      <div class="safety-name">Downstream Occlusion Sensing</div>
+      <div class="safety-desc">Piezoresistive pressure sensor continuously monitors line pressure. Rising pressure triggers occlusion alarm. Threshold configurable 300–900 mmHg. Lower threshold = faster detection but more nuisance alarms.</div>
+      <div class="safety-standard">IEC 60601-2-24 §201.12.5 · User configurable</div>
+    </div>
+
+    <div class="safety-card">
+      <div class="safety-number">04</div>
+      <div class="safety-icon-wrap" style="background:var(--user-light);color:var(--user)">💊</div>
+      <div class="safety-name">Dose Error Reduction Software (DERS)</div>
+      <div class="safety-desc">Drug library with hard limits (pump refuses to start) and soft limits (warning, requires confirmation). Prevents 10× programming errors. Hard limits non-bypassable by any user. DERS bypass is a reportable event.</div>
+      <div class="safety-standard">NPSA alert 2010 · NHS England DERS guidance · MHRA reportable</div>
+    </div>
+
+    <div class="safety-card">
+      <div class="safety-number">05</div>
+      <div class="safety-icon-wrap" style="background:var(--user-light);color:var(--user)">🚪</div>
+      <div class="safety-name">Door Interlock</div>
+      <div class="safety-desc">Microswitch or Hall-effect sensor prevents pump operation with door open. Ensures tubing is correctly loaded. Also triggers clamp on door open event during infusion. Critical to free-flow prevention.</div>
+      <div class="safety-standard">IEC 60601-2-24 · Tested at annual PPM</div>
+    </div>
+
+    <div class="safety-card">
+      <div class="safety-number">06</div>
+      <div class="safety-icon-wrap" style="background:var(--engineer-light);color:var(--engineer)">🧠</div>
+      <div class="safety-name">Dual-CPU Safety Architecture</div>
+      <div class="safety-desc">Independent safety processor monitors main CPU heartbeat via watchdog. On main CPU failure, safety CPU immediately actuates mechanical clamp regardless of main software state. Compliant with IEC 62304 SIL-2.</div>
+      <div class="safety-standard">IEC 62304 Class C · IEC 61508 SIL-2</div>
+    </div>
+
+    <div class="safety-card">
+      <div class="safety-number">07</div>
+      <div class="safety-icon-wrap" style="background:var(--engineer-light);color:var(--engineer)">🔔</div>
+      <div class="safety-name">IEC 60601-1-8 Alarm System</div>
+      <div class="safety-desc">Three-priority alarm framework: High (immediate risk — audio ≥65 dBA, distinct melody), Medium (prompt attention), Low (advisory). Separate alarm signal path from main CPU ensures alarms fire even on CPU fault.</div>
+      <div class="safety-standard">IEC 60601-1-8 · Audio ≥65 dBA at 1 m · Visual indicator</div>
+    </div>
+
+    <div class="safety-card">
+      <div class="safety-number">08</div>
+      <div class="safety-icon-wrap" style="background:var(--patient-light);color:var(--patient)">⚡</div>
+      <div class="safety-name">CF Applied Part (Cardiac Floating)</div>
+      <div class="safety-desc">Patient circuit electrically isolated from all other conductive parts via isolation transformer or optocoupler. Patient leakage current ≤10 µA (normal) / ≤50 µA (single fault). Protects intracardiac catheter patients.</div>
+      <div class="safety-standard">IEC 60601-1 Table 1 · CF classification</div>
+    </div>
+
+    <div class="safety-card">
+      <div class="safety-number">09</div>
+      <div class="safety-icon-wrap" style="background:var(--engineer-light);color:var(--engineer)">🔋</div>
+      <div class="safety-name">Battery Backup & Management</div>
+      <div class="safety-desc">LiPo battery provides ≥4 hr autonomy. BMS prevents overcharge, deep discharge, and thermal runaway. Low battery alarm (medium priority) at 20%. Maintains infusion through power interruptions and patient transport.</div>
+      <div class="safety-standard">IEC 60601-1 §11 · IEC 62133 battery safety</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════ DEFENCE IN DEPTH ══════════════ -->
+<div id="sec-defence" class="section">
+  <div class="section-title">Defence-in-Depth</div>
+  <div class="section-desc">Swiss cheese model — multiple independent layers prevent hazard reaching patient</div>
+
+  <div class="defence-wrap">
+    <div class="defence-layers">
+
+      <div class="defence-layer">
+        <div class="layer-num" style="background:rgba(192,57,43,0.1);color:var(--patient);border-color:var(--patient-mid)">1</div>
+        <div class="layer-body">
+          <div class="layer-title">Design Controls (Inherent Safety)</div>
+          <div class="layer-desc">Hazards eliminated or reduced at design stage. No design can produce free-flow even if all software fails (mechanical anti-syphon). Minimum possible leakage current by CF construction. ISO 14971 risk analysis drives design requirements.</div>
+          <div class="layer-examples">
+            <span class="layer-tag" style="background:var(--patient-light);color:var(--patient)">Anti-syphon spring</span>
+            <span class="layer-tag" style="background:var(--patient-light);color:var(--patient)">CF isolation</span>
+            <span class="layer-tag" style="background:var(--patient-light);color:var(--patient)">Hard dose limits</span>
+            <span class="layer-tag" style="background:var(--patient-light);color:var(--patient)">Dual CPU</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="defence-layer">
+        <div class="layer-num" style="background:rgba(192,57,43,0.1);color:var(--patient);border-color:var(--patient-mid)">2</div>
+        <div class="layer-body">
+          <div class="layer-title">Automatic Protection Devices (Sensors & Alarms)</div>
+          <div class="layer-desc">Active sensors detect hazard and halt pump without requiring human action. Air detector, pressure sensor, encoder feedback, and watchdog all act automatically. Alarms alert clinical staff for secondary response.</div>
+          <div class="layer-examples">
+            <span class="layer-tag" style="background:var(--patient-light);color:var(--patient)">Air detector halt</span>
+            <span class="layer-tag" style="background:var(--patient-light);color:var(--patient)">Occlusion alarm</span>
+            <span class="layer-tag" style="background:var(--patient-light);color:var(--patient)">Watchdog clamp</span>
+            <span class="layer-tag" style="background:var(--patient-light);color:var(--patient)">Empty bag alarm</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="defence-layer">
+        <div class="layer-num" style="background:rgba(26,107,154,0.1);color:var(--user);border-color:var(--user-mid)">3</div>
+        <div class="layer-body">
+          <div class="layer-title">Warnings & Alerts (Human Response Required)</div>
+          <div class="layer-desc">Alarms and warnings that require clinical user to diagnose and act. Effective only if alarm is heard, correctly interpreted, and responded to promptly. Alarm fatigue is the primary failure mode of this layer.</div>
+          <div class="layer-examples">
+            <span class="layer-tag" style="background:var(--user-light);color:var(--user)">Audible alarm</span>
+            <span class="layer-tag" style="background:var(--user-light);color:var(--user)">Visual indicator</span>
+            <span class="layer-tag" style="background:var(--user-light);color:var(--user)">Near-end warning</span>
+            <span class="layer-tag" style="background:var(--user-light);color:var(--user)">Battery low alert</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="defence-layer">
+        <div class="layer-num" style="background:rgba(26,107,154,0.1);color:var(--user);border-color:var(--user-mid)">4</div>
+        <div class="layer-body">
+          <div class="layer-title">Clinical Procedures & Human Factors</div>
+          <div class="layer-desc">Ward protocols, double-checks, drug library governance, and standardised concentrations reduce use error probability. IEC 62366-1 usability engineering ensures the device interface supports safe use under realistic clinical conditions.</div>
+          <div class="layer-examples">
+            <span class="layer-tag" style="background:var(--user-light);color:var(--user)">5-rights check</span>
+            <span class="layer-tag" style="background:var(--user-light);color:var(--user)">Standardised conc.</span>
+            <span class="layer-tag" style="background:var(--user-light);color:var(--user)">Independent double-check</span>
+            <span class="layer-tag" style="background:var(--user-light);color:var(--user)">IEC 62366 usability</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="defence-layer">
+        <div class="layer-num" style="background:rgba(30,122,74,0.1);color:var(--engineer);border-color:var(--engineer-mid)">5</div>
+        <div class="layer-body">
+          <div class="layer-title">Planned Preventive Maintenance (EBME/CE)</div>
+          <div class="layer-desc">Annual PPM verifies all safety mechanisms remain functional. Gravimetric accuracy test, free-flow test, electrical safety re-test, and alarm threshold verification restore confidence that layers 1–3 remain intact. PPM is the clinical engineer's primary patient safety contribution.</div>
+          <div class="layer-examples">
+            <span class="layer-tag" style="background:var(--engineer-light);color:var(--engineer)">Free-flow test</span>
+            <span class="layer-tag" style="background:var(--engineer-light);color:var(--engineer)">Gravimetric accuracy</span>
+            <span class="layer-tag" style="background:var(--engineer-light);color:var(--engineer)">ESR test</span>
+            <span class="layer-tag" style="background:var(--engineer-light);color:var(--engineer)">Alarm level test</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="defence-layer">
+        <div class="layer-num" style="background:rgba(30,122,74,0.1);color:var(--engineer);border-color:var(--engineer-mid)">6</div>
+        <div class="layer-body">
+          <div class="layer-title">Post-Market Surveillance & Vigilance (MHRA)</div>
+          <div class="layer-desc">MHRA Yellow Card / MIR reporting of device incidents. Manufacturers required to conduct PMS, PMCF, issue FSCAs. Sentinel events (free-flow deaths, air embolism) trigger field safety corrective actions across entire device fleet. EU MDR 2017/745 and UK MDR 2002.</div>
+          <div class="layer-examples">
+            <span class="layer-tag" style="background:var(--engineer-light);color:var(--engineer)">MHRA Yellow Card</span>
+            <span class="layer-tag" style="background:var(--engineer-light);color:var(--engineer)">Datix incident report</span>
+            <span class="layer-tag" style="background:var(--engineer-light);color:var(--engineer)">FSCA / Field Safety Notice</span>
+            <span class="layer-tag" style="background:var(--engineer-light);color:var(--engineer)">PMS / PMCF</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ STANDARDS ══════════════════════ -->
+<div id="sec-standards" class="section">
+  <div class="section-title">Applicable Standards & Regulations</div>
+  <div class="section-desc">Normative framework governing infusion device design, testing, and post-market oversight</div>
+
+  <table class="std-table">
+    <thead>
+      <tr>
+        <th>Standard / Regulation</th>
+        <th>Scope</th>
+        <th>Applies To</th>
+        <th>Key Requirements</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IEC 60601-2-24</strong></td>
+        <td>Particular requirements for infusion pumps and controllers</td>
+        <td>Manufacturer · EBME</td>
+        <td>Free-flow protection; accuracy ±2%; occlusion alarm; air-in-line; alarm annunciation</td>
+      </tr>
+      <tr>
+        <td><strong>IEC 60601-1</strong></td>
+        <td>General ME equipment safety</td>
+        <td>Manufacturer · EBME</td>
+        <td>Leakage current limits; CF applied part; earth continuity; creepage/clearance</td>
+      </tr>
+      <tr>
+        <td><strong>IEC 60601-1-8</strong></td>
+        <td>Alarm systems for ME equipment</td>
+        <td>Manufacturer · Clinical User</td>
+        <td>High/medium/low alarm priorities; audio ≥65 dBA; visual alarms; alarm silence timing</td>
+      </tr>
+      <tr>
+        <td><strong>IEC 62304</strong></td>
+        <td>Medical device software lifecycle</td>
+        <td>Manufacturer · EBME</td>
+        <td>Class C software (highest risk); change management; firmware update validation</td>
+      </tr>
+      <tr>
+        <td><strong>IEC 62366-1</strong></td>
+        <td>Usability engineering for ME devices</td>
+        <td>Manufacturer · Clinical User</td>
+        <td>Formative/summative usability testing; use error risk analysis; user interface design</td>
+      </tr>
+      <tr>
+        <td><strong>ISO 14971:2019</strong></td>
+        <td>Risk management for medical devices</td>
+        <td>Manufacturer · EBME</td>
+        <td>Hazard identification; risk estimation; ALARP; residual risk acceptability</td>
+      </tr>
+      <tr>
+        <td><strong>IEC 62353</strong></td>
+        <td>Recurrent test of ME equipment</td>
+        <td>EBME</td>
+        <td>Electrical safety re-test after repair; acceptance criteria post-service</td>
+      </tr>
+      <tr>
+        <td><strong>UK MDR 2002</strong></td>
+        <td>UK medical device market regulation</td>
+        <td>Manufacturer · EBME</td>
+        <td>Registration; conformity; incident reporting to MHRA; FSCA obligations</td>
+      </tr>
+      <tr>
+        <td><strong>EU MDR 2017/745</strong></td>
+        <td>EU medical device regulation</td>
+        <td>Manufacturer</td>
+        <td>Class IIb (infusion pumps); UDI/EUDAMED; PMS; PMCF; PSUR</td>
+      </tr>
+      <tr>
+        <td><strong>NHS HTM 06-01</strong></td>
+        <td>Electrical services in healthcare premises</td>
+        <td>EBME · Estates</td>
+        <td>Periodic inspection; portable appliance testing; safe isolation procedures</td>
+      </tr>
+      <tr>
+        <td><strong>Electricity at Work Regs 1989</strong></td>
+        <td>Electrical safety at work</td>
+        <td>EBME Engineer</td>
+        <td>Competence for electrical work; safe systems of work; LOTO</td>
+      </tr>
+      <tr>
+        <td><strong>COSHH 2002</strong></td>
+        <td>Control of hazardous substances</td>
+        <td>EBME Engineer</td>
+        <td>Risk assessment for cleaning agents; biological material; PPE requirements</td>
+      </tr>
+      <tr>
+        <td><strong>Sharps Regs 2013</strong></td>
+        <td>Health and Safety (Sharp Instruments)</td>
+        <td>Clinical User</td>
+        <td>Needleless connectors; safe disposal; post-exposure protocol; training</td>
+      </tr>
+      <tr>
+        <td><strong>MHRA DB2006(06)</strong></td>
+        <td>Decontamination of medical devices</td>
+        <td>EBME · Clinical User</td>
+        <td>Decontamination certificate requirement; cleaning agents compatibility</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+</div><!-- /content -->
+
+<script>
+function showTab(id, el) {
+  // hide all sections
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.getElementById('sec-' + id).classList.add('visible');
+  // deactivate all tabs
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    t.classList.remove('active-patient','active-user','active-engineer','active-overview');
+  });
+  // activate clicked tab
+  const classes = {
+    'overview': 'active-overview',
+    'patient': 'active-patient',
+    'user': 'active-user',
+    'engineer': 'active-engineer',
+    'safety': 'active-overview',
+    'defence': 'active-overview',
+    'standards': 'active-overview'
+  };
+  el.classList.add(classes[id] || 'active-overview');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

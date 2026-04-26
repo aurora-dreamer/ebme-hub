@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diathermy Machine — Engineering Visualiser</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d14;
+    --panel: #0f1520;
+    --border: #1e2d45;
+    --accent: #00e5ff;
+    --accent2: #ff6b35;
+    --accent3: #a8ff3e;
+    --warn: #ffd600;
+    --text: #c8d8e8;
+    --dim: #4a6080;
+    --cut: #ff2244;
+    --coag: #ff8800;
+    --blend: #cc44ff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+  }
+  header h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 800;
+    font-size: 1.7rem;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  header span {
+    font-size: 0.72rem;
+    color: var(--dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .badge {
+    margin-left: auto;
+    background: rgba(0,229,255,0.08);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.68rem;
+    padding: 3px 10px;
+    letter-spacing: 2px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: grid;
+    grid-template-columns: 260px 1fr 220px;
+    grid-template-rows: auto auto;
+    gap: 0;
+    height: calc(100vh - 55px);
+  }
+
+  /* ── CONTROL PANEL ── */
+  .controls {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow-y: auto;
+  }
+  .ctrl-section {
+    border: 1px solid var(--border);
+    padding: 14px;
+  }
+  .ctrl-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+
+  /* Mode buttons */
+  .mode-btns { display: flex; flex-direction: column; gap: 8px; }
+  .mode-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    padding: 10px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .mode-btn .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mode-btn.active[data-mode="cut"] { background: rgba(255,34,68,0.12); border-color: var(--cut); color: var(--cut); }
+  .mode-btn.active[data-mode="coag"] { background: rgba(255,136,0,0.12); border-color: var(--coag); color: var(--coag); }
+  .mode-btn.active[data-mode="blend"] { background: rgba(204,68,255,0.12); border-color: var(--blend); color: var(--blend); }
+  .mode-btn.active[data-mode="cut"] .dot { background: var(--cut); box-shadow: 0 0 8px var(--cut); }
+  .mode-btn.active[data-mode="coag"] .dot { background: var(--coag); box-shadow: 0 0 8px var(--coag); }
+  .mode-btn.active[data-mode="blend"] .dot { background: var(--blend); box-shadow: 0 0 8px var(--blend); }
+
+  /* Sliders */
+  .slider-row { margin-bottom: 14px; }
+  .slider-row label { font-size: 0.72rem; color: var(--dim); display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .slider-row label span { color: var(--accent); }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    background: var(--border); border-radius: 2px; outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    background: var(--accent); border-radius: 50%; cursor: pointer;
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  .indicator-row { display: flex; justify-content: space-between; margin-top: 6px; }
+  .indicator { text-align: center; }
+  .indicator .val { font-size: 1.2rem; color: var(--accent3); }
+  .indicator .lbl { font-size: 0.62rem; color: var(--dim); letter-spacing: 1px; }
+
+  /* ── CENTRE CANVAS ── */
+  .viz-area {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .viz-top {
+    flex: 1;
+    position: relative;
+  }
+  canvas#mainCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .waveform-bar {
+    height: 130px;
+    background: #08101a;
+    border-top: 1px solid var(--border);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .wave-label {
+    font-size: 0.65rem;
+    color: var(--dim);
+    letter-spacing: 2px;
+    padding: 6px 14px 0;
+  }
+  canvas#waveCanvas {
+    flex: 1;
+    display: block;
+    width: 100%;
+  }
+
+  /* ── RIGHT PANEL: SCHEMATIC ── */
+  .schematic {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+  .sch-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 600;
+    font-size: 0.73rem;
+    letter-spacing: 3px;
+    color: var(--dim);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+  }
+  canvas#schCanvas {
+    width: 100%;
+    height: 320px;
+    display: block;
+  }
+  .spec-table { font-size: 0.68rem; width: 100%; border-collapse: collapse; }
+  .spec-table tr { border-bottom: 1px solid #12202e; }
+  .spec-table td { padding: 5px 4px; color: var(--dim); }
+  .spec-table td:last-child { color: var(--text); text-align: right; }
+  #specFreq { color: var(--accent); }
+  #specDuty { color: var(--accent2); }
+  #specVolt { color: var(--warn); }
+  #specTissue { color: var(--accent3); }
+
+  .tissue-bar { margin-top: 8px; }
+  .tissue-bar label { font-size: 0.65rem; color: var(--dim); display: block; margin-bottom: 4px; letter-spacing: 1px; }
+  .t-track { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .t-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+
+  .log-box {
+    background: #060c14;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    font-size: 0.64rem;
+    color: var(--dim);
+    height: 90px;
+    overflow-y: auto;
+    line-height: 1.7;
+  }
+  .log-box p { margin: 0; }
+  .log-box .t-cut { color: var(--cut); }
+  .log-box .t-coag { color: var(--coag); }
+  .log-box .t-blend { color: var(--blend); }
+  .log-box .t-ok { color: var(--accent3); }
+  .log-box .t-info { color: var(--accent); }
+
+  /* Oscillating status light */
+  #statusLight {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent3);
+    display: inline-block;
+    margin-right: 6px;
+    animation: blink 1.2s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  .footer-bar {
+    grid-column: 1 / -1;
+    background: #080d18;
+    border-top: 1px solid var(--border);
+    padding: 6px 20px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-size: 0.65rem;
+    color: var(--dim);
+  }
+  .footer-bar span { color: var(--text); }
+  #activeMode { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Diathermy Visualiser</h1>
+  <span>Surgical Electrosurgery — Engineering Simulation</span>
+  <div class="badge">IEC 60601-2-2</div>
+</header>
+
+<div class="main">
+
+  <!-- LEFT: CONTROLS -->
+  <div class="controls">
+    <div class="ctrl-section">
+      <div class="ctrl-title">Operating Mode</div>
+      <div class="mode-btns">
+        <button class="mode-btn active" data-mode="cut">
+          <span class="dot"></span> CUT (Pure)
+        </button>
+        <button class="mode-btn" data-mode="coag">
+          <span class="dot"></span> COAGULATE
+        </button>
+        <button class="mode-btn" data-mode="blend">
+          <span class="dot"></span> BLEND
+        </button>
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">Power Settings</div>
+      <div class="slider-row">
+        <label>Output Power <span id="pwrVal">80</span> W</label>
+        <input type="range" id="pwrSlider" min="10" max="400" value="80">
+      </div>
+      <div class="slider-row">
+        <label>Frequency <span id="freqVal">500</span> kHz</label>
+        <input type="range" id="freqSlider" min="200" max="1000" value="500">
+      </div>
+      <div class="slider-row">
+        <label>Duty Cycle <span id="dutyVal">100</span>%</label>
+        <input type="range" id="dutySlider" min="5" max="100" value="100" id="dutySlider">
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">System Metrics</div>
+      <div class="indicator-row">
+        <div class="indicator">
+          <div class="val" id="voltInd">—</div>
+          <div class="lbl">PEAK V</div>
+        </div>
+        <div class="indicator">
+          <div class="val" id="currInd">—</div>
+          <div class="lbl">mA RMS</div>
+        </div>
+        <div class="indicator">
+          <div class="val" id="impedInd">—</div>
+          <div class="lbl">Ω LOAD</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">Tissue Interaction</div>
+      <div class="tissue-bar">
+        <label>VAPORISATION <span id="vapPct">0</span>%</label>
+        <div class="t-track"><div class="t-fill" id="vapBar" style="width:0%;background:var(--cut)"></div></div>
+      </div>
+      <div class="tissue-bar">
+        <label>COAGULATION <span id="coagPct">0</span>%</label>
+        <div class="t-track"><div class="t-fill" id="coagBar" style="width:0%;background:var(--coag)"></div></div>
+      </div>
+      <div class="tissue-bar">
+        <label>DESICCATION <span id="desiPct">0</span>%</label>
+        <div class="t-track"><div class="t-fill" id="desiBar" style="width:0%;background:var(--warn)"></div></div>
+      </div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-title">Safety</div>
+      <div style="font-size:0.68rem;line-height:1.9;color:var(--dim)">
+        <div>🔒 REM monitor <span style="color:var(--accent3)">OK</span></div>
+        <div>⚡ Isolation transformer <span style="color:var(--accent3)">OK</span></div>
+        <div>🌡 Thermal cutout <span style="color:var(--accent3)">ARMED</span></div>
+        <div>📶 Return electrode <span id="retElec" style="color:var(--accent3)">CONTACT OK</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRE: MAIN VISUALISATION -->
+  <div class="viz-area">
+    <div class="viz-top">
+      <canvas id="mainCanvas"></canvas>
+    </div>
+    <div class="waveform-bar">
+      <div class="wave-label">OUTPUT WAVEFORM — <span id="waveLabel" style="color:var(--accent)">CONTINUOUS SINE · 500 kHz</span></div>
+      <canvas id="waveCanvas"></canvas>
+    </div>
+  </div>
+
+  <!-- RIGHT: SCHEMATIC + SPECS -->
+  <div class="schematic">
+    <div class="sch-title">Block Schematic</div>
+    <canvas id="schCanvas"></canvas>
+    <div class="sch-title" style="margin-top:6px">Live Parameters</div>
+    <table class="spec-table">
+      <tr><td>Frequency</td><td id="specFreq">—</td></tr>
+      <tr><td>Duty cycle</td><td id="specDuty">—</td></tr>
+      <tr><td>Peak voltage</td><td id="specVolt">—</td></tr>
+      <tr><td>Waveform</td><td id="specWave">—</td></tr>
+      <tr><td>Tissue effect</td><td id="specTissue">—</td></tr>
+      <tr><td>Haemostasis</td><td id="specHemo">—</td></tr>
+    </table>
+
+    <div class="sch-title" style="margin-top:10px">Event Log</div>
+    <div class="log-box" id="logBox">
+      <p class="t-info">► System initialised — IEC 60601-2-2 compliant</p>
+      <p class="t-ok">► REM contact impedance: 87Ω — PASS</p>
+      <p class="t-ok">► Output stage self-test: PASS</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer-bar">
+  <span id="statusLight"></span>
+  Mode: <span id="activeMode">CUT</span> &nbsp;|&nbsp;
+  Power: <span id="footPwr">80 W</span> &nbsp;|&nbsp;
+  Freq: <span id="footFreq">500 kHz</span> &nbsp;|&nbsp;
+  RF State: <span id="footRF" style="color:var(--accent3)">READY</span>
+</div>
+
+<script>
+// ──────────────────────────────────────────────────────
+// STATE
+// ──────────────────────────────────────────────────────
+let state = {
+  mode: 'cut',
+  power: 80,
+  freq: 500,
+  duty: 100,
+  t: 0,
+  particles: [],
+  sparks: [],
+  active: false
+};
+
+// ──────────────────────────────────────────────────────
+// CANVAS SETUP
+// ──────────────────────────────────────────────────────
+const mainCv = document.getElementById('mainCanvas');
+const mainCtx = mainCv.getContext('2d');
+const waveCv = document.getElementById('waveCanvas');
+const waveCtx = waveCv.getContext('2d');
+const schCv = document.getElementById('schCanvas');
+const schCtx = schCv.getContext('2d');
+
+function resize() {
+  const vizTop = document.querySelector('.viz-top');
+  mainCv.width = vizTop.clientWidth;
+  mainCv.height = vizTop.clientHeight;
+  waveCv.width = waveCv.parentElement.clientWidth;
+  waveCv.height = waveCv.parentElement.clientHeight - 24;
+  schCv.width = schCv.parentElement.clientWidth - 24;
+  schCv.height = 320;
+}
+window.addEventListener('resize', resize);
+setTimeout(resize, 50);
+
+// ──────────────────────────────────────────────────────
+// CONTROLS
+// ──────────────────────────────────────────────────────
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+    // Auto-set duty cycle
+    if (state.mode === 'cut') { document.getElementById('dutySlider').value = 100; state.duty = 100; }
+    if (state.mode === 'coag') { document.getElementById('dutySlider').value = 6; state.duty = 6; }
+    if (state.mode === 'blend') { document.getElementById('dutySlider').value = 50; state.duty = 50; }
+    updateSliderDisplays();
+    logEvent(state.mode);
+  });
+});
+
+document.getElementById('pwrSlider').addEventListener('input', e => { state.power = +e.target.value; updateSliderDisplays(); });
+document.getElementById('freqSlider').addEventListener('input', e => { state.freq = +e.target.value; updateSliderDisplays(); });
+document.getElementById('dutySlider').addEventListener('input', e => { state.duty = +e.target.value; updateSliderDisplays(); });
+
+function updateSliderDisplays() {
+  document.getElementById('pwrVal').textContent = state.power;
+  document.getElementById('freqVal').textContent = state.freq;
+  document.getElementById('dutyVal').textContent = state.duty;
+  // Derived
+  const impedance = 200 + Math.random() * 100 | 0;
+  const peakV = Math.sqrt(2 * state.power * impedance) | 0;
+  const rmsI = (state.power / (peakV / Math.sqrt(2)) * 1000) | 0;
+  document.getElementById('voltInd').textContent = peakV;
+  document.getElementById('currInd').textContent = rmsI;
+  document.getElementById('impedInd').textContent = impedance;
+  document.getElementById('footPwr').textContent = state.power + ' W';
+  document.getElementById('footFreq').textContent = state.freq + ' kHz';
+
+  // Tissue bars
+  let vap=0, coag=0, desi=0;
+  const pf = state.power / 400;
+  if (state.mode === 'cut') { vap = 80 + pf*18; coag = 5; desi = 5; }
+  if (state.mode === 'coag') { vap = 5; coag = 20 + pf*30; desi = 50 + pf*20; }
+  if (state.mode === 'blend') { vap = 30 + pf*20; coag = 30 + pf*20; desi = 20; }
+  document.getElementById('vapBar').style.width = Math.min(vap,100)+'%';
+  document.getElementById('vapPct').textContent = Math.min(vap,100)|0;
+  document.getElementById('coagBar').style.width = Math.min(coag,100)+'%';
+  document.getElementById('coagPct').textContent = Math.min(coag,100)|0;
+  document.getElementById('desiBar').style.width = Math.min(desi,100)+'%';
+  document.getElementById('desiPct').textContent = Math.min(desi,100)|0;
+
+  // Spec table
+  const waveforms = { cut: 'Continuous sine', coag: 'Damped burst', blend: 'Interrupted sine' };
+  const tissue = { cut: 'Vaporisation', coag: 'Protein denat.', blend: 'Mixed' };
+  const hemo = { cut: 'Minimal', coag: 'High', blend: 'Moderate' };
+  document.getElementById('specFreq').textContent = state.freq + ' kHz';
+  document.getElementById('specDuty').textContent = state.duty + '%';
+  document.getElementById('specVolt').textContent = peakV + ' V pk';
+  document.getElementById('specWave').textContent = waveforms[state.mode];
+  document.getElementById('specTissue').textContent = tissue[state.mode];
+  document.getElementById('specHemo').textContent = hemo[state.mode];
+  document.getElementById('activeMode').textContent = state.mode.toUpperCase();
+  document.getElementById('waveLabel').textContent = waveforms[state.mode].toUpperCase() + ' · ' + state.freq + ' kHz';
+}
+updateSliderDisplays();
+
+// ──────────────────────────────────────────────────────
+// LOG
+// ──────────────────────────────────────────────────────
+function logEvent(mode) {
+  const box = document.getElementById('logBox');
+  const msgs = {
+    cut:   ['<p class="t-cut">► Mode switch: CUT — continuous 100% duty</p>','<p class="t-cut">► High E-field density at tip → cellular vaporisation</p>'],
+    coag:  ['<p class="t-coag">► Mode switch: COAGULATE — damped burst output</p>','<p class="t-coag">► Fulguration: protein denaturation, haemostasis</p>'],
+    blend: ['<p class="t-blend">► Mode switch: BLEND — interrupted sine wave</p>','<p class="t-blend">► Partial vaporisation + coagulation margin</p>']
+  };
+  msgs[mode].forEach(m => { box.innerHTML += m; });
+  box.scrollTop = box.scrollHeight;
+}
+
+// ──────────────────────────────────────────────────────
+// PARTICLES
+// ──────────────────────────────────────────────────────
+function spawnParticle(x, y, mode) {
+  const colors = { cut: '#ff2244', coag: '#ff8800', blend: '#cc44ff' };
+  const n = mode === 'cut' ? 8 : 3;
+  for (let i=0;i<n;i++) {
+    state.particles.push({
+      x, y,
+      vx: (Math.random()-0.5)*4,
+      vy: (Math.random()-1.5)*4,
+      life: 1,
+      decay: 0.03+Math.random()*0.04,
+      size: 1+Math.random()*3,
+      color: colors[mode]
+    });
+  }
+}
+function spawnSpark(x, y) {
+  for (let i=0;i<6;i++) {
+    const angle = Math.random()*Math.PI*2;
+    const speed = 2+Math.random()*5;
+    state.sparks.push({ x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, life:1, decay:0.06 });
+  }
+}
+
+// ──────────────────────────────────────────────────────
+// MAIN CANVAS DRAW
+// ──────────────────────────────────────────────────────
+function drawMain() {
+  const W = mainCv.width, H = mainCv.height;
+  if (!W || !H) return;
+  mainCtx.clearRect(0,0,W,H);
+
+  // Background grid
+  mainCtx.strokeStyle = 'rgba(30,45,70,0.4)';
+  mainCtx.lineWidth = 0.5;
+  for (let x=0;x<W;x+=40) { mainCtx.beginPath(); mainCtx.moveTo(x,0); mainCtx.lineTo(x,H); mainCtx.stroke(); }
+  for (let y=0;y<H;y+=40) { mainCtx.beginPath(); mainCtx.moveTo(0,y); mainCtx.lineTo(W,y); mainCtx.stroke(); }
+
+  // ── MACHINE BLOCK ──
+  const machX = W*0.06, machY = H*0.18, machW = W*0.22, machH = H*0.6;
+  mainCtx.fillStyle = '#0d1a28';
+  mainCtx.strokeStyle = '#1e2d45';
+  mainCtx.lineWidth = 1.5;
+  mainCtx.fillRect(machX, machY, machW, machH);
+  mainCtx.strokeRect(machX, machY, machW, machH);
+
+  // Machine label
+  mainCtx.fillStyle = '#00e5ff';
+  mainCtx.font = 'bold 11px Share Tech Mono';
+  mainCtx.fillText('ESU / RF GENERATOR', machX+10, machY+20);
+
+  // Internal blocks inside machine
+  const blocks = [
+    { label: 'MAINS SUPPLY\n50/60 Hz', y: 0.10, color: '#1e3a4a' },
+    { label: 'ISOLATION\nTRANSFORMER', y: 0.26, color: '#1a3528' },
+    { label: 'RECTIFIER +\nFILTER', y: 0.42, color: '#1e3a4a' },
+    { label: 'RF OSCILLATOR\n' + state.freq + ' kHz', y: 0.56, color: '#2a1e40' },
+    { label: 'POWER AMP\n' + state.power + ' W', y: 0.70, color: '#3a1e1e' },
+    { label: 'OUTPUT\nCIRCUIT', y: 0.84, color: '#1e3a4a' },
+  ];
+  blocks.forEach(b => {
+    const bx = machX+10, by = machY + machH*b.y, bw = machW-20, bh = machH*0.12;
+    mainCtx.fillStyle = b.color;
+    mainCtx.strokeStyle = '#253545';
+    mainCtx.fillRect(bx, by, bw, bh);
+    mainCtx.strokeRect(bx, by, bw, bh);
+    const lines = b.label.split('\n');
+    mainCtx.fillStyle = '#8aa8c8';
+    mainCtx.font = '9px Share Tech Mono';
+    lines.forEach((l,i) => mainCtx.fillText(l, bx+4, by+13+i*12));
+    // Arrow connector down
+    if (b.y < 0.84) {
+      const ax = bx+bw/2, ay = by+bh;
+      mainCtx.strokeStyle = '#00e5ff44';
+      mainCtx.lineWidth = 1;
+      mainCtx.beginPath(); mainCtx.moveTo(ax,ay); mainCtx.lineTo(ax,ay+machH*0.02); mainCtx.stroke();
+    }
+  });
+
+  // ── CABLE FROM MACHINE TO ACTIVE ELECTRODE ──
+  const cableStartX = machX + machW;
+  const cableStartY = machY + machH*0.92;
+  const tipX = W*0.62, tipY = H*0.35;
+  const modeColors = { cut: '#ff2244', coag: '#ff8800', blend: '#cc44ff' };
+  const modeC = modeColors[state.mode];
+
+  // Animate current flow along cable
+  mainCtx.lineWidth = 3;
+  mainCtx.strokeStyle = modeC + '60';
+  mainCtx.setLineDash([8, 12]);
+  mainCtx.lineDashOffset = -state.t * 2;
+  mainCtx.beginPath();
+  mainCtx.moveTo(cableStartX, cableStartY);
+  mainCtx.bezierCurveTo(cableStartX+80, cableStartY, tipX-80, tipY+40, tipX, tipY+20);
+  mainCtx.stroke();
+  mainCtx.setLineDash([]);
+
+  // ── ACTIVE ELECTRODE (pencil/blade) ──
+  mainCtx.save();
+  mainCtx.translate(tipX, tipY);
+  mainCtx.rotate(-0.3);
+  // Handle
+  mainCtx.fillStyle = '#1e3050';
+  mainCtx.strokeStyle = '#2e4060';
+  mainCtx.lineWidth = 1;
+  mainCtx.fillRect(-8,-30,16,60);
+  mainCtx.strokeRect(-8,-30,16,60);
+  // Blade
+  mainCtx.fillStyle = '#aaccdd';
+  mainCtx.beginPath();
+  mainCtx.moveTo(-3,30); mainCtx.lineTo(3,30); mainCtx.lineTo(1,55); mainCtx.lineTo(-1,55);
+  mainCtx.closePath(); mainCtx.fill();
+  mainCtx.font = '8px Share Tech Mono';
+  mainCtx.fillStyle = '#4a6080';
+  mainCtx.fillText('ACTIVE', -10,-35);
+  mainCtx.fillText('ELECTRODE', -14,-24);
+  mainCtx.restore();
+
+  // ── TISSUE BLOCK ──
+  const tissX = W*0.55, tissY = H*0.52, tissW = W*0.22, tissH = H*0.3;
+  // Base tissue
+  const tissueGrad = mainCtx.createLinearGradient(tissX,tissY,tissX,tissY+tissH);
+  tissueGrad.addColorStop(0,'#3d1a1a');
+  tissueGrad.addColorStop(1,'#5a2a2a');
+  mainCtx.fillStyle = tissueGrad;
+  mainCtx.strokeStyle = '#7a3a3a';
+  mainCtx.lineWidth = 1.5;
+  mainCtx.fillRect(tissX, tissY, tissW, tissH);
+  mainCtx.strokeRect(tissX, tissY, tissW, tissH);
+  mainCtx.fillStyle = '#7a3a3a44';
+  mainCtx.font = '9px Share Tech Mono';
+  mainCtx.fillStyle = '#8a5050';
+  mainCtx.fillText('TISSUE (biological load)', tissX+6, tissY+14);
+  // Resistance symbol
+  mainCtx.fillStyle = '#6a4040';
+  mainCtx.font = '22px Share Tech Mono';
+  mainCtx.fillText('~300Ω', tissX+tissW/2-26, tissY+tissH*0.6);
+
+  // Arc/spark at electrode tip
+  const arcX = W*0.615, arcY = H*0.52;
+  if (state.mode === 'cut') {
+    // Continuous plasma arc
+    for (let i=0;i<5;i++) {
+      const ox = (Math.random()-0.5)*18, oy = Math.random()*14;
+      mainCtx.strokeStyle = `rgba(255,${100+Math.random()*155},50,${0.4+Math.random()*0.5})`;
+      mainCtx.lineWidth = 1.5+Math.random();
+      mainCtx.beginPath();
+      mainCtx.moveTo(arcX, arcY);
+      mainCtx.quadraticCurveTo(arcX+ox/2, arcY+oy/2+6, arcX+ox, arcY+oy+8);
+      mainCtx.stroke();
+    }
+    spawnParticle(arcX + (Math.random()-0.5)*10, arcY+8, 'cut');
+  } else if (state.mode === 'coag') {
+    // Intermittent spark
+    if (Math.random() < state.duty/100) {
+      spawnSpark(arcX + (Math.random()-0.5)*12, arcY+6);
+    }
+  } else {
+    // Blend: both
+    for (let i=0;i<2;i++) {
+      const ox = (Math.random()-0.5)*12, oy = Math.random()*10;
+      mainCtx.strokeStyle = `rgba(200,80,255,${0.3+Math.random()*0.4})`;
+      mainCtx.lineWidth = 1+Math.random();
+      mainCtx.beginPath();
+      mainCtx.moveTo(arcX,arcY);
+      mainCtx.quadraticCurveTo(arcX+ox/2,arcY+oy/2+4,arcX+ox,arcY+oy+7);
+      mainCtx.stroke();
+    }
+    if (Math.random()<0.3) spawnParticle(arcX+(Math.random()-0.5)*8,arcY+6,'blend');
+  }
+
+  // Draw particles
+  state.particles.forEach(p => {
+    mainCtx.globalAlpha = p.life;
+    mainCtx.fillStyle = p.color;
+    mainCtx.beginPath();
+    mainCtx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    mainCtx.fill();
+  });
+  mainCtx.globalAlpha = 1;
+  state.particles = state.particles.filter(p => { p.x+=p.vx; p.y+=p.vy; p.vy+=0.1; p.life-=p.decay; return p.life>0; });
+
+  // Sparks
+  state.sparks.forEach(s => {
+    mainCtx.globalAlpha = s.life;
+    mainCtx.strokeStyle = '#ffd600';
+    mainCtx.lineWidth = 1;
+    mainCtx.beginPath();
+    mainCtx.moveTo(s.x,s.y);
+    mainCtx.lineTo(s.x+s.vx*2,s.y+s.vy*2);
+    mainCtx.stroke();
+  });
+  mainCtx.globalAlpha = 1;
+  state.sparks = state.sparks.filter(s => { s.x+=s.vx; s.y+=s.vy; s.life-=s.decay; return s.life>0; });
+
+  // ── RETURN CABLE ──
+  const retStartX = tissX+tissW, retStartY = tissY+tissH*0.7;
+  const retEndX = machX+machW, retEndY = machY+machH*0.5;
+  mainCtx.strokeStyle = '#00e5ff40';
+  mainCtx.lineWidth = 2;
+  mainCtx.setLineDash([6,14]);
+  mainCtx.lineDashOffset = state.t*1.5;
+  mainCtx.beginPath();
+  mainCtx.moveTo(retStartX, retStartY);
+  mainCtx.bezierCurveTo(retStartX+60,retStartY,retEndX+60,retEndY,retEndX,retEndY);
+  mainCtx.stroke();
+  mainCtx.setLineDash([]);
+
+  // Return electrode label
+  mainCtx.fillStyle = '#4a6080';
+  mainCtx.font = '9px Share Tech Mono';
+  mainCtx.fillText('RETURN (dispersive)', tissX+tissW+4, tissY+tissH+14);
+
+  // ── LABELS & ANNOTATIONS ──
+  mainCtx.fillStyle = '#00e5ff';
+  mainCtx.font = 'bold 10px Share Tech Mono';
+  mainCtx.fillText('RF CURRENT PATH', W*0.35, H*0.52);
+  // Frequency annotation on cable
+  mainCtx.fillStyle = modeC;
+  mainCtx.font = '9px Share Tech Mono';
+  mainCtx.fillText('⚡ ' + state.freq + ' kHz', W*0.38, H*0.43);
+
+  // Mode annotation box
+  const modeName = { cut: 'CUT — Continuous sine. High E-field. Vaporises cells.', coag: 'COAG — Damped bursts. Low duty. Protein denaturation.', blend: 'BLEND — Interrupted sine. Mixed tissue effect.' };
+  mainCtx.fillStyle = '#0d1a28';
+  mainCtx.strokeStyle = modeC;
+  mainCtx.lineWidth = 1;
+  mainCtx.fillRect(W*0.05, H*0.86, W*0.52, 28);
+  mainCtx.strokeRect(W*0.05, H*0.86, W*0.52, 28);
+  mainCtx.fillStyle = modeC;
+  mainCtx.font = '9px Share Tech Mono';
+  mainCtx.fillText('▸  ' + modeName[state.mode], W*0.06, H*0.86+17);
+
+  state.t += 0.5;
+}
+
+// ──────────────────────────────────────────────────────
+// WAVEFORM CANVAS
+// ──────────────────────────────────────────────────────
+function drawWave() {
+  const W = waveCv.width, H = waveCv.height;
+  if (!W||!H) return;
+  waveCtx.clearRect(0,0,W,H);
+  // Grid
+  waveCtx.strokeStyle = 'rgba(30,45,70,0.5)';
+  waveCtx.lineWidth = 0.5;
+  for (let x=0;x<W;x+=40) { waveCtx.beginPath(); waveCtx.moveTo(x,0); waveCtx.lineTo(x,H); waveCtx.stroke(); }
+  waveCtx.beginPath(); waveCtx.moveTo(0,H/2); waveCtx.lineTo(W,H/2); waveCtx.stroke();
+
+  const modeC = { cut:'#ff2244', coag:'#ff8800', blend:'#cc44ff' }[state.mode];
+  waveCtx.strokeStyle = modeC;
+  waveCtx.lineWidth = 1.8;
+  waveCtx.shadowColor = modeC;
+  waveCtx.shadowBlur = 6;
+  waveCtx.beginPath();
+  const cycles = 8;
+  const amp = H/2*0.8;
+  for (let px=0;px<W;px++) {
+    const t = (px/W)*cycles*Math.PI*2;
+    let y = H/2;
+    if (state.mode === 'cut') {
+      y = H/2 - Math.sin(t + state.t*0.2)*amp;
+    } else if (state.mode === 'coag') {
+      // Damped bursts
+      const burstLen = 0.08;
+      const burstPeriod = 0.25;
+      const pos = (px/W) % burstPeriod;
+      if (pos < burstLen) {
+        const env = Math.exp(-pos/burstLen*3);
+        y = H/2 - Math.sin(t + state.t*0.2)*amp*env;
+      }
+    } else {
+      // blend: interrupted
+      const duty = state.duty/100;
+      const period = 0.12;
+      const pos = (px/W) % period;
+      if (pos < period*duty) {
+        y = H/2 - Math.sin(t + state.t*0.2)*amp;
+      }
+    }
+    px===0 ? waveCtx.moveTo(px,y) : waveCtx.lineTo(px,y);
+  }
+  waveCtx.stroke();
+  waveCtx.shadowBlur = 0;
+}
+
+// ──────────────────────────────────────────────────────
+// SCHEMATIC CANVAS
+// ──────────────────────────────────────────────────────
+function drawSchematic() {
+  const W = schCv.width, H = schCv.height;
+  if (!W||!H) return;
+  schCtx.clearRect(0,0,W,H);
+  schCtx.fillStyle='#060c14';
+  schCtx.fillRect(0,0,W,H);
+
+  const C = { text:'#8aa8c8', line:'#1e3a50', accent:'#00e5ff', cut:'#ff2244', coag:'#ff8800', blend:'#cc44ff' };
+  const mc = { cut:C.cut, coag:C.coag, blend:C.blend }[state.mode];
+
+  // Simple vertical chain schematic
+  const cx = W/2;
+  const items = [
+    { label:'MAINS\n230V 50Hz', y:0.04, h:0.08, icon:'~' },
+    { label:'ISOLATION\nTRANSFORMER', y:0.16, h:0.08, icon:'⊙' },
+    { label:'RECTIFIER\n& FILTER', y:0.28, h:0.08, icon:'⇌' },
+    { label:'RF OSCILLATOR\n' + state.freq + ' kHz', y:0.40, h:0.08, icon:'∿' },
+    { label:'POWER AMP', y:0.52, h:0.08, icon:'▲' },
+    { label:'OUTPUT CIRCUIT\n+ MATCHING', y:0.64, h:0.08, icon:'≋' },
+  ];
+
+  items.forEach((item, i) => {
+    const bx=10, by=H*item.y, bw=W-20, bh=H*item.h;
+    // Box
+    schCtx.fillStyle = i===3||i===4 ? '#120d20' : '#0c1820';
+    schCtx.strokeStyle = i>=3 ? mc+'88' : C.line;
+    schCtx.lineWidth = i>=3 ? 1.5 : 1;
+    schCtx.fillRect(bx,by,bw,bh);
+    schCtx.strokeRect(bx,by,bw,bh);
+    // Icon
+    schCtx.fillStyle = i>=3 ? mc : C.accent;
+    schCtx.font = 'bold 13px Share Tech Mono';
+    schCtx.fillText(item.icon, bx+8, by+bh/2+5);
+    // Label
+    schCtx.fillStyle = C.text;
+    schCtx.font = '8px Share Tech Mono';
+    item.label.split('\n').forEach((l,li) => schCtx.fillText(l, bx+26, by+bh/2+(li-0.5)*11));
+
+    // Arrow down
+    if (i<items.length-1) {
+      const ay = H*(item.y+item.h);
+      const ny = H*items[i+1].y;
+      schCtx.strokeStyle = i>=2 ? mc+'66' : C.line;
+      schCtx.lineWidth = i>=2 ? 2 : 1;
+      schCtx.setLineDash(i>=3 ? [4,4] : []);
+      schCtx.lineDashOffset = -state.t*(i>=3?1.5:0);
+      schCtx.beginPath(); schCtx.moveTo(cx,ay); schCtx.lineTo(cx,ny); schCtx.stroke();
+      schCtx.setLineDash([]);
+      // Arrowhead
+      schCtx.fillStyle = i>=2?mc:C.line;
+      schCtx.beginPath(); schCtx.moveTo(cx,ny); schCtx.lineTo(cx-5,ny-8); schCtx.lineTo(cx+5,ny-8); schCtx.closePath(); schCtx.fill();
+    }
+  });
+
+  // Bottom: electrode outputs
+  const lastY = H*(items[items.length-1].y + items[items.length-1].h) + 4;
+  // Active
+  schCtx.strokeStyle = mc;
+  schCtx.lineWidth = 2;
+  schCtx.setLineDash([6,8]);
+  schCtx.lineDashOffset = -state.t;
+  schCtx.beginPath(); schCtx.moveTo(W*0.35,lastY); schCtx.lineTo(W*0.2,H*0.97); schCtx.stroke();
+  schCtx.setLineDash([]);
+  schCtx.fillStyle=mc; schCtx.font='8px Share Tech Mono';
+  schCtx.fillText('ACTIVE', 4, H*0.97);
+  // Return
+  schCtx.strokeStyle=C.accent+'55';
+  schCtx.lineWidth=1.5;
+  schCtx.setLineDash([4,8]);
+  schCtx.lineDashOffset=state.t*0.8;
+  schCtx.beginPath(); schCtx.moveTo(W*0.65,lastY); schCtx.lineTo(W*0.8,H*0.97); schCtx.stroke();
+  schCtx.setLineDash([]);
+  schCtx.fillStyle=C.accent+'88'; schCtx.fillText('RETURN', W*0.68,H*0.97);
+}
+
+// ──────────────────────────────────────────────────────
+// LOOP
+// ──────────────────────────────────────────────────────
+function loop() {
+  drawMain();
+  drawWave();
+  drawSchematic();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
