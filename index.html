@@ -167,26 +167,38 @@
     <span class="section-count">IEC 62353 · IEC 60601-1</span>
   </div>
 
+  <!-- EST Learning Tool toggle card -->
   <div class="cards-2" style="margin-bottom:16px;">
-    <a href="est/est-learning-tool.html" class="card card-green card-wide">
-      <div class="card-icon">🧠</div>
-      <div class="card-body">
-        <span class="card-tag">AI-Powered · Interactive · Claude-Tutored</span>
-        <div class="card-name">EST Interactive Learning Tool</div>
-        <div class="card-desc">Five interactive modules with live Claude tutoring — hover the current threshold atlas for instant physiological explanations, click applied part types for real NHS clinical scenarios, run the EST sequence simulator with randomised fault injection and AI diagnosis, explore leakage current pathways in NC and SFC, then test yourself with the 10-question NHS competency quiz with AI feedback on wrong answers.</div>
-        <div class="sub-links">
-          <a href="est/est-learning-tool.html" class="sub-link">01 · Current vs Body</a>
-          <a href="est/est-learning-tool.html" class="sub-link">02 · Applied Parts</a>
-          <a href="est/est-learning-tool.html" class="sub-link">03 · Test Sequence</a>
-          <a href="est/est-learning-tool.html" class="sub-link">04 · Leakage Pathways</a>
-          <a href="est/est-learning-tool.html" class="sub-link">05 · NHS Quiz</a>
-        </div>
-        <div class="card-footer">
-          <span class="card-path">est/est-learning-tool.html</span>
-          <span class="status-badge status-ready">Ready</span>
+    <div class="card card-green card-wide" style="cursor:default;">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div class="card-icon" style="flex-shrink:0;">🧠</div>
+        <div class="card-body" style="flex:1;min-width:0;">
+          <span class="card-tag">AI-Powered · Interactive · Claude-Tutored · Embedded</span>
+          <div class="card-name">EST Interactive Learning Tool</div>
+          <div class="card-desc">Five interactive modules with live Claude tutoring — current threshold atlas, applied part classification, EST sequence simulator with fault injection, leakage current pathways (NC/SFC), and a 10-question NHS competency quiz with AI explanations on wrong answers.</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center;">
+            <button id="est-tool-toggle" onclick="toggleESTTool()" style="
+              font-family:'DM Mono',monospace;font-size:11px;font-weight:500;
+              color:#0d1117;background:#22c55e;border:none;border-radius:6px;
+              padding:7px 18px;cursor:pointer;letter-spacing:0.08em;
+              transition:background 0.2s;display:flex;align-items:center;gap:6px;">
+              <span id="est-toggle-icon">▶</span>
+              <span id="est-toggle-label">Launch Learning Tool</span>
+            </button>
+            <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);">01 · Current vs Body &nbsp;·&nbsp; 02 · Applied Parts &nbsp;·&nbsp; 03 · Test Sequence &nbsp;·&nbsp; 04 · Leakage Pathways &nbsp;·&nbsp; 05 · NHS Quiz</span>
+          </div>
+          <div class="card-footer" style="margin-top:12px;">
+            <span class="card-path">embedded · inline</span>
+            <span class="status-badge status-ready">Ready</span>
+          </div>
         </div>
       </div>
-    </a>
+    </div>
+  </div>
+
+  <!-- EST React App panel — hidden until toggle -->
+  <div id="est-tool-panel" style="display:none;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid #22c55e40;">
+    <div id="est-tool-root" style="min-height:400px;"></div>
   </div>
 
   <div class="cards-3">
@@ -412,6 +424,834 @@
     <span class="std-pill">ISO 80601-2-13</span>
   </div>
 </footer>
+
+<!-- ═══════════════════════════════════════════════════════════
+     EST LEARNING TOOL — CDN dependencies (lazy-loaded on toggle)
+     Netlify serves this as static HTML — no build step needed.
+═══════════════════════════════════════════════════════════ -->
+<script>
+// CDN URLs
+const CDN = {
+  react:    'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
+  reactDom: 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
+  babel:    'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js',
+  tailwind: 'https://cdn.tailwindcss.com',
+};
+
+let toolLoaded = false;
+let toolOpen   = false;
+let rootInstance = null;
+
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    if (document.querySelector(`script[src="${src}"]`)) return res();
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+}
+
+async function toggleESTTool() {
+  const panel  = document.getElementById('est-tool-panel');
+  const icon   = document.getElementById('est-toggle-icon');
+  const label  = document.getElementById('est-toggle-label');
+  const btn    = document.getElementById('est-tool-toggle');
+
+  toolOpen = !toolOpen;
+
+  if (toolOpen) {
+    icon.textContent  = '▼';
+    label.textContent = 'Close Learning Tool';
+    btn.style.background = '#16a34a';
+    panel.style.display = 'block';
+    // Scroll into view
+    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+
+    if (!toolLoaded) {
+      document.getElementById('est-tool-root').innerHTML =
+        '<div style="padding:40px;text-align:center;font-family:\'DM Mono\',monospace;font-size:12px;color:#6b7f96;letter-spacing:0.1em;">LOADING EST TOOL…</div>';
+
+      // Load Tailwind first (no dependencies)
+      await loadScript(CDN.tailwind);
+      // Load React, then ReactDOM, then Babel, then mount
+      await loadScript(CDN.react);
+      await loadScript(CDN.reactDom);
+      await loadScript(CDN.babel);
+
+      // Now transform and execute the JSX app
+      const appScript = document.getElementById('est-app-jsx');
+      const transformed = Babel.transform(appScript.textContent, { presets: ['react'] }).code;
+      // eslint-disable-next-line no-new-func
+      new Function(transformed)();
+      toolLoaded = true;
+    }
+  } else {
+    icon.textContent  = '▶';
+    label.textContent = 'Launch Learning Tool';
+    btn.style.background = '#22c55e';
+    panel.style.display = 'none';
+  }
+}
+</script>
+
+<!-- EST App source — stored as inert text/est-app, transformed by Babel on demand -->
+<script id="est-app-jsx" type="text/est-app">
+const { useState, useRef } = React;
+
+// ── Icon shim (no lucide UMD needed) ──────────────────────────
+const Ico = ({ d, fill }) => (
+  <svg style={{width:'1em',height:'1em',display:'inline-block',verticalAlign:'middle'}}
+    viewBox="0 0 24 24" fill={fill||'none'} stroke="currentColor"
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {d.split('||').map((p,i)=><path key={i} d={p}/>)}
+  </svg>
+);
+const Zap=()=><Ico d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>;
+const Activity=()=><Ico d="M22 12h-4l-3 9L9 3l-3 9H2"/>;
+const AlertTriangle=()=><Ico d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z||M12 9v4||M12 17h.01"/>;
+const CheckCircle2=()=><Ico d="M22 11.08V12a10 10 0 11-5.93-9.14||M22 4L12 14.01l-3-3"/>;
+const XCircle=()=><Ico d="M15 9l-6 6||M9 9l6 6||M22 12A10 10 0 1112 2a10 10 0 0110 10z"/>;
+const Loader2=({spin})=><span style={{display:'inline-block',animation:spin?'spin 1s linear infinite':'none'}}>⟳</span>;
+const Heart=()=><Ico d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" fill="currentColor"/>;
+const Shield=()=><Ico d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>;
+const Cpu=()=><Ico d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>;
+const ChevronRight=()=><Ico d="M9 18l6-6-6-6"/>;
+const Play=()=><Ico d="M5 3l14 9-14 9V3z"/>;
+const RotateCcw=()=><Ico d="M1 4v6h6||M3.51 15a9 9 0 102.13-9.36L1 10"/>;
+const Award=()=><Ico d="M12 15a7 7 0 100-14 7 7 0 000 14z||M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>;
+const BookOpen=()=><Ico d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z||M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>;
+const Gauge=()=><Ico d="M12 2a10 10 0 11-9.17 14H12V2z||M12 2v4||M2 12h4"/>;
+const Cable=()=><Ico d="M4 9a2 2 0 010-4h16a2 2 0 010 4||M4 15a2 2 0 010-4h16a2 2 0 010 4||M9 3v18||M15 3v18"/>;
+
+// ── API ───────────────────────────────────────────────────────
+const callClaude = async (prompt, max = 800) => {
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:max,
+        messages:[{role:'user',content:prompt}] })
+    });
+    const d = await r.json();
+    return d.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+  } catch { return 'AI unavailable. Check connection.'; }
+};
+
+// ── Shared UI ─────────────────────────────────────────────────
+const Panel = ({children,label,className=''}) => (
+  <div style={{position:'relative',border:'1px solid rgba(71,85,105,0.6)',background:'rgba(15,23,42,0.7)',backdropFilter:'blur(8px)',borderRadius:8}} className={className}>
+    {label && <div style={{position:'absolute',top:-10,left:16,padding:'0 8px',background:'#020617',fontFamily:'IBM Plex Mono,monospace',fontSize:10,letterSpacing:'0.2em',color:'#22d3ee',textTransform:'uppercase'}}>{label}</div>}
+    {children}
+  </div>
+);
+
+const Dot = ({status}) => {
+  const c = {pass:'#34d399',fail:'#ef4444',pending:'#475569',active:'#fbbf24'}[status]||'#475569';
+  return <span style={{display:'inline-block',width:8,height:8,borderRadius:'50%',background:c,boxShadow:status==='pass'?`0 0 8px ${c}`:status==='active'?`0 0 8px ${c}`:'none'}}/>;
+};
+
+const AIBox = ({loading,content,accent='cyan'}) => {
+  const borderColor = accent==='amber'?'#f59e0b':'#22d3ee';
+  const textColor   = accent==='amber'?'#fef3c7':'#ecfeff';
+  return (
+    <div style={{marginTop:16,padding:16,borderLeft:`2px solid ${borderColor}40`,background:'rgba(2,6,23,0.6)',fontSize:13,lineHeight:1.65,color:textColor}}>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,fontSize:10,fontFamily:'IBM Plex Mono,monospace',letterSpacing:'0.2em',textTransform:'uppercase',opacity:0.7}}>
+        <Cpu/> Claude · Clinical Engineer Tutor
+      </div>
+      {loading
+        ? <div style={{opacity:0.7,fontFamily:'IBM Plex Mono,monospace'}}>⟳ Thinking…</div>
+        : <div style={{whiteSpace:'pre-wrap',fontWeight:300}}>{content||'Hover or click to query.'}</div>
+      }
+    </div>
+  );
+};
+
+// ── Module 1: Current Threshold Atlas ────────────────────────
+const Module1 = () => {
+  const [hovered,setHovered]=useState(null);
+  const [ai,setAi]=useState('');
+  const [loading,setLoading]=useState(false);
+  const last=useRef(null);
+
+  const toY = mA => ((3-Math.log10(mA))/6)*100;
+
+  const macro=[
+    {label:'Perception',min:0.5,max:2,bg:'rgba(14,165,233,0.25)',color:'#7dd3fc'},
+    {label:'Painful / Startle',min:2,max:10,bg:'rgba(6,182,212,0.25)',color:'#67e8f9'},
+    {label:'Let-go threshold',min:10,max:20,bg:'rgba(234,179,8,0.3)',color:'#fde047'},
+    {label:'Respiratory paralysis',min:20,max:50,bg:'rgba(249,115,22,0.3)',color:'#fdba74'},
+    {label:'Ventricular fibrillation',min:50,max:200,bg:'rgba(220,38,38,0.35)',color:'#fca5a5'},
+    {label:'Cardiac arrest / burns',min:200,max:1000,bg:'rgba(127,29,29,0.5)',color:'#f87171'},
+  ];
+  const micro=[
+    {label:'Sub-perception (safe)',min:0.001,max:0.01,bg:'rgba(71,85,105,0.2)',color:'#94a3b8'},
+    {label:'VF threshold (intracardiac)',min:0.01,max:0.1,bg:'rgba(220,38,38,0.3)',color:'#fca5a5'},
+    {label:'Lethal microshock',min:0.1,max:1,bg:'rgba(127,29,29,0.5)',color:'#f87171'},
+  ];
+  const limits=[
+    {v:0.5,label:'B/BF earth leakage NC',color:'#22d3ee'},
+    {v:0.1,label:'B/BF patient leakage NC',color:'#fbbf24'},
+    {v:0.01,label:'CF patient leakage NC',color:'#f472b6'},
+  ];
+
+  const hover = async (band,mode) => {
+    const key=`${mode}-${band.label}`;
+    if(last.current===key) return;
+    last.current=key; setHovered({...band,mode}); setLoading(true); setAi('');
+    const txt = await callClaude(`Clinical engineering educator. Explain in 4-5 sentences the physiological mechanism for an NHS engineer:
+Mode: ${mode==='macro'?'Macroshock (skin contact)':'Microshock (intracardiac)'}
+Band: ${band.label} · ${band.min}–${band.max} mA
+Be technical. Mention IEC 60601-1 if relevant. No preamble.`, 400);
+    setAi(txt); setLoading(false);
+  };
+
+  const chartH = 460;
+  return (
+    <Panel label="Module 01 · Current vs Physiological Effect" className="p-6">
+      <div style={{display:'grid',gridTemplateColumns:'1fr 320px',gap:24,padding:24}}>
+        <div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:16}}>
+            <span style={{fontSize:20,fontWeight:300,color:'#f1f5f9'}}>Current Threshold Atlas</span>
+            <span style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.2em',textTransform:'uppercase'}}>50 Hz AC · 1 second exposure</span>
+          </div>
+          <div style={{display:'flex',gap:12,height:chartH,position:'relative'}}>
+            {/* Y axis */}
+            <div style={{width:52,position:'relative',fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b'}}>
+              {[1000,100,10,1,0.1,0.01,0.001].map(v=>(
+                <div key={v} style={{position:'absolute',right:4,top:`${toY(v)}%`,transform:'translateY(-50%)'}}>{v>=1?v:v} mA</div>
+              ))}
+              <div style={{position:'absolute',right:0,top:0,bottom:0,borderRight:'1px solid #334155'}}/>
+            </div>
+            {/* Macroshock */}
+            <div style={{flex:1,position:'relative'}}>
+              <div style={{position:'absolute',top:-22,left:0,fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#22d3ee',letterSpacing:'0.15em',textTransform:'uppercase'}}>Macroshock</div>
+              <div style={{position:'relative',height:'100%',border:'1px solid rgba(71,85,105,0.4)'}}>
+                {macro.map(b=>{
+                  const top=toY(b.max),h=toY(b.min)-top;
+                  const active=hovered?.mode==='macro'&&hovered?.label===b.label;
+                  return (
+                    <div key={b.label} onMouseEnter={()=>hover(b,'macro')}
+                      style={{position:'absolute',left:0,right:0,top:`${top}%`,height:`${h}%`,
+                        background:b.bg,borderTop:'1px solid rgba(71,85,105,0.3)',
+                        cursor:'pointer',filter:active?'brightness(1.5)':'none',
+                        outline:active?`1px solid ${b.color}40`:'none',transition:'filter 0.2s'}}>
+                      <div style={{padding:'3px 6px',fontSize:10,fontFamily:'IBM Plex Mono,monospace',color:b.color,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}}>
+                        {b.label} · {b.min}–{b.max} mA
+                      </div>
+                    </div>
+                  );
+                })}
+                {limits.map((l,i)=>(
+                  <div key={i} style={{position:'absolute',left:0,right:0,top:`${toY(l.v)}%`,borderTop:`2px dashed ${l.color}`,pointerEvents:'none'}}>
+                    <span style={{position:'absolute',right:4,top:-14,fontSize:9,fontFamily:'IBM Plex Mono,monospace',color:l.color}}>{l.v} mA</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Microshock */}
+            <div style={{flex:1,position:'relative'}}>
+              <div style={{position:'absolute',top:-22,left:0,fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#f472b6',letterSpacing:'0.15em',textTransform:'uppercase'}}>Microshock · Intracardiac</div>
+              <div style={{position:'relative',height:'100%',border:'1px solid rgba(71,85,105,0.4)'}}>
+                {micro.map(b=>{
+                  const top=toY(b.max),h=toY(b.min)-top;
+                  const active=hovered?.mode==='micro'&&hovered?.label===b.label;
+                  return (
+                    <div key={b.label} onMouseEnter={()=>hover(b,'micro')}
+                      style={{position:'absolute',left:0,right:0,top:`${top}%`,height:`${h}%`,
+                        background:b.bg,borderTop:'1px solid rgba(71,85,105,0.3)',
+                        cursor:'pointer',filter:active?'brightness(1.5)':'none',transition:'filter 0.2s'}}>
+                      <div style={{padding:'3px 6px',fontSize:10,fontFamily:'IBM Plex Mono,monospace',color:b.color,overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}}>
+                        {b.label}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div style={{marginTop:16,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
+            {limits.map((l,i)=>(
+              <div key={i} style={{display:'flex',alignItems:'center',gap:8,fontSize:10,fontFamily:'IBM Plex Mono,monospace',color:'#94a3b8'}}>
+                <div style={{width:24,borderTop:`2px dashed ${l.color}`}}/>
+                <span>{l.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div style={{fontSize:10,fontFamily:'IBM Plex Mono,monospace',color:'#64748b',letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:8}}>Selected band</div>
+          <div style={{fontSize:22,fontWeight:300,color:'#f1f5f9',marginBottom:4}}>{hovered?.label||'—'}</div>
+          <div style={{fontSize:12,fontFamily:'IBM Plex Mono,monospace',color:'#64748b'}}>
+            {hovered?`${hovered.min} mA → ${hovered.max} mA · ${hovered.mode}`:'Hover a band to query Claude'}
+          </div>
+          <AIBox loading={loading} content={ai}/>
+          <div style={{marginTop:16,padding:12,background:'rgba(120,53,15,0.3)',border:'1px solid rgba(180,83,9,0.5)',color:'#fde68a',fontSize:12,borderRadius:6}}>
+            <AlertTriangle/> Microshock thresholds are 100–1000× lower. A current imperceptible at skin can induce VF intracardiac.
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+};
+
+// ── Module 2: Applied Parts ───────────────────────────────────
+const Module2 = () => {
+  const [sel,setSel]=useState(null);
+  const [scenario,setScenario]=useState('');
+  const [loading,setLoading]=useState(false);
+
+  const types=[
+    {id:'B',name:'Type B',ref:'IEC 60601-1 Tbl 3&4',desc:'Body-protected. Earthed AP. No cardiac.',isolated:false,defib:false,
+     ncPat:'0.1 mA',sfcPat:'0.5 mA',mainsAP:null,color:'#22d3ee',dimColor:'rgba(34,211,238,0.15)',
+     examples:['Operating tables','Surgical lights','Hospital beds','Phototherapy lamps']},
+    {id:'BF',name:'Type BF',ref:'IEC 60601-1 Tbl 3&4',desc:'Body Floating. Isolated, no cardiac.',isolated:true,defib:false,
+     ncPat:'0.1 mA',sfcPat:'0.5 mA',mainsAP:'5.0 mA',color:'#fbbf24',dimColor:'rgba(251,191,36,0.15)',
+     examples:['ECG 12-lead','NIBP monitors','SpO₂ probes','Ultrasound transducers']},
+    {id:'CF',name:'Type CF',ref:'IEC 60601-1 Tbl 3&4',desc:'Cardiac Floating. Highest protection.',isolated:true,defib:true,
+     ncPat:'0.01 mA',sfcPat:'0.05 mA',mainsAP:'0.05 mA',color:'#f472b6',dimColor:'rgba(244,114,182,0.15)',
+     examples:['Intracardiac pressure transducers','Pacing leads','Cardiac catheterisation','CVP monitoring']},
+  ];
+
+  const pick = async t => {
+    setSel(t); setLoading(true); setScenario('');
+    const txt=await callClaude(`NHS clinical engineering educator. Realistic clinical scenario (4-6 sentences) involving Type ${t.id} applied part in UK NHS.
+Include: NHS clinical environment, specific device, clinical task, why Type ${t.id} is essential, one PPM safety check. British English. No preamble.`,500);
+    setScenario(txt); setLoading(false);
+  };
+
+  return (
+    <Panel label="Module 02 · Applied Part Classification" className="p-6">
+      <div style={{padding:24}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:20}}>
+          <span style={{fontSize:20,fontWeight:300,color:'#f1f5f9'}}>Patient-Applied Part Types</span>
+          <span style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.2em',textTransform:'uppercase'}}>IEC 60601-1 Cl. 8.5</span>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:16,marginBottom:24}}>
+          {types.map(t=>{
+            const active=sel?.id===t.id;
+            return (
+              <button key={t.id} onClick={()=>pick(t)} style={{
+                textAlign:'left',padding:20,border:`1px solid ${active?t.color:'rgba(71,85,105,0.6)'}`,
+                borderRadius:8,background:active?t.dimColor:'rgba(15,23,42,0.4)',cursor:'pointer',
+                boxShadow:active?`0 0 30px ${t.dimColor}`:'none',transition:'all 0.2s',color:'inherit',
+                fontFamily:'inherit'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+                  <div>
+                    <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:active?t.color:'#64748b',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:4}}>{t.ref}</div>
+                    <div style={{fontSize:28,fontWeight:300,color:active?t.color:'#e2e8f0'}}>{t.name}</div>
+                  </div>
+                  <div style={{width:44,height:44,border:`2px solid ${active?t.color:'#475569'}`,display:'flex',alignItems:'center',justifyContent:'center',color:t.color,fontSize:20}}>
+                    {t.id==='CF'?<Heart/>:t.id==='BF'?<Shield/>:<Activity/>}
+                  </div>
+                </div>
+                <p style={{fontSize:12,color:'#94a3b8',marginBottom:16,lineHeight:1.6}}>{t.desc}</p>
+                <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,display:'flex',flexDirection:'column',gap:4}}>
+                  {[['Patient leakage NC',t.ncPat],['Patient leakage SFC',t.sfcPat],t.mainsAP&&['Mains on AP',t.mainsAP]].filter(Boolean).map(([k,v])=>(
+                    <div key={k} style={{display:'flex',justifyContent:'space-between',color:'#64748b'}}>
+                      <span>{k}</span><span style={{color:t.color}}>{v}</span>
+                    </div>
+                  ))}
+                  <div style={{borderTop:'1px solid #1e293b',paddingTop:6,marginTop:4,display:'flex',justifyContent:'space-between',color:'#64748b'}}>
+                    <span>Isolated</span><span style={{color:t.isolated?'#34d399':'#475569'}}>{t.isolated?'✓ YES':'✗ NO'}</span>
+                  </div>
+                  <div style={{display:'flex',justifyContent:'space-between',color:'#64748b'}}>
+                    <span>Defib protected</span><span style={{color:t.defib?'#34d399':'#475569'}}>{t.defib?'✓ YES':'✗ NO'}</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {sel&&(
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+            <div>
+              <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:12}}>Isolation Topology</div>
+              <svg viewBox="0 0 400 200" style={{width:'100%',border:'1px solid rgba(71,85,105,0.4)',background:'rgba(2,6,23,0.4)',borderRadius:6}}>
+                <rect x="10" y="80" width="60" height="40" fill="none" stroke="#475569" strokeWidth="1"/>
+                <text x="40" y="105" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="monospace">MAINS</text>
+                <line x1="70" y1="100" x2="120" y2="100" stroke="#06b6d4" strokeWidth="1.5"/>
+                <rect x="120" y="60" width="100" height="80" fill="none" stroke="#06b6d4" strokeWidth="1.5"/>
+                <text x="170" y="90" textAnchor="middle" fill="#67e8f9" fontSize="10" fontFamily="monospace">DEVICE</text>
+                <text x="170" y="108" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Type {sel.id}</text>
+                <line x1="170" y1="140" x2="170" y2="168" stroke="#10b981" strokeWidth="1.5"/>
+                <line x1="155" y1="168" x2="185" y2="168" stroke="#10b981" strokeWidth="2"/>
+                <line x1="161" y1="174" x2="179" y2="174" stroke="#10b981" strokeWidth="1.5"/>
+                <line x1="166" y1="180" x2="174" y2="180" stroke="#10b981" strokeWidth="1"/>
+                <text x="200" y="175" fill="#10b981" fontSize="9" fontFamily="monospace">PE</text>
+                {sel.isolated&&<>
+                  <line x1="220" y1="55" x2="220" y2="145" stroke={sel.color} strokeWidth="2" strokeDasharray="4,2"/>
+                  <text x="220" y="50" textAnchor="middle" fill={sel.color} fontSize="8" fontFamily="monospace">{sel.id==='CF'?'4kV ISOLATION':'ISOLATION'}</text>
+                </>}
+                <line x1="220" y1="100" x2="280" y2="100" stroke={sel.color} strokeWidth="1.5"/>
+                <rect x="280" y="80" width="60" height="40" fill="none" stroke={sel.color} strokeWidth="1.5"/>
+                <text x="310" y="104" textAnchor="middle" fill={sel.color} fontSize="10" fontFamily="monospace">AP</text>
+                <circle cx="368" cy="100" r="14" fill="none" stroke="#cbd5e1" strokeWidth="1"/>
+                <text x="368" y="104" textAnchor="middle" fill="#cbd5e1" fontSize="10" fontFamily="monospace">Pt</text>
+                <line x1="340" y1="100" x2="354" y2="100" stroke="#cbd5e1" strokeWidth="1" strokeDasharray="2,2"/>
+              </svg>
+              <div style={{marginTop:12,display:'flex',flexWrap:'wrap',gap:8}}>
+                {sel.examples.map(e=>(
+                  <span key={e} style={{fontSize:11,padding:'3px 10px',border:`1px solid ${sel.color}40`,color:sel.color,borderRadius:4}}>{e}</span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:8}}>NHS Clinical Scenario</div>
+              <AIBox loading={loading} content={scenario} accent={sel.id==='BF'?'amber':'cyan'}/>
+            </div>
+          </div>
+        )}
+      </div>
+    </Panel>
+  );
+};
+
+// ── Module 3: EST Sequence Simulator ─────────────────────────
+const Module3 = () => {
+  const [results,setResults]=useState(null);
+  const [running,setRunning]=useState(false);
+  const [active,setActive]=useState(-1);
+  const [diagnosis,setDiagnosis]=useState('');
+  const [loadingDx,setLoadingDx]=useState(false);
+
+  const steps=[
+    {id:'visual',  name:'Visual Inspection',    measure:'Cable, casing, APs, labels',       limit:'No defects',                          unit:''},
+    {id:'earth',   name:'Earth Continuity',      measure:'PE pin to chassis (25A)',           limit:'≤ 0.30 Ω',                           unit:'Ω'},
+    {id:'ins',     name:'Insulation Resistance', measure:'Mains→chassis @ 500V DC',          limit:'≥ 2 MΩ',                              unit:'MΩ'},
+    {id:'el-nc',   name:'Earth Leakage (NC)',    measure:'Current in PE, normal',             limit:'≤ 0.5 mA',                           unit:'mA'},
+    {id:'el-sfc',  name:'Earth Leakage (SFC)',   measure:'PE open simulated',                 limit:'≤ 1.0 mA',                           unit:'mA'},
+    {id:'pl-nc',   name:'Patient Leakage (NC)',  measure:'AP→earth via patient model',        limit:'≤ 0.1 mA (BF) / 0.01 mA (CF)',       unit:'mA'},
+    {id:'pl-sfc',  name:'Patient Leakage (SFC)', measure:'Patient leakage, open earth',       limit:'≤ 0.5 mA (BF) / 0.05 mA (CF)',       unit:'mA'},
+    {id:'moap',    name:'Mains on Applied Part', measure:'Mains applied to AP',               limit:'≤ 5.0 mA (BF) / 0.05 mA (CF)',       unit:'mA'},
+  ];
+
+  const gen=()=>{
+    const fi=Math.floor(Math.random()*steps.length);
+    return steps.map((s,i)=>{
+      const f=i===fi; let v,pass;
+      switch(s.id){
+        case 'visual': v=f?'Frayed mains cable strain relief':'OK · No defects'; pass=!f; break;
+        case 'earth':  v=f?(Math.random()*1.5+0.5).toFixed(2):(Math.random()*0.15+0.08).toFixed(2); pass=parseFloat(v)<=0.30; break;
+        case 'ins':    v=f?(Math.random()*1.5+0.5).toFixed(1):(Math.random()*80+20).toFixed(1); pass=parseFloat(v)>=2; break;
+        case 'el-nc':  v=f?(Math.random()*0.4+0.6).toFixed(3):(Math.random()*0.3+0.05).toFixed(3); pass=parseFloat(v)<=0.5; break;
+        case 'el-sfc': v=f?(Math.random()*1+1.2).toFixed(3):(Math.random()*0.5+0.2).toFixed(3); pass=parseFloat(v)<=1.0; break;
+        case 'pl-nc':  v=f?(Math.random()*0.3+0.15).toFixed(4):(Math.random()*0.05+0.005).toFixed(4); pass=parseFloat(v)<=0.1; break;
+        case 'pl-sfc': v=f?(Math.random()*0.8+0.6).toFixed(4):(Math.random()*0.2+0.05).toFixed(4); pass=parseFloat(v)<=0.5; break;
+        case 'moap':   v=f?(Math.random()*8+6).toFixed(3):(Math.random()*2+0.5).toFixed(3); pass=parseFloat(v)<=5.0; break;
+        default: v='—'; pass=true;
+      }
+      return {...s,value:v,pass};
+    });
+  };
+
+  const run=async()=>{
+    setRunning(true); setDiagnosis(''); setResults(null);
+    const final=gen();
+    for(let i=0;i<final.length;i++){setActive(i);await new Promise(r=>setTimeout(r,450));}
+    setActive(-1); setResults(final); setRunning(false);
+    const failed=final.find(s=>!s.pass);
+    if(failed){
+      setLoadingDx(true);
+      const txt=await callClaude(`NHS clinical engineering tutor. Class I Type BF device failed EST.
+FAILED: ${failed.name} | Measured: ${failed.value} ${failed.unit} | Limit: ${failed.limit}
+~6 sentences: physical cause, clinical risk, NHS action (repair/condemn/quarantine/MHRA), IEC or HTM reference. No preamble.`,600);
+      setDiagnosis(txt); setLoadingDx(false);
+    }
+  };
+
+  const TH={padding:'8px 12px',fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',textTransform:'uppercase',letterSpacing:'0.12em',borderBottom:'1px solid #1e293b',background:'rgba(2,6,23,0.5)',textAlign:'left'};
+  const TD={padding:'10px 12px',borderBottom:'1px solid rgba(30,41,59,0.6)',fontSize:12,verticalAlign:'middle'};
+
+  return (
+    <Panel label="Module 03 · EST Sequence Simulator" className="p-6">
+      <div style={{padding:24}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+          <div>
+            <div style={{fontSize:20,fontWeight:300,color:'#f1f5f9'}}>Class I · Type BF Test Sequence</div>
+            <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#64748b',marginTop:4}}>Simulated patient monitor · IEC 60601-1 Cl. 8.7 / HTM 06-01</div>
+          </div>
+          <button onClick={run} disabled={running} style={{
+            display:'flex',alignItems:'center',gap:8,padding:'10px 20px',
+            background:running?'#155e75':'#22d3ee',color:running?'#cffafe':'#0c1a2e',
+            fontFamily:'IBM Plex Mono,monospace',fontSize:11,letterSpacing:'0.15em',textTransform:'uppercase',
+            border:'none',borderRadius:6,cursor:running?'not-allowed':'pointer',opacity:running?0.7:1,transition:'all 0.2s'}}>
+            {running?<><Loader2 spin/> Running…</>:<><Play/> Run Simulation</>}
+          </button>
+        </div>
+        <table style={{width:'100%',borderCollapse:'collapse',border:'1px solid rgba(71,85,105,0.4)',background:'rgba(2,6,23,0.4)'}}>
+          <thead><tr><th style={TH}>#</th><th style={TH}>Test</th><th style={TH}>Measurement</th><th style={TH}>Result</th><th style={TH}>Limit</th></tr></thead>
+          <tbody>
+            {steps.map((s,i)=>{
+              const r=results?.[i],isAct=active===i;
+              const status=r?(r.pass?'pass':'fail'):(isAct?'active':'pending');
+              const rowBg=isAct?'rgba(120,53,15,0.2)':r&&!r.pass?'rgba(127,29,29,0.2)':'transparent';
+              return (
+                <tr key={s.id} style={{background:rowBg}}>
+                  <td style={{...TD,fontFamily:'IBM Plex Mono,monospace',color:'#64748b'}}>
+                    <span style={{display:'inline-flex',alignItems:'center',gap:8}}><Dot status={status}/>{String(i+1).padStart(2,'0')}</span>
+                  </td>
+                  <td style={{...TD,color:'#e2e8f0'}}>{s.name}</td>
+                  <td style={{...TD,color:'#64748b',fontSize:11}}>{s.measure}</td>
+                  <td style={{...TD,fontFamily:'IBM Plex Mono,monospace'}}>
+                    {r?<span style={{color:r.pass?'#34d399':'#f87171'}}>{r.value} {r.unit}</span>:<span style={{color:'#334155'}}>—</span>}
+                  </td>
+                  <td style={{...TD,fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b'}}>{s.limit}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {results&&(
+          <div style={{marginTop:16,display:'grid',gridTemplateColumns:'200px 1fr',gap:16}}>
+            <div style={{padding:16,border:`1px solid ${results.every(r=>r.pass)?'rgba(52,211,153,0.4)':'rgba(248,113,113,0.4)'}`,background:results.every(r=>r.pass)?'rgba(6,78,59,0.2)':'rgba(127,29,29,0.2)',borderRadius:6}}>
+              <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:8}}>Overall verdict</div>
+              <div style={{fontSize:22,fontWeight:300,color:results.every(r=>r.pass)?'#6ee7b7':'#fca5a5'}}>{results.every(r=>r.pass)?'✓ SAFE':'✗ FAILED'}</div>
+              <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#94a3b8',marginTop:8}}>{results.filter(r=>r.pass).length}/{results.length} passed</div>
+            </div>
+            <div>
+              <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.15em',textTransform:'uppercase',marginBottom:8}}>Claude Diagnosis</div>
+              {results.every(r=>r.pass)
+                ?<div style={{padding:16,border:'1px solid rgba(52,211,153,0.3)',background:'rgba(2,6,23,0.6)',fontSize:13,color:'#6ee7b7',borderRadius:6}}>Device passes all EST tests. Issue PPM label, log in CMMS, return to clinical use.</div>
+                :<AIBox loading={loadingDx} content={diagnosis} accent="amber"/>
+              }
+            </div>
+          </div>
+        )}
+      </div>
+    </Panel>
+  );
+};
+
+// ── Module 4: Leakage Pathways ────────────────────────────────
+const Module4 = () => {
+  const [cond,setCond]=useState('NC');
+  const [hov,setHov]=useState(null);
+  const [ai,setAi]=useState('');
+  const [loading,setLoading]=useState(false);
+  const last=useRef(null);
+
+  const paths={
+    earth:{label:'Earth Leakage',desc:'Mains→insulation/Y-caps→PE',limitNC:'0.5 mA',limitSFC:'1.0 mA',color:'#10b981'},
+    touch:{label:'Touch Current',desc:'Chassis→operator via body',limitNC:'0.1 mA',limitSFC:'0.5 mA',color:'#06b6d4'},
+    patient:{label:'Patient Leakage',desc:'AP→earth via patient body',limitNC:'0.1 mA (BF) / 0.01 mA (CF)',limitSFC:'0.5 mA (BF) / 0.05 mA (CF)',color:'#fbbf24'},
+    aux:{label:'Patient Auxiliary',desc:'Between applied parts (AP→AP)',limitNC:'0.1 mA (BF) / 0.01 mA (CF)',limitSFC:'0.5 mA (BF) / 0.05 mA (CF)',color:'#ec4899'},
+  };
+
+  const hover=async key=>{
+    if(last.current===`${key}-${cond}`) return;
+    last.current=`${key}-${cond}`; setHov(key); setLoading(true); setAi('');
+    const p=paths[key];
+    const txt=await callClaude(`NHS clinical engineering educator. 4-5 sentences:
+CURRENT: ${p.label} | CONDITION: ${cond==='NC'?'Normal Condition':'Single Fault Condition (open earth)'}
+Cover: physical mechanism, dominant pathway, why current exists/increases, clinical hazard. Reference IEC 60601-1. No preamble.`,400);
+    setAi(txt); setLoading(false);
+  };
+
+  const op=k=>hov===k||!hov?1:0.25;
+  const sw=k=>hov===k?3:1.5;
+
+  return (
+    <Panel label="Module 04 · Leakage Current Pathways" className="p-6">
+      <div style={{padding:24}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
+          <span style={{fontSize:20,fontWeight:300,color:'#f1f5f9'}}>Current Flow Topology</span>
+          <div style={{display:'flex',border:'1px solid #334155',borderRadius:6,overflow:'hidden'}}>
+            {['NC','SFC'].map(c=>(
+              <button key={c} onClick={()=>setCond(c)} style={{
+                padding:'7px 16px',fontFamily:'IBM Plex Mono,monospace',fontSize:10,letterSpacing:'0.15em',textTransform:'uppercase',
+                border:'none',cursor:'pointer',transition:'all 0.2s',
+                background:cond===c?(c==='NC'?'#10b981':'#f59e0b'):'transparent',
+                color:cond===c?'#0c1a2e':'#94a3b8'}}>
+                {c==='NC'?'Normal Condition':'Single Fault (Open Earth)'}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 300px',gap:24}}>
+          <div>
+            <svg viewBox="0 0 800 500" style={{width:'100%',border:'1px solid rgba(71,85,105,0.4)',background:'rgba(2,6,23,0.4)',borderRadius:6}}>
+              <defs>
+                <pattern id="g2" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0L0 0 0 20" fill="none" stroke="#1e293b" strokeWidth="0.5"/></pattern>
+                {[['ag','#10b981'],['ac','#06b6d4'],['aa','#fbbf24'],['ap','#ec4899']].map(([id,fill])=>(
+                  <marker key={id} id={id} markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill={fill}/></marker>
+                ))}
+              </defs>
+              <rect width="800" height="500" fill="url(#g2)"/>
+              {/* Mains */}
+              <rect x="30" y="180" width="100" height="100" fill="none" stroke="#475569" strokeWidth="1.5"/>
+              <text x="80" y="220" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace">230 V</text>
+              <text x="80" y="238" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace">50 Hz</text>
+              <text x="135" y="202" fill="#fbbf24" fontSize="10" fontFamily="monospace">L</text>
+              <text x="135" y="237" fill="#3b82f6" fontSize="10" fontFamily="monospace">N</text>
+              <text x="135" y="272" fill="#10b981" fontSize="10" fontFamily="monospace">PE</text>
+              <line x1="130" y1="200" x2="280" y2="200" stroke="#fbbf24" strokeWidth="1.5"/>
+              <line x1="130" y1="235" x2="280" y2="235" stroke="#3b82f6" strokeWidth="1.5"/>
+              <line x1="130" y1="270" x2="280" y2="270" stroke={cond==='SFC'?'#ef4444':'#10b981'} strokeWidth="1.5" strokeDasharray={cond==='SFC'?'5,4':'none'}/>
+              {cond==='SFC'&&<>
+                <line x1="194" y1="262" x2="214" y2="278" stroke="#ef4444" strokeWidth="2"/>
+                <line x1="214" y1="262" x2="194" y2="278" stroke="#ef4444" strokeWidth="2"/>
+                <text x="204" y="296" textAnchor="middle" fill="#ef4444" fontSize="9" fontFamily="monospace">OPEN PE</text>
+              </>}
+              {/* Device */}
+              <rect x="280" y="140" width="220" height="200" fill="none" stroke="#06b6d4" strokeWidth="2"/>
+              <text x="390" y="164" textAnchor="middle" fill="#67e8f9" fontSize="11" fontFamily="monospace">MEDICAL DEVICE</text>
+              <text x="390" y="180" textAnchor="middle" fill="#94a3b8" fontSize="9" fontFamily="monospace">Class I · Type BF</text>
+              <line x1="320" y1="200" x2="320" y2="270" stroke="#475569" strokeWidth="1" strokeDasharray="3,2"/>
+              <text x="320" y="194" textAnchor="middle" fill="#64748b" fontSize="8" fontFamily="monospace">Cy</text>
+              <line x1="430" y1="158" x2="430" y2="322" stroke="#fbbf24" strokeWidth="1.5" strokeDasharray="5,3"/>
+              <text x="430" y="153" textAnchor="middle" fill="#fcd34d" fontSize="8" fontFamily="monospace">ISOLATION</text>
+              <rect x="450" y="218" width="42" height="52" fill="none" stroke="#fbbf24" strokeWidth="1.5"/>
+              <text x="471" y="247" textAnchor="middle" fill="#fcd34d" fontSize="9" fontFamily="monospace">AP</text>
+              {/* Patient */}
+              <circle cx="600" cy="245" r="36" fill="none" stroke="#cbd5e1" strokeWidth="1.5"/>
+              <text x="600" y="241" textAnchor="middle" fill="#cbd5e1" fontSize="11" fontFamily="monospace">PATIENT</text>
+              <text x="600" y="257" textAnchor="middle" fill="#64748b" fontSize="9" fontFamily="monospace">~1 kΩ</text>
+              <line x1="492" y1="244" x2="564" y2="244" stroke="#fbbf24" strokeWidth="1.5"/>
+              {/* Earth leakage path */}
+              <path d={`M320 200 Q360 270 ${cond==='SFC'?'320 330':'160 270'}`}
+                fill="none" stroke={paths.earth.color} strokeWidth={sw('earth')} strokeDasharray="6,3"
+                opacity={op('earth')} markerEnd="url(#ag)"
+                onMouseEnter={()=>hover('earth')} style={{cursor:'pointer'}}>
+                <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1s" repeatCount="indefinite"/>
+              </path>
+              <text x={cond==='SFC'?340:228} y={cond==='SFC'?318:254} fill={paths.earth.color} fontSize="9" fontFamily="monospace"
+                opacity={op('earth')} onMouseEnter={()=>hover('earth')} style={{cursor:'pointer'}}>I_earth</text>
+              {/* Touch */}
+              <path d="M390 140 Q420 80 500 80" fill="none" stroke={paths.touch.color}
+                strokeWidth={sw('touch')} strokeDasharray="6,3" opacity={op('touch')} markerEnd="url(#ac)"
+                onMouseEnter={()=>hover('touch')} style={{cursor:'pointer'}}>
+                <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1s" repeatCount="indefinite"/>
+              </path>
+              <text x="430" y="100" fill={paths.touch.color} fontSize="9" fontFamily="monospace"
+                opacity={op('touch')} onMouseEnter={()=>hover('touch')} style={{cursor:'pointer'}}>I_touch</text>
+              <circle cx="510" cy="80" r="8" fill="none" stroke={paths.touch.color} strokeWidth="1" opacity={op('touch')}/>
+              <text x="525" y="84" fill={paths.touch.color} fontSize="9" fontFamily="monospace" opacity={op('touch')}>operator</text>
+              {/* Patient leakage */}
+              <path d="M600 281 Q600 382 280 382 L160 382 Q80 382 80 290"
+                fill="none" stroke={paths.patient.color} strokeWidth={sw('patient')} strokeDasharray="6,3"
+                opacity={op('patient')} markerEnd="url(#aa)"
+                onMouseEnter={()=>hover('patient')} style={{cursor:'pointer'}}>
+                <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1s" repeatCount="indefinite"/>
+              </path>
+              <text x="378" y="397" fill={paths.patient.color} fontSize="9" fontFamily="monospace"
+                opacity={op('patient')} onMouseEnter={()=>hover('patient')} style={{cursor:'pointer'}}>I_patient</text>
+              {/* Aux */}
+              <path d="M580 228 Q592 250 580 272" fill="none" stroke={paths.aux.color}
+                strokeWidth={sw('aux')} strokeDasharray="4,2" opacity={op('aux')} markerEnd="url(#ap)"
+                onMouseEnter={()=>hover('aux')} style={{cursor:'pointer'}}>
+                <animate attributeName="stroke-dashoffset" from="0" to="-12" dur="1s" repeatCount="indefinite"/>
+              </path>
+              <text x="640" y="252" fill={paths.aux.color} fontSize="9" fontFamily="monospace"
+                opacity={op('aux')} onMouseEnter={()=>hover('aux')} style={{cursor:'pointer'}}>I_aux</text>
+              {/* Earth symbol */}
+              <line x1="80" y1="290" x2="80" y2="430" stroke="#10b981" strokeWidth="1.5"/>
+              <line x1="62" y1="430" x2="98" y2="430" stroke="#10b981" strokeWidth="2"/>
+              <line x1="68" y1="437" x2="92" y2="437" stroke="#10b981" strokeWidth="1.5"/>
+              <line x1="74" y1="444" x2="86" y2="444" stroke="#10b981" strokeWidth="1"/>
+              <text x="80" y="462" textAnchor="middle" fill="#10b981" fontSize="9" fontFamily="monospace">PE / EARTH</text>
+            </svg>
+            <div style={{marginTop:16,display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+              {Object.entries(paths).map(([key,p])=>(
+                <button key={key} onMouseEnter={()=>hover(key)} style={{
+                  display:'flex',alignItems:'center',gap:8,padding:10,
+                  border:`1px solid ${hov===key?'rgba(71,85,105,0.8)':'rgba(30,41,59,0.8)'}`,
+                  background:hov===key?'rgba(30,41,59,0.6)':'transparent',
+                  cursor:'pointer',textAlign:'left',borderRadius:4,color:'inherit',fontFamily:'inherit'}}>
+                  <div style={{width:16,height:2,background:p.color,flexShrink:0}}/>
+                  <div>
+                    <div style={{fontSize:12,color:'#e2e8f0'}}>{p.label}</div>
+                    <div style={{fontSize:10,fontFamily:'IBM Plex Mono,monospace',color:'#64748b'}}>NC: {p.limitNC}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:8}}>Selected pathway</div>
+            <div style={{fontSize:20,fontWeight:300,color:'#f1f5f9',marginBottom:4}}>{hov?paths[hov].label:'—'}</div>
+            <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:11,color:'#64748b',marginBottom:8}}>
+              {hov?`Limit (${cond}): ${cond==='NC'?paths[hov].limitNC:paths[hov].limitSFC}`:'Hover any path or legend'}
+            </div>
+            <AIBox loading={loading} content={ai} accent={cond==='SFC'?'amber':'cyan'}/>
+            {cond==='SFC'&&<div style={{marginTop:16,padding:12,background:'rgba(120,53,15,0.3)',border:'1px solid rgba(180,83,9,0.5)',color:'#fde68a',fontSize:12,borderRadius:6}}>
+              <Zap/> Open-earth fault: chassis floats at mains potential via Y-capacitors. All currents redistribute through patient/operator return paths.
+            </div>}
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+};
+
+// ── Module 5: NHS Quiz ────────────────────────────────────────
+const Module5 = () => {
+  const Qs=[
+    {q:"Maximum earth leakage current under Normal Condition for Class I device (IEC 60601-1)?",opts:["0.1 mA","0.5 mA","1.0 mA","5.0 mA"],ans:1,ref:"IEC 60601-1 Cl. 8.7.3, Table 4"},
+    {q:"Type CF applied part maximum patient leakage current under Normal Condition:",opts:["0.1 mA","0.05 mA","0.01 mA","0.5 mA"],ans:2,ref:"IEC 60601-1 Cl. 8.7.3, Table 3"},
+    {q:"Per HTM 06-01, maximum earth continuity resistance (including mains lead) for Class I:",opts:["0.10 Ω","0.20 Ω","0.30 Ω","1.00 Ω"],ans:2,ref:"HTM 06-01 Part A"},
+    {q:"IT-isolated power supply in operating theatre (HTM 06-01 Part C) is primarily required to:",opts:["Reduce mains harmonics","Allow first-fault tolerance without interruption","Improve EMC","Lower energy consumption"],ans:1,ref:"HTM 06-01 Part C / IEC 60364-7-710"},
+    {q:"A Single Fault Condition test for earth leakage simulates:",opts:["Short circuit L and N","Open neutral","Open earth conductor","Loss of all phases"],ans:2,ref:"IEC 60601-1 Cl. 8.7.2"},
+    {q:"Engineer measures 7.2 mA earth leakage under SFC on Class I patient warmer. Correct action?",opts:["Pass — within limit","Pass with caution, shorten interval","Fail, quarantine, repair, retest","Fail and immediately raise MHRA Yellow Card"],ans:2,ref:"IEC 60601-1 Cl. 8.7.3 + NHS SOP"},
+    {q:"Microshock VF threshold for current delivered directly to the myocardium:",opts:["100 mA","10 mA","1 mA","10–100 µA (0.01–0.1 mA)"],ans:3,ref:"Bronzino / IEC 60601-1 rationale CF"},
+    {q:"Mains-on-Applied-Part testing is mandatory for:",opts:["Type B only","Type B and BF","Type BF and CF (F-type)","All types equally"],ans:2,ref:"IEC 60601-1 Cl. 8.7.4.7"},
+    {q:"Insulation resistance testing on a medical device is performed at:",opts:["100 V DC","250 V AC","500 V DC","1000 V AC"],ans:2,ref:"IEC 60601-1 / HTM 06-01"},
+    {q:"ECG monitor (BF) and pacing system (CF) connected to same patient — combined leakage governed by:",opts:["Lower of the two limits","Sum of both limits","IEC 60601-1 Clause 16 — ME Systems","Whichever device has higher classification"],ans:2,ref:"IEC 60601-1 Cl. 16"},
+  ];
+
+  const [cur,setCur]=useState(0);
+  const [answers,setAnswers]=useState([]);
+  const [sel,setSel]=useState(null);
+  const [fb,setFb]=useState('');
+  const [showFb,setShowFb]=useState(false);
+  const [loading,setLoading]=useState(false);
+  const [done,setDone]=useState(false);
+  const score=answers.filter(a=>a.correct).length;
+
+  const submit=async()=>{
+    if(sel===null) return;
+    const ok=sel===Qs[cur].ans;
+    setAnswers(p=>[...p,{...Qs[cur],selected:sel,correct:ok}]);
+    setShowFb(true);
+    if(!ok){
+      setLoading(true);
+      const txt=await callClaude(`NHS clinical engineering tutor. Trainee answered incorrectly:
+Q: ${Qs[cur].q}
+Their answer: ${Qs[cur].opts[sel]}
+Correct: ${Qs[cur].opts[Qs[cur].ans]}
+Ref: ${Qs[cur].ref}
+4-5 sentences: why wrong, technical reasoning, standard clause, memorable recall for Band 6 interview. No preamble.`,500);
+      setFb(txt); setLoading(false);
+    }
+  };
+  const next=()=>{ if(cur+1<Qs.length){setCur(c=>c+1);setSel(null);setShowFb(false);setFb('');}else setDone(true); };
+  const reset=()=>{ setCur(0);setAnswers([]);setSel(null);setFb('');setShowFb(false);setDone(false); };
+
+  if(done){
+    const pct=(score/Qs.length)*100;
+    const [band,msg,col]=pct>=90?['Band 7+ Mastery','Specialist-level. Ready for SME / regulatory roles.','#34d399']:
+      pct>=70?['Band 6 Competency','Solid knowledge. Suitable for autonomous practice.','#22d3ee']:
+      pct>=50?['Band 5 Foundational','Adequate baseline. Continue structured CPD.','#fbbf24']:
+      ['Trainee Level','Significant gaps. Re-study IEC 60601-1 Cl. 8.5–8.7 and HTM 06-01.','#f87171'];
+    return (
+      <Panel label="Module 05 · Assessment Complete" className="p-6">
+        <div style={{padding:32,textAlign:'center',maxWidth:600,margin:'0 auto'}}>
+          <Award/><div style={{fontSize:72,fontWeight:200,color:'#f1f5f9',margin:'16px 0'}}>{score}<span style={{fontSize:32,color:'#64748b'}}>/{Qs.length}</span></div>
+          <div style={{display:'inline-block',padding:'8px 20px',border:`1px solid ${col}40`,color:col,fontSize:18,fontWeight:300,borderRadius:6}}>{band}</div>
+          <p style={{color:'#94a3b8',fontSize:13,marginTop:16}}>{msg}</p>
+          <div style={{marginTop:24,display:'flex',flexDirection:'column',gap:8}}>
+            {answers.map((a,i)=>(
+              <div key={i} style={{display:'flex',gap:12,padding:12,border:`1px solid ${a.correct?'rgba(52,211,153,0.3)':'rgba(248,113,113,0.3)'}`,background:a.correct?'rgba(6,78,59,0.1)':'rgba(127,29,29,0.1)',borderRadius:4,textAlign:'left'}}>
+                <span style={{color:a.correct?'#34d399':'#f87171',flexShrink:0}}>{a.correct?<CheckCircle2/>:<XCircle/>}</span>
+                <div style={{fontSize:12}}>
+                  <div style={{color:'#cbd5e1'}}>{i+1}. {a.q}</div>
+                  <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',marginTop:4}}>{a.ref}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button onClick={reset} style={{marginTop:24,padding:'10px 24px',background:'#22d3ee',color:'#0c1a2e',border:'none',borderRadius:6,fontFamily:'IBM Plex Mono,monospace',fontSize:11,letterSpacing:'0.15em',textTransform:'uppercase',cursor:'pointer'}}>
+            <RotateCcw/> Retake Assessment
+          </button>
+        </div>
+      </Panel>
+    );
+  }
+
+  const q=Qs[cur];
+  return (
+    <Panel label="Module 05 · NHS Competency Assessment" className="p-6">
+      <div style={{padding:24}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',marginBottom:20}}>
+          <span style={{fontSize:20,fontWeight:300,color:'#f1f5f9'}}>Knowledge Check</span>
+          <span style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.15em',textTransform:'uppercase'}}>Q {cur+1} / {Qs.length} · Score {score}</span>
+        </div>
+        <div style={{height:3,background:'#1e293b',borderRadius:2,marginBottom:24,overflow:'hidden'}}>
+          <div style={{height:'100%',background:'#22d3ee',width:`${(cur/Qs.length)*100}%`,transition:'width 0.3s'}}/>
+        </div>
+        <div style={{border:'1px solid rgba(71,85,105,0.4)',background:'rgba(2,6,23,0.5)',borderRadius:8,padding:24}}>
+          <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#22d3ee',letterSpacing:'0.2em',textTransform:'uppercase',marginBottom:12}}>Q{cur+1}</div>
+          <div style={{fontSize:17,color:'#f1f5f9',lineHeight:1.65,marginBottom:20}}>{q.q}</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            {q.opts.map((opt,i)=>{
+              const isSel=sel===i,isCorrect=i===q.ans;
+              let borderColor='rgba(71,85,105,0.6)',bg='transparent',color='#e2e8f0';
+              if(showFb){
+                if(isCorrect){borderColor='#34d399';bg='rgba(6,78,59,0.3)';color='#6ee7b7';}
+                else if(isSel){borderColor='#f87171';bg='rgba(127,29,29,0.3)';color='#fca5a5';}
+                else{borderColor='rgba(30,41,59,0.6)';color='#475569';}
+              } else if(isSel){borderColor='#22d3ee';bg='rgba(8,145,178,0.15)';color='#7dd3fc';}
+              return (
+                <button key={i} disabled={showFb} onClick={()=>setSel(i)} style={{
+                  padding:'12px 14px',border:`1px solid ${borderColor}`,background:bg,borderRadius:6,
+                  textAlign:'left',cursor:showFb?'default':'pointer',display:'flex',alignItems:'center',gap:12,
+                  transition:'all 0.15s',color:'inherit',fontFamily:'inherit'}}>
+                  <span style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',flexShrink:0}}>{String.fromCharCode(65+i)}</span>
+                  <span style={{fontSize:13,color}}>{opt}</span>
+                  {showFb&&isCorrect&&<span style={{marginLeft:'auto',color:'#34d399'}}><CheckCircle2/></span>}
+                  {showFb&&isSel&&!isCorrect&&<span style={{marginLeft:'auto',color:'#f87171'}}><XCircle/></span>}
+                </button>
+              );
+            })}
+          </div>
+          {showFb&&(
+            <div style={{marginTop:20}}>
+              <div style={{fontFamily:'IBM Plex Mono,monospace',fontSize:10,color:'#64748b',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:8}}>Reference · {q.ref}</div>
+              {!answers[answers.length-1]?.correct&&<AIBox loading={loading} content={fb} accent="amber"/>}
+              {answers[answers.length-1]?.correct&&<div style={{padding:16,borderLeft:'2px solid rgba(52,211,153,0.4)',background:'rgba(2,6,23,0.6)',fontSize:13,color:'#6ee7b7'}}><CheckCircle2/> Correct. {q.ref}</div>}
+              <button onClick={next} style={{marginTop:16,padding:'10px 20px',background:'#22d3ee',color:'#0c1a2e',border:'none',borderRadius:6,fontFamily:'IBM Plex Mono,monospace',fontSize:11,letterSpacing:'0.15em',textTransform:'uppercase',cursor:'pointer',display:'flex',alignItems:'center',gap:8}}>
+                {cur+1===Qs.length?'See Results':'Next Question'} <ChevronRight/>
+              </button>
+            </div>
+          )}
+          {!showFb&&<button onClick={submit} disabled={sel===null} style={{marginTop:20,padding:'10px 20px',background:'#22d3ee',color:'#0c1a2e',border:'none',borderRadius:6,fontFamily:'IBM Plex Mono,monospace',fontSize:11,letterSpacing:'0.15em',textTransform:'uppercase',cursor:sel===null?'not-allowed':'pointer',opacity:sel===null?0.35:1}}>Submit Answer</button>}
+        </div>
+      </div>
+    </Panel>
+  );
+};
+
+// ── Root App ──────────────────────────────────────────────────
+const modules=[
+  {id:0,name:'Current vs Body',Icon:Zap,      Comp:Module1},
+  {id:1,name:'Applied Parts',  Icon:Heart,    Comp:Module2},
+  {id:2,name:'Test Sequence',  Icon:Gauge,    Comp:Module3},
+  {id:3,name:'Leakage Paths',  Icon:Cable,    Comp:Module4},
+  {id:4,name:'NHS Quiz',       Icon:BookOpen, Comp:Module5},
+];
+
+function ESTApp(){
+  const [active,setActive]=useState(0);
+  const {Comp}=modules[active];
+  return (
+    <div style={{fontFamily:'IBM Plex Sans,-apple-system,sans-serif',background:'#020617',color:'#e2e8f0',minHeight:'400px'}}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');`}</style>
+      {/* Tab header */}
+      <div style={{borderBottom:'1px solid #1e293b',background:'rgba(2,6,23,0.9)',padding:'0 24px'}}>
+        <div style={{display:'flex',gap:0,overflowX:'auto'}}>
+          {modules.map(m=>(
+            <button key={m.id} onClick={()=>setActive(m.id)} style={{
+              display:'flex',alignItems:'center',gap:8,padding:'14px 18px',
+              fontFamily:'IBM Plex Mono,monospace',fontSize:10,letterSpacing:'0.15em',textTransform:'uppercase',
+              border:'none',borderBottom:`2px solid ${active===m.id?'#22d3ee':'transparent'}`,
+              background:'transparent',cursor:'pointer',whiteSpace:'nowrap',
+              color:active===m.id?'#22d3ee':'#64748b',transition:'color 0.2s'}}>
+              <span style={{color:'#334155',fontSize:9}}>0{m.id+1}</span>
+              <m.Icon/> {m.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      {/* Module content */}
+      <div style={{padding:24}}><Comp/></div>
+      <div style={{borderTop:'1px solid #1e293b',padding:'16px 24px',textAlign:'center',fontFamily:'IBM Plex Mono,monospace',fontSize:10,letterSpacing:'0.15em',textTransform:'uppercase',color:'#334155'}}>
+        Powered by Claude · For NHS clinical engineering training only · Not a substitute for IEC 60601-1 / HTM 06-01
+      </div>
+    </div>
+  );
+}
+
+// Mount into the existing div
+ReactDOM.createRoot(document.getElementById('est-tool-root')).render(<ESTApp/>);
+</script>
 
 </body>
 </html>
