@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NHS Legal & Regulatory Framework — EBME Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #131920;
+    --bg3: #1a2330;
+    --bg4: #1f2d3d;
+    --surface: #162030;
+    --surface2: #1c2a3a;
+    --border: #243347;
+    --border2: #2e4060;
+    --amber: #f59e0b;
+    --amber2: #d97706;
+    --amber-dim: rgba(245,158,11,0.12);
+    --amber-glow: rgba(245,158,11,0.2);
+    --green: #22c55e;
+    --green2: #16a34a;
+    --green-dim: rgba(34,197,94,0.10);
+    --teal: #2dd4bf;
+    --teal-dim: rgba(45,212,191,0.10);
+    --red: #ef4444;
+    --red-dim: rgba(239,68,68,0.12);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.12);
+    --violet: #8b5cf6;
+    --violet-dim: rgba(139,92,246,0.12);
+    --pink: #ec4899;
+    --pink-dim: rgba(236,72,153,0.10);
+    --ink: #e2eaf4;
+    --ink2: #a8b8cc;
+    --ink3: #6b7f96;
+    --ink4: #3d5166;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Outfit', sans-serif;
+    --serif: 'Instrument Serif', serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.15;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── NAV ── */
+  .topnav {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 32px; height: 52px;
+    background: rgba(13,17,23,0.93);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    color: var(--ink2); text-decoration: none; letter-spacing: 0.05em;
+  }
+  .nav-logo span { color: var(--amber); }
+  .nav-sep { color: var(--ink4); font-size: 14px; }
+  .nav-current { font-family: var(--mono); font-size: 12px; color: var(--amber); }
+  .nav-badge {
+    margin-left: auto;
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    color: var(--amber); border: 1px solid var(--amber2);
+    background: var(--amber-dim); padding: 3px 10px; border-radius: 4px;
+    letter-spacing: 0.08em;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative; z-index: 1;
+    padding: 56px 40px 40px;
+    max-width: 1280px; margin: 0 auto;
+  }
+  .hero-kicker {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--amber); letter-spacing: 0.12em; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .hero-title {
+    font-family: var(--serif); font-size: clamp(34px, 5vw, 56px);
+    font-weight: 400; line-height: 1.1; color: var(--ink); margin-bottom: 16px;
+  }
+  .hero-title em { color: var(--amber); font-style: italic; }
+  .hero-sub {
+    font-size: 15px; color: var(--ink2); max-width: 680px;
+    line-height: 1.65; margin-bottom: 28px;
+  }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .hero-tag {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--ink3); border: 1px solid var(--border2);
+    background: var(--surface); padding: 4px 10px; border-radius: 4px;
+  }
+  .hero-tag.active { color: var(--amber); border-color: var(--amber2); background: var(--amber-dim); }
+
+  /* ── SECTION NAV ── */
+  .section-nav {
+    position: relative; z-index: 1;
+    max-width: 1280px; margin: 0 auto;
+    padding: 0 40px 0;
+    display: flex; gap: 4px; flex-wrap: wrap;
+  }
+  .snav-btn {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--ink3); background: var(--surface);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 14px; cursor: pointer; transition: all 0.2s;
+    text-decoration: none;
+  }
+  .snav-btn:hover, .snav-btn.active {
+    color: var(--amber); border-color: var(--amber2); background: var(--amber-dim);
+  }
+
+  /* ── MAIN ── */
+  .main {
+    position: relative; z-index: 1;
+    max-width: 1280px; margin: 0 auto;
+    padding: 32px 40px 80px;
+  }
+
+  /* ── SECTIONS ── */
+  .reg-section {
+    margin-bottom: 64px;
+    opacity: 0; transform: translateY(20px);
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .reg-section:nth-child(1) { animation-delay: 0.05s; }
+  .reg-section:nth-child(2) { animation-delay: 0.10s; }
+  .reg-section:nth-child(3) { animation-delay: 0.15s; }
+  .reg-section:nth-child(4) { animation-delay: 0.20s; }
+  .reg-section:nth-child(5) { animation-delay: 0.25s; }
+  .reg-section:nth-child(6) { animation-delay: 0.30s; }
+  .reg-section:nth-child(7) { animation-delay: 0.35s; }
+  .reg-section:nth-child(8) { animation-delay: 0.40s; }
+
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  .section-header {
+    display: flex; align-items: baseline; gap: 14px;
+    margin-bottom: 20px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon { font-size: 20px; }
+  .section-label {
+    font-family: var(--mono); font-size: 10px; color: var(--ink3);
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .section-title {
+    font-family: var(--serif); font-size: 26px;
+    color: var(--ink); font-weight: 400; margin-top: 4px;
+  }
+  .section-badge {
+    margin-left: auto; font-family: var(--mono); font-size: 11px;
+    padding: 4px 10px; border-radius: 4px;
+  }
+  .badge-amber { color: var(--amber); border: 1px solid var(--amber2); background: var(--amber-dim); }
+  .badge-green { color: var(--green); border: 1px solid var(--green2); background: var(--green-dim); }
+  .badge-teal  { color: var(--teal);  border: 1px solid var(--teal);  background: var(--teal-dim); }
+  .badge-blue  { color: var(--blue);  border: 1px solid var(--blue);  background: var(--blue-dim); }
+  .badge-violet{ color: var(--violet);border: 1px solid var(--violet);background: var(--violet-dim); }
+  .badge-pink  { color: var(--pink);  border: 1px solid var(--pink);  background: var(--pink-dim); }
+
+  /* ── GRID LAYOUTS ── */
+  .two-col   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .four-col  { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+  @media (max-width: 1000px) { .three-col { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 740px)  {
+    .two-col, .three-col, .four-col { grid-template-columns: 1fr; }
+    .hero, .main, .section-nav { padding-left: 20px; padding-right: 20px; }
+  }
+
+  /* ── INFO BLOCK ── */
+  .info-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    transition: border-color 0.2s;
+  }
+  .info-block:hover { border-color: var(--border2); }
+
+  .block-title {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .bt-amber { color: var(--amber); }
+  .bt-green { color: var(--green); }
+  .bt-teal  { color: var(--teal); }
+  .bt-blue  { color: var(--blue); }
+  .bt-violet{ color: var(--violet); }
+  .bt-red   { color: var(--red); }
+  .bt-pink  { color: var(--pink); }
+
+  /* ── ENTRY CARDS ── */
+  .entry-list { display: flex; flex-direction: column; gap: 10px; }
+  .entry {
+    padding: 13px 16px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; transition: border-color 0.2s, background 0.2s;
+  }
+  .entry:hover { border-color: var(--border2); background: var(--bg4); }
+  .entry-name {
+    font-size: 13px; font-weight: 600; color: var(--ink);
+    margin-bottom: 4px; line-height: 1.3;
+  }
+  .entry-desc { font-size: 12px; color: var(--ink2); line-height: 1.6; }
+  .entry-tag {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    padding: 1px 7px; border-radius: 100px; margin-bottom: 5px;
+  }
+  .tag-amber  { color: var(--amber);  background: var(--amber-dim);  border: 1px solid var(--amber2); }
+  .tag-green  { color: var(--green);  background: var(--green-dim);  border: 1px solid var(--green2); }
+  .tag-teal   { color: var(--teal);   background: var(--teal-dim);   border: 1px solid var(--teal); }
+  .tag-blue   { color: var(--blue);   background: var(--blue-dim);   border: 1px solid var(--blue); }
+  .tag-violet { color: var(--violet); background: var(--violet-dim); border: 1px solid var(--violet); }
+  .tag-red    { color: var(--red);    background: var(--red-dim);    border: 1px solid var(--red); }
+  .tag-pink   { color: var(--pink);   background: var(--pink-dim);   border: 1px solid var(--pink); }
+
+  /* ── HIGHLIGHT CARDS (Key Ones) ── */
+  .key-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+  .key-card:hover { border-color: var(--border2); }
+  .key-card.amber { border-left: 3px solid var(--amber); }
+  .key-card.green { border-left: 3px solid var(--green); }
+  .key-card.teal  { border-left: 3px solid var(--teal); }
+  .key-card.blue  { border-left: 3px solid var(--blue); }
+  .key-card.violet{ border-left: 3px solid var(--violet); }
+  .key-card.red   { border-left: 3px solid var(--red); }
+  .key-card-label {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;
+  }
+
+  /* ── NOTICE ── */
+  .notice {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 13px 16px; border-radius: 8px; margin-bottom: 20px;
+    font-size: 13px; line-height: 1.6;
+  }
+  .notice.amber { background: var(--amber-dim); border: 1px solid var(--amber2); color: var(--ink2); }
+  .notice.green { background: var(--green-dim); border: 1px solid var(--green2); color: var(--ink2); }
+  .notice.teal  { background: var(--teal-dim);  border: 1px solid var(--teal);   color: var(--ink2); }
+  .notice.blue  { background: var(--blue-dim);  border: 1px solid var(--blue);   color: var(--ink2); }
+  .notice.violet{ background: var(--violet-dim);border: 1px solid var(--violet); color: var(--ink2); }
+  .n-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* ── TABLE ── */
+  .ref-table {
+    width: 100%; border-collapse: collapse; font-size: 12.5px;
+  }
+  .ref-table th {
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em;
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+    text-align: left; background: var(--bg3);
+  }
+  .ref-table td {
+    padding: 10px 12px; border-bottom: 1px solid var(--border);
+    color: var(--ink2); vertical-align: top;
+  }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table tr:hover td { background: var(--bg4); }
+  .val-a { font-family: var(--mono); color: var(--amber); font-weight: 500; }
+  .val-g { font-family: var(--mono); color: var(--green); font-weight: 500; }
+  .val-t { font-family: var(--mono); color: var(--teal); font-weight: 500; }
+  .val-b { font-family: var(--mono); color: var(--blue); font-weight: 500; }
+  .val-v { font-family: var(--mono); color: var(--violet); font-weight: 500; }
+
+  /* ── WIDE CARD ── */
+  .wide-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px 24px; margin-bottom: 20px;
+  }
+
+  /* ── TIP BOX ── */
+  .tip-box {
+    background: rgba(245,158,11,0.07); border: 1px solid var(--amber2);
+    border-radius: 8px; padding: 14px 18px;
+    font-size: 13px; color: var(--ink2); line-height: 1.65;
+    margin-top: 16px;
+  }
+  .tip-box strong { color: var(--amber); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px; background: var(--border);
+    max-width: 1280px; margin: 0 auto 48px;
+    position: relative; z-index: 1;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 24px 40px; max-width: 1280px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-brand { font-family: var(--mono); font-size: 11px; color: var(--ink4); }
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    padding: 2px 8px; border-radius: 100px; margin: 2px;
+  }
+  .pill-amber  { color: var(--amber);  background: var(--amber-dim);  border: 1px solid var(--amber2); }
+  .pill-green  { color: var(--green);  background: var(--green-dim);  border: 1px solid var(--green2); }
+  .pill-teal   { color: var(--teal);   background: var(--teal-dim);   border: 1px solid var(--teal); }
+  .pill-blue   { color: var(--blue);   background: var(--blue-dim);   border: 1px solid var(--blue); }
+  .pill-violet { color: var(--violet); background: var(--violet-dim); border: 1px solid var(--violet); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="../index.html" class="nav-logo">EBME <span>/</span> HUB</a>
+  <span class="nav-sep">›</span>
+  <span class="nav-current">NHS Legal & Regulatory Framework</span>
+  <span class="nav-badge">UK MDR · MHRA · NHS England</span>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-kicker">Section 04 · Legislative Framework</div>
+  <h1 class="hero-title">NHS Regulations &<br><em>Legal Framework</em></h1>
+  <p class="hero-sub">Complete reference for NHS EBME departments — legislation, standards, frameworks, regulatory bodies, guidance documents, policies, and protocols. Sourced from the NHS Legal Document 2025/26.</p>
+  <div class="hero-tags">
+    <span class="hero-tag active">UK MDR 2002</span>
+    <span class="hero-tag active">MHRA</span>
+    <span class="hero-tag active">ISO 14971</span>
+    <span class="hero-tag active">CQC</span>
+    <span class="hero-tag">HTM Guidance</span>
+    <span class="hero-tag">PSIRF</span>
+    <span class="hero-tag">DTAC</span>
+    <span class="hero-tag">PPM Policy</span>
+    <span class="hero-tag">HSSIB</span>
+    <span class="hero-tag">IEC 60601-1</span>
+    <span class="hero-tag">WEEE 2026</span>
+  </div>
+</div>
+
+<div class="section-nav">
+  <a href="#legislation"  class="snav-btn active">Legislation</a>
+  <a href="#standards"    class="snav-btn">Standards</a>
+  <a href="#frameworks"   class="snav-btn">Frameworks</a>
+  <a href="#bodies"       class="snav-btn">Bodies</a>
+  <a href="#guidance"     class="snav-btn">Guidance Docs</a>
+  <a href="#policies"     class="snav-btn">Policies</a>
+  <a href="#protocols"    class="snav-btn">Protocols</a>
+  <a href="#others"       class="snav-btn">Others</a>
+  <a href="#key-ones"     class="snav-btn">⭐ Key Ones</a>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════
+     1. LEGISLATION
+══════════════════════════════════════ -->
+<section class="reg-section" id="legislation">
+  <div class="section-header">
+    <span class="section-icon">📜</span>
+    <div>
+      <div class="section-label">Section 04.1</div>
+      <h2 class="section-title">Legislation</h2>
+    </div>
+    <span class="section-badge badge-amber">Primary Law</span>
+  </div>
+
+  <div class="notice amber">
+    <span class="n-icon">⚖️</span>
+    <div>These Acts and Statutory Instruments are the enforceable law governing NHS operations. Non-compliance carries legal consequences including fines, prosecution, and loss of registration. Updated for 2025/26 with several new regulations now in force.</div>
+  </div>
+
+  <div class="three-col" style="margin-bottom:16px;">
+    <!-- Health, Safety & Estates -->
+    <div class="info-block">
+      <div class="block-title bt-amber">1. Health, Safety & Estates</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-amber">1974</span>
+          <div class="entry-name">Health and Safety at Work etc. Act 1974</div>
+          <div class="entry-desc">The primary "Umbrella" Act. NHS must ensure health, safety, and welfare of all employees and patients "so far as is reasonably practicable".</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-amber">1989</span>
+          <div class="entry-name">Electricity at Work Regulations 1989</div>
+          <div class="entry-desc">Safe maintenance of the electrical grid and all plugged-in devices — from light switches to MRI machines.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-amber">2005</span>
+          <div class="entry-name">Regulatory Reform (Fire Safety) Order 2005</div>
+          <div class="entry-desc">Mandates fire risk assessments, fire wardens, and compartmentation (fire doors) to protect non-ambulatory patients.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-amber">2002</span>
+          <div class="entry-name">COSHH 2002</div>
+          <div class="entry-desc">Control of Substances Hazardous to Health — governs chemicals, lab reagents, and biohazards. Requires risk assessments, control measures, and staff training.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-amber">2013</span>
+          <div class="entry-name">RIDDOR 2013</div>
+          <div class="entry-desc">Reporting of Injuries, Diseases and Dangerous Occurrences — legal duty to report serious accidents (e.g. needle-stick injuries) to the HSE.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-amber">1998</span>
+          <div class="entry-name">LOLER 1998</div>
+          <div class="entry-desc">Lifting Operations and Lifting Equipment Regulations — covers patient hoists, bed lifts, and service elevators.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-amber">1998</span>
+          <div class="entry-name">PUWER 1998</div>
+          <div class="entry-desc">Provision and Use of Work Equipment Regulations — ensures all equipment from maintenance drills to surgical lasers is fit for intended purpose.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medical Device Legislation -->
+    <div class="info-block">
+      <div class="block-title bt-teal">2. Medical Device & Clinical Governance</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-teal">2002</span>
+          <div class="entry-name">Medical Devices Regulations 2002 (UK MDR 2002)</div>
+          <div class="entry-desc">Foundational legislation for how devices are placed on the UK market. Classification: Class I, IIa, IIb, III based on risk. UKCA marking, registration, incident reporting, and FSCA obligations.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">2021</span>
+          <div class="entry-name">Medicines and Medical Devices Act 2021</div>
+          <div class="entry-desc">"Parent" Act giving government power to update regulations without new Parliament Act. Established the Patient Safety Commissioner.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">2024 🆕</span>
+          <div class="entry-name">Post-Market Surveillance (PMS) Regulations 2024</div>
+          <div class="entry-desc">Enforced June 2025. Manufacturers must monitor devices after NHS entry and report serious incidents within 15 days.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">2017</span>
+          <div class="entry-name">IRMER 2017 & IRR17</div>
+          <div class="entry-desc">Ionising Radiation (Medical Exposure) Regulations — protects patients from excessive radiation. IRR17 protects staff working with radiation.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data, Commercial & Patient Rights -->
+    <div class="info-block">
+      <div class="block-title bt-violet">3. Data, Commercial & Patient Rights</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-violet">2018</span>
+          <div class="entry-name">Data Protection Act 2018 / UK GDPR</div>
+          <div class="entry-desc">Primary law protecting patient records and data privacy in the NHS.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">2025 🆕</span>
+          <div class="entry-name">Data (Use and Access) Act 2025 (DUAA)</div>
+          <div class="entry-desc">Effective February 2026. Modernizes data sharing and legally recognizes "Broad Consent" for research.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">2023 🆕</span>
+          <div class="entry-name">Procurement Act 2023</div>
+          <div class="entry-desc">Replaced 2015 regulations in February 2025. Focus shifts to "Most Advantageous Tender" (MAT) — value over cheapest price.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">2026 🆕</span>
+          <div class="entry-name">WEEE Regulations 2026</div>
+          <div class="entry-desc">Waste Electrical and Electronic Equipment — safe disposal, recycling of lithium-ion batteries, and forensic data wiping of electronic medical devices.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">2026 🆕</span>
+          <div class="entry-name">HPOA 2026</div>
+          <div class="entry-desc">Health Professions and Occupations Act. Effective April 2026. Replaces old Health Professions Act. Introduces statutory duty for Cultural Safety and Anti-Racism.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">2010</span>
+          <div class="entry-name">Equality Act 2010</div>
+          <div class="entry-desc">Ensures hospitals do not discriminate and provides accessibility for those with disabilities.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     2. STANDARDS
+══════════════════════════════════════ -->
+<section class="reg-section" id="standards">
+  <div class="section-header">
+    <span class="section-icon">📐</span>
+    <div>
+      <div class="section-label">Section 04.2</div>
+      <h2 class="section-title">Standards</h2>
+    </div>
+    <span class="section-badge badge-green">ISO · IEC · BS EN</span>
+  </div>
+
+  <div class="three-col">
+    <!-- Technical Engineering Standards -->
+    <div class="info-block">
+      <div class="block-title bt-green">Technical Engineering</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-green">IEC / BS EN</span>
+          <div class="entry-name">BS EN 60601-1 (2026 Edition)</div>
+          <div class="entry-desc">"Grandfather" standard for Medical Electrical Equipment. Defines Basic Safety (no shocks) and Essential Performance.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">IEC</span>
+          <div class="entry-name">60601-1-2 (EMC)</div>
+          <div class="entry-desc">Electromagnetic Compatibility sub-standard. Ensures devices like MRIs don't interfere with ventilators or other critical equipment.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">IEC / BS EN</span>
+          <div class="entry-name">BS EN 62353</div>
+          <div class="entry-desc">Recurrent test and test after repair of ME equipment — used for annual EBME safety checks and post-repair verification.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">IEC</span>
+          <div class="entry-name">BS EN 55011</div>
+          <div class="entry-desc">Electromagnetic Interference (EMI) — limits radio-frequency disturbances to prevent equipment interfering with life-support systems.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">IEC</span>
+          <div class="entry-name">IEC 62304</div>
+          <div class="entry-desc">Medical Device Software lifecycle processes — critical for validating Software as a Medical Device (SaMD).</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">IEC</span>
+          <div class="entry-name">IEC 62366-1</div>
+          <div class="entry-desc">Usability Engineering — ensures devices are designed using Human Factors to prevent user error in clinical environments.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quality & Risk -->
+    <div class="info-block">
+      <div class="block-title bt-teal">Quality & Risk Management</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-teal">ISO</span>
+          <div class="entry-name">ISO 13485:2016 (QMSR 2026 Update)</div>
+          <div class="entry-desc">International standard for a Quality Management System (QMS) specifically for medical devices. QMSR 2026 update aligns with FDA QMSR requirements.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">ISO</span>
+          <div class="entry-name">ISO 14971:2019</div>
+          <div class="entry-desc">Global standard for Risk Management — teaches engineers how to weigh device failure risks against patient benefits using hazard analysis and risk matrices.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">ISO</span>
+          <div class="entry-name">ISO 55001</div>
+          <div class="entry-desc">Key standard for Asset Management — used by top-performing Trusts to ensure "value for money" across a device's full lifecycle.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">ISO</span>
+          <div class="entry-name">ISO 9001:2015</div>
+          <div class="entry-desc">General international standard for Quality Management Systems — focused on consistent service and patient/clinician satisfaction.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">ISO / BS EN 🆕</span>
+          <div class="entry-name">BS EN ISO 15223-1 (2026 Update)</div>
+          <div class="entry-desc">Standard for symbols used on medical device labels to ensure international recognition and safety.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical & Operational -->
+    <div class="info-block">
+      <div class="block-title bt-blue">Clinical & Operational</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-blue">CQC</span>
+          <div class="entry-name">CQC Fundamental Standards</div>
+          <div class="entry-desc">Inspection standards including Regulation 12 (Safe Care and Treatment) and Regulation 15 (Premises and Equipment).</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">NHS 🆕</span>
+          <div class="entry-name">National Standards of Healthcare Cleanliness 2025</div>
+          <div class="entry-desc">Updated decontamination requirements. Introduces 1–5 star rating system for public transparency and Efficacy Auditing.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">NHS 🆕</span>
+          <div class="entry-name">Protein Detection Standards (2025/26)</div>
+          <div class="entry-desc">Shift in decontamination requiring residual protein on reusable devices to be below 5 µg per side.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">NHS</span>
+          <div class="entry-name">GL1 Standards (Scan for Safety)</div>
+          <div class="entry-desc">Standards for barcoding and tracking every individual device via Unique Device Identifiers (UDI) to a specific patient.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">IPEM · AHCS</span>
+          <div class="entry-name">IPEM & AHCS Professional Standards</div>
+          <div class="entry-desc">Standards required for technologists to be on the RCT or HCPC register. IPEM provides "Good Practice" guides for physiological and technological measurements.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     3. FRAMEWORKS
+══════════════════════════════════════ -->
+<section class="reg-section" id="frameworks">
+  <div class="section-header">
+    <span class="section-icon">🏗️</span>
+    <div>
+      <div class="section-label">Section 04.3</div>
+      <h2 class="section-title">Frameworks</h2>
+    </div>
+    <span class="section-badge badge-teal">Safety · Digital · Commercial</span>
+  </div>
+
+  <div class="two-col" style="margin-bottom:16px;">
+    <!-- Patient Safety -->
+    <div class="info-block">
+      <div class="block-title bt-red">Patient Safety & Incident Response</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-red">2026 Mandatory 🆕</span>
+          <div class="entry-name">PSIRF — Patient Safety Incident Response Framework</div>
+          <div class="entry-desc">The mandatory 2026 framework replacing the old Serious Incident Framework. Moves away from blame culture toward system-wide learning. All NHS Trusts must operate under PSIRF.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">2026 🆕</span>
+          <div class="entry-name">Martha's Rule</div>
+          <div class="entry-desc">Fully integrated into the 2026 NHS Standard Contract. Grants patients and families the right to trigger an urgent 24/7 "Rapid Review Team" if they feel a condition is deteriorating.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">Clinical</span>
+          <div class="entry-name">PIER Approach</div>
+          <div class="entry-desc">Framework for managing patient deterioration: Prevention, Identification, Escalation, and Response. Showing awareness of PIER in an interview signals current clinical safety knowledge.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">Legal</span>
+          <div class="entry-name">Duty of Candour (Regulation 20)</div>
+          <div class="entry-desc">Legal and ethical framework requiring healthcare providers to be open and honest with patients when something goes wrong with their care.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical & Digital -->
+    <div class="info-block">
+      <div class="block-title bt-violet">Technical & Digital Governance</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-violet">Mandatory</span>
+          <div class="entry-name">DTAC — Digital Technology Assessment Criteria</div>
+          <div class="entry-desc">Mandatory for any medical technology with a "plug or a pixel". Assesses Clinical Safety (DCB0129), Data Protection, Technical Security, and Interoperability.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">MHRA 🆕</span>
+          <div class="entry-name">AIaMD — AI as a Medical Device Framework</div>
+          <div class="entry-desc">MHRA framework being implemented for regulating artificial intelligence in healthcare. Includes PCCPs (Predetermined Change Control Plans) for AI learning and updates.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">NHS</span>
+          <div class="entry-name">Scan for Safety (GL1 Standards)</div>
+          <div class="entry-desc">National framework using barcodes and Unique Device Identifiers (UDI) to track every device to every patient at point of care.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">Cyber 🆕</span>
+          <div class="entry-name">Cyber Assessment Framework (CAF)</div>
+          <div class="entry-desc">Used alongside DTAC. Ensures medical devices are resilient against cyber-attacks and meet requirements of the 2026 Cyber Bill.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <!-- Sustainability -->
+    <div class="info-block">
+      <div class="block-title bt-green">Sustainability & Commercial</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-green">2026 🆕</span>
+          <div class="entry-name">Evergreen Sustainable Supplier Framework</div>
+          <div class="entry-desc">From April 2026, all suppliers must meet Level 1 (baseline carbon reporting) to bid for NHS contracts.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">2025</span>
+          <div class="entry-name">Procurement Act 2023 Framework</div>
+          <div class="entry-desc">Shifts from cheapest price to "Most Advantageous Tender" (MAT) — weighing resilience, social value, and community impact.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">2026</span>
+          <div class="entry-name">Circular Economy / "Design for Life" Roadmap</div>
+          <div class="entry-desc">2025/26 policy framework encouraging legal reprocessing and remanufacturing of medical devices to reduce single-use waste.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leadership -->
+    <div class="info-block">
+      <div class="block-title bt-blue">Leadership & Workforce</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-blue">Annual</span>
+          <div class="entry-name">FPPT — Fit and Proper Person Test Framework</div>
+          <div class="entry-desc">Rigorous annual requirement for all board members and senior managers — verifies good character, professional competence, and financial soundness.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">2026 🆕</span>
+          <div class="entry-name">Multi-Professional Regulation Framework</div>
+          <div class="entry-desc">2026 initiative where GMC, NMC, and HCPC move toward a common framework to allow staff to work flexibly across different Integrated Care Boards (ICBs).</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">2026 🆕</span>
+          <div class="entry-name">HPOA 2026 Framework</div>
+          <div class="entry-desc">Introduces a more independent disciplinary process and a statutory duty for Cultural Safety and Anti-Racism training for all staff.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     4. BODIES
+══════════════════════════════════════ -->
+<section class="reg-section" id="bodies">
+  <div class="section-header">
+    <span class="section-icon">🏛️</span>
+    <div>
+      <div class="section-label">Section 04.4</div>
+      <h2 class="section-title">Regulatory Bodies</h2>
+    </div>
+    <span class="section-badge badge-amber">Watchdogs · Professional Bodies</span>
+  </div>
+
+  <div class="wide-card" style="margin-bottom:16px;">
+    <div class="block-title bt-amber">Quick Reference — Who Does What</div>
+    <table class="ref-table">
+      <thead>
+        <tr><th>Body</th><th>Type</th><th>Primary Role for EBME</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="val-a">MHRA</span></td><td>Primary Regulator</td><td>Decides if a device is safe for the UK market; manages UKCA marking; Yellow Card / FSN system</td></tr>
+        <tr><td><span class="val-a">CQC</span></td><td>Inspection Body</td><td>Inspects against Regulation 15 (Premises & Equipment) and Regulation 12 (Safe Care)</td></tr>
+        <tr><td><span class="val-t">NICE</span></td><td>Regulator</td><td>Clinical and cost-effectiveness of devices — not just safety but value</td></tr>
+        <tr><td><span class="val-t">HSSIB</span></td><td>Investigative</td><td>Investigates most serious failures — "air accident investigators" for healthcare</td></tr>
+        <tr><td><span class="val-b">IPEM</span></td><td>Professional Body</td><td>Primary professional body for clinical engineers; "Good Practice" guides</td></tr>
+        <tr><td><span class="val-b">RCT</span></td><td>Register</td><td>Register of Clinical Technologists — many Trusts require Band 6+ to be registered</td></tr>
+        <tr><td><span class="val-b">HCPC</span></td><td>Statutory Regulator</td><td>Statutory regulator for health professionals; clinical engineers may be on HCPC</td></tr>
+        <tr><td><span class="val-b">AHCS</span></td><td>Professional Body</td><td>Overarching body for healthcare scientists; sets professional standards</td></tr>
+        <tr><td><span class="val-v">ICO</span></td><td>Data Regulator</td><td>UK information rights body; patients appeal here for data complaints</td></tr>
+        <tr><td><span class="val-v">HRA</span></td><td>Ethics Body</td><td>Ensures clinical trials and device research are conducted ethically</td></tr>
+        <tr><td><span class="val-g">NHS England PST</span></td><td>Safety Team</td><td>Issues National Patient Safety Alerts (NatPSAs) for devices with fatal flaws</td></tr>
+        <tr><td><span class="val-g">ICBs</span></td><td>Regional NHS</td><td>Integrated Care Boards — regional NHS bodies overseeing local healthcare delivery</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     5. GUIDANCE DOCUMENTS
+══════════════════════════════════════ -->
+<section class="reg-section" id="guidance">
+  <div class="section-header">
+    <span class="section-icon">📘</span>
+    <div>
+      <div class="section-label">Section 04.5</div>
+      <h2 class="section-title">Guidance Documents</h2>
+    </div>
+    <span class="section-badge badge-blue">HTMs · HBNs · MHRA Docs</span>
+  </div>
+
+  <div class="three-col">
+    <!-- Estates & Technical -->
+    <div class="info-block">
+      <div class="block-title bt-blue">Estates & Technical (HTMs)</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-blue">HTM 00</span>
+          <div class="entry-name">HTM 00 — Best Practice</div>
+          <div class="entry-desc">Foundational guidance for healthcare engineering. Sets out general principles of healthcare engineering and service provision to ensure consistent quality across NHS technical services.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">HTM 06-01</span>
+          <div class="entry-name">HTM 06-01 — Electrical Services</div>
+          <div class="entry-desc">Specific guide for electrical safety in healthcare premises. Provides technical requirements for the electrical supply medical devices plug into. Mandates Uninterrupted Power Supplies (UPS) for operating theatres.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">HTM 01-01</span>
+          <div class="entry-name">HTM 01-01 — Decontamination</div>
+          <div class="entry-desc">Guidance for management and decontamination of reusable medical devices. Sets standards for cleaning surgical scalpels and endoscopes. 2026 shift toward "Design for Decontamination" and strict protein detection standards.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">HTM 07-01</span>
+          <div class="entry-name">HTM 07-01 — Healthcare Waste</div>
+          <div class="entry-desc">Classification and disposal of healthcare waste. Dictates how to dispose of devices contaminated with blood or chemicals. Links to e-Manifests for real-time digital tracking.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">HBNs</span>
+          <div class="entry-name">HBNs — Health Building Notes</div>
+          <div class="entry-desc">Strategic guidance on the design and planning of healthcare buildings. Ensures hospital spaces (e.g., MRI suites) are designed so medical devices can be used safely.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clinical Safety -->
+    <div class="info-block">
+      <div class="block-title bt-red">Clinical Safety & Alerting</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-red">MHRA Primary</span>
+          <div class="entry-name">Managing Medical Devices (MHRA Guidance)</div>
+          <div class="entry-desc">Primary document for clinical engineering managers. Outlines legal responsibilities for the entire device lifecycle from Trust Board to engineer. Mandatory for CQC Regulation 15 compliance.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">NHS England</span>
+          <div class="entry-name">National Patient Safety Alerts (NatPSAs)</div>
+          <div class="entry-desc">Critical safety notices issued by NHS England Patient Safety Team. Issued when a specific device or process has a fatal flaw. Hospitals must act — often within 48 hours — to find and remove dangerous devices.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">IPC</span>
+          <div class="entry-name">The "IPC Green Book"</div>
+          <div class="entry-desc">Health and Social Care Act Code of Practice for Infection Prevention and Control. Requires all NHS bodies to have a Director of Infection Prevention and Control (DIPC).</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">2025 🆕</span>
+          <div class="entry-name">National Standards of Healthcare Cleanliness 2025</div>
+          <div class="entry-desc">Updated standards for environmental hygiene. Introduces "Efficacy Auditing" and a 1–5 star public rating system for wards. Dictates how devices must be decontaminated before maintenance.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sustainability & Commercial -->
+    <div class="info-block">
+      <div class="block-title bt-green">Sustainability & Commercial</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-green">2025</span>
+          <div class="entry-name">2025 Social Value Playbook</div>
+          <div class="entry-desc">Guidance on incorporating social and environmental value into NHS contracts. Mandates that 10% of any contract score is based on Net Zero impact and local community support.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">Strategy</span>
+          <div class="entry-name">NHS Net Zero Roadmap</div>
+          <div class="entry-desc">Strategic document for the NHS to reach net zero direct emissions by 2040. Targets the total carbon footprint of the medical device supply chain. Drives Tray Rationalisation and similar initiatives.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">2025/26 🆕</span>
+          <div class="entry-name">"Design for Life" Roadmap</div>
+          <div class="entry-desc">Framework promoting the Circular Economy in healthcare. Encourages legal reprocessing and remanufacturing of single-use devices to reduce waste and move away from disposables.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     6. POLICIES
+══════════════════════════════════════ -->
+<section class="reg-section" id="policies">
+  <div class="section-header">
+    <span class="section-icon">📋</span>
+    <div>
+      <div class="section-label">Section 04.6</div>
+      <h2 class="section-title">Policies</h2>
+    </div>
+    <span class="section-badge badge-violet">Trust Policies · National Mandates</span>
+  </div>
+
+  <div class="three-col">
+    <!-- Patient Safety Policies -->
+    <div class="info-block">
+      <div class="block-title bt-red">Patient Safety & Clinical</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-red">National 🆕</span>
+          <div class="entry-name">Martha's Rule (2024/2026)</div>
+          <div class="entry-desc">National policy in the NHS Standard Contract. Grants patients and families the right to trigger an urgent 24/7 Rapid Review Team.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">2025/26 🆕</span>
+          <div class="entry-name">Jess's Rule</div>
+          <div class="entry-desc">"Three Strikes" policy for primary care — a doctor must rethink a diagnosis if a patient presents three times with the same symptoms.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">Legal</span>
+          <div class="entry-name">Duty of Candour Policy (Regulation 20)</div>
+          <div class="entry-desc">Legal requirement to be open, honest, and apologetic with patients when care or device failure causes harm.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">Mandatory</span>
+          <div class="entry-name">Medical Device Safety Policy</div>
+          <div class="entry-desc">Every Trust must have a Medical Device Safety Officer (MDSO) to oversee the safety network, Yellow Card reporting, and Field Safety Notices.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Engineering & Operational Policies -->
+    <div class="info-block">
+      <div class="block-title bt-teal">Engineering & Operational</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-teal">BS EN 62353</span>
+          <div class="entry-name">PPM Policy — Planned Preventative Maintenance</div>
+          <div class="entry-desc">Requires all medical equipment to be maintained according to BS EN 62353 standard. Typically 95% completion target measured as a KPI.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">2026 🆕</span>
+          <div class="entry-name">Alternative PPM (A-PPM) Policy</div>
+          <div class="entry-desc">2026 strategy allowing engineers to use risk-profiling data to safely adjust maintenance intervals and reduce costs without compromising safety.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">HTM 01-01</span>
+          <div class="entry-name">Decontamination Policy</div>
+          <div class="entry-desc">Governs how reusable devices must be cleaned. Strict protein detection standards — below 5 µg per side for reusable instruments.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">EPRR</span>
+          <div class="entry-name">Business Continuity & EPRR Policy</div>
+          <div class="entry-desc">Manages medical devices and services during emergencies — power outages, cyber-attacks, pandemics. Must maintain UPS for critical life-support equipment.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">UDI</span>
+          <div class="entry-name">"Scan for Safety" Policy</div>
+          <div class="entry-desc">National programme using barcodes and UDIs to ensure every high-risk device is linked to a specific patient for full traceability.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Information Governance & Commercial -->
+    <div class="info-block">
+      <div class="block-title bt-violet">Information Governance & Commercial</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-violet">UK GDPR</span>
+          <div class="entry-name">Data Protection & Confidentiality Policy</div>
+          <div class="entry-desc">Governs legal protection and storage of patient records in compliance with UK GDPR and DPA 2018.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">2026 🆕</span>
+          <div class="entry-name">"Broad Consent" Policy (DUAA 2025)</div>
+          <div class="entry-desc">Allows the NHS to use patient data for broad areas of research without needing to re-ask consent for every sub-study.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">WEEE · GDPR</span>
+          <div class="entry-name">Forensic Data Wiping Policy</div>
+          <div class="entry-desc">Mandatory data wiping from all devices during decommissioning to comply with WEEE 2026 and UK GDPR.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">Procurement</span>
+          <div class="entry-name">10% Social Value Policy</div>
+          <div class="entry-desc">Mandatory requirement that at least 10% of any contract score for medical devices is based on Net Zero and community impact.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-violet">2026 🆕</span>
+          <div class="entry-name">Sustainable Procurement Policy</div>
+          <div class="entry-desc">All suppliers must meet Evergreen Level 1 carbon reporting standards by April 2026 to bid for NHS contracts.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     7. PROTOCOLS
+══════════════════════════════════════ -->
+<section class="reg-section" id="protocols">
+  <div class="section-header">
+    <span class="section-icon">📝</span>
+    <div>
+      <div class="section-label">Section 04.7</div>
+      <h2 class="section-title">Protocols</h2>
+    </div>
+    <span class="section-badge badge-teal">Operational Procedures</span>
+  </div>
+
+  <div class="notice teal">
+    <span class="n-icon">💡</span>
+    <div><strong>Interview tip:</strong> If asked "How do you ensure a device is safe to return to a ward?" reference <strong>Protocol Adherence</strong>: follow the local Maintenance Protocol to meet BS EN 62353 benchmarks → Decontamination Protocol (HTM 01-01) → record in CMMS for the CQC Regulation 15 audit trail.</div>
+  </div>
+
+  <div class="three-col">
+    <div class="info-block">
+      <div class="block-title bt-teal">Medical Device Management</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-teal">Commissioning</span>
+          <div class="entry-name">Acceptance Testing & Commissioning Protocol</div>
+          <div class="entry-desc">Steps taken when a new device arrives — ensures it meets BS EN 60601-1 standards before it touches a patient.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">BS EN 62353</span>
+          <div class="entry-name">PPM Protocols</div>
+          <div class="entry-desc">Specific technical checklists engineers follow during a service to comply with BS EN 62353.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">HTM 01-01</span>
+          <div class="entry-name">Device Decontamination Protocol</div>
+          <div class="entry-desc">Mandatory steps for cleaning a device before maintenance — includes protein detection checks (below 5 µg/side).</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-teal">WEEE · GDPR</span>
+          <div class="entry-name">Asset Disposal & Decommissioning Protocol</div>
+          <div class="entry-desc">Procedures for removing a device from the hospital — forensic data wiping (UK GDPR) and compliant disposal (WEEE 2026).</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <div class="block-title bt-red">Clinical Safety & Emergency</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-red">Martha's Rule</span>
+          <div class="entry-name">Rapid Response & Escalation Protocol</div>
+          <div class="entry-desc">Procedure allowing staff or families to trigger an urgent 24/7 Rapid Review Team when a patient deteriorates.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">EPRR</span>
+          <div class="entry-name">Business Continuity & EPRR Protocols</div>
+          <div class="entry-desc">Step-by-step plans for managing medical technology during major failures — power outages and cyber-attacks.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">48-hour urgent</span>
+          <div class="entry-name">NatPSA Response Protocol</div>
+          <div class="entry-desc">Urgent workflow to identify, locate, and remove a device from the clinical area — often within 48 hours — once a National Patient Safety Alert is issued.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-red">Legal</span>
+          <div class="entry-name">Duty of Candour Protocol</div>
+          <div class="entry-desc">Formal process of meeting with patients and families to provide an apology and full explanation if a device failure has caused harm.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <div class="block-title bt-blue">Reporting & Governance</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-blue">LFPSE · Datix</span>
+          <div class="entry-name">Incident Reporting Protocol</div>
+          <div class="entry-desc">Workflow for logging an incident or "Good Catch" into the national LFPSE database. Includes Datix for local Trust reporting.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">MHRA</span>
+          <div class="entry-name">Yellow Card Reporting Protocol</div>
+          <div class="entry-desc">Specific steps for reporting medical device malfunctions directly to the MHRA via the Yellow Card system.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">KPI · Audit</span>
+          <div class="entry-name">Audit & KPI Monitoring Protocol</div>
+          <div class="entry-desc">Process for checking the department is meeting its 95% PPM completion target and other performance indicators.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-blue">UDI · GL1</span>
+          <div class="entry-name">"Scan for Safety" Scanning Protocol</div>
+          <div class="entry-desc">Point-of-care procedure where the engineer or clinician scans the device UDI and patient's wristband to ensure full traceability.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     8. OTHERS
+══════════════════════════════════════ -->
+<section class="reg-section" id="others">
+  <div class="section-header">
+    <span class="section-icon">🔧</span>
+    <div>
+      <div class="section-label">Section 04.8</div>
+      <h2 class="section-title">Others — Specialist Topics</h2>
+    </div>
+    <span class="section-badge badge-violet">Advanced · Interview Power Topics</span>
+  </div>
+
+  <div class="three-col">
+    <div class="info-block">
+      <div class="block-title bt-violet">MDSO Network</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-violet">Mandatory Role</span>
+          <div class="entry-name">Medical Device Safety Officer (MDSO)</div>
+          <div class="entry-desc">Mandated role in every NHS Trust. Acts as primary link between the hospital and MHRA. Manages Yellow Card reporting and Field Safety Notices (FSNs). Ensures local device failures are escalated nationally.</div>
+        </div>
+      </div>
+      <div class="block-title bt-blue" style="margin-top:16px;">Digital Clinical Safety</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-blue">Software Safety</span>
+          <div class="entry-name">DCB0129 & DCB0160</div>
+          <div class="entry-desc">DCB0129 — standard for manufacturers to manage clinical risk in health software. DCB0160 — standard for NHS Trusts to manage clinical risk when implementing that software. Essential for any engineer deploying AI tools or integrating devices with EPR systems.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <div class="block-title bt-teal">EPRR & Resilience</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-teal">Emergency</span>
+          <div class="entry-name">Emergency Preparedness, Resilience & Response (EPRR)</div>
+          <div class="entry-desc">Policy framework for managing national power outages, cyber-attacks, and pandemics. Engineers must maintain Business Continuity Plans for critical life-support equipment and UPS as per HTM 06-01.</div>
+        </div>
+      </div>
+      <div class="block-title bt-amber" style="margin-top:16px;">COSHH Detail</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-amber">HSE Enforced</span>
+          <div class="entry-name">COSHH 2002 — Key Aspects</div>
+          <div class="entry-desc">Legal requirement: assess, manage, and monitor risks from hazardous substances (chemicals, fumes, dust, bacteria). Scope covers chemicals, fumes, dust, vapours, biological agents. Failure risks fines and imprisonment. Part of the broader Health and Safety at Work Act 1974.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-block">
+      <div class="block-title bt-green">Human Factors & Registration</div>
+      <div class="entry-list">
+        <div class="entry">
+          <span class="entry-tag tag-green">IEC 62366-1</span>
+          <div class="entry-name">Human Factors & Usability Engineering</div>
+          <div class="entry-desc">In 2026, NHS focus has shifted from technical failure to user error prevention. IEC 62366-1 ensures devices are designed so clinicians don't make mistakes under high-stress conditions. Used during procurement to evaluate device interface safety.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">2026 🆕</span>
+          <div class="entry-name">NMEMS — National Medical Equipment Management System</div>
+          <div class="entry-desc">2026 push to move from local spreadsheets to a nationally linked data hub for device tracking. Mentioning NMEMS in an interview signals awareness of future NHS data infrastructure direction.</div>
+        </div>
+        <div class="entry">
+          <span class="entry-tag tag-green">RCT · HCPC</span>
+          <div class="entry-name">Professional Accountability & Registration</div>
+          <div class="entry-desc">Many Trusts now mandate Band 6+ engineers to be on the Register of Clinical Technologists (RCT) or the HCPC. HPOA 2026 introduces statutory duty for Cultural Safety training.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     KEY ONES — Quick Revision
+══════════════════════════════════════ -->
+<section class="reg-section" id="key-ones">
+  <div class="section-header">
+    <span class="section-icon">⭐</span>
+    <div>
+      <div class="section-label">Section 04.9 · Quick Revision</div>
+      <h2 class="section-title">Key Ones — Must-Know for Interview</h2>
+    </div>
+    <span class="section-badge badge-amber">Priority Reference</span>
+  </div>
+
+  <div class="notice amber">
+    <span class="n-icon">🎯</span>
+    <div>These are the highest-impact items to cite in NHS EBME Band 5–7 interviews. Each maps directly to a CQC domain, KSF competency, or NHS values question. Know at least one detail about each.</div>
+  </div>
+
+  <div class="three-col" style="margin-bottom:16px;">
+    <div class="key-card amber">
+      <div class="key-card-label" style="color:var(--amber);">⚖️ Key Legislation</div>
+      <div class="entry-list">
+        <div class="entry"><div class="entry-name">UK MDR 2002</div><div class="entry-desc">Device classification (Class I → III), UKCA marking, incident reporting.</div></div>
+        <div class="entry"><div class="entry-name">Electricity at Work Regs 1989</div><div class="entry-desc">Safe maintenance of all electrical systems — mandates regular inspection and testing.</div></div>
+        <div class="entry"><div class="entry-name">PMS Regulations 2024</div><div class="entry-desc">Serious incident reporting within 15 days. In force June 2025.</div></div>
+        <div class="entry"><div class="entry-name">COSHH 2002</div><div class="entry-desc">Hazardous substance risk assessment and control in workshop and clinical environments.</div></div>
+        <div class="entry"><div class="entry-name">WEEE Regulations 2026</div><div class="entry-desc">Device disposal, battery recycling, forensic data wiping.</div></div>
+      </div>
+    </div>
+
+    <div class="key-card green">
+      <div class="key-card-label" style="color:var(--green);">📐 Key Standards</div>
+      <div class="entry-list">
+        <div class="entry"><div class="entry-name">BS EN 60601-1 (2026)</div><div class="entry-desc">Basic Safety and Essential Performance for all ME equipment.</div></div>
+        <div class="entry"><div class="entry-name">BS EN 62353</div><div class="entry-desc">Recurrent testing and test after repair — the EBME engineer's daily standard.</div></div>
+        <div class="entry"><div class="entry-name">ISO 14971:2019</div><div class="entry-desc">Risk management — hazard identification, risk evaluation, risk control.</div></div>
+        <div class="entry"><div class="entry-name">ISO 13485 (QMSR 2026)</div><div class="entry-desc">QMS for medical devices — underpins department accreditation.</div></div>
+        <div class="entry"><div class="entry-name">ISO 55001</div><div class="entry-desc">Asset management lifecycle — "value for money" across device lifespan.</div></div>
+      </div>
+    </div>
+
+    <div class="key-card teal">
+      <div class="key-card-label" style="color:var(--teal);">🏗️ Key Frameworks</div>
+      <div class="entry-list">
+        <div class="entry"><div class="entry-name">PSIRF (2026)</div><div class="entry-desc">Mandatory incident response — system learning, not blame.</div></div>
+        <div class="entry"><div class="entry-name">Martha's Rule</div><div class="entry-desc">24/7 Rapid Review escalation — in NHS Standard Contract 2026.</div></div>
+        <div class="entry"><div class="entry-name">DTAC</div><div class="entry-desc">Mandatory assessment for any technology with a "plug or a pixel".</div></div>
+        <div class="entry"><div class="entry-name">Scan for Safety (GL1)</div><div class="entry-desc">UDI barcode tracking of every device to every patient.</div></div>
+        <div class="entry"><div class="entry-name">Evergreen Supplier Framework</div><div class="entry-desc">Suppliers need Level 1 carbon reporting from April 2026.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="key-card blue">
+      <div class="key-card-label" style="color:var(--blue);">🏛️ Key Bodies</div>
+      <div class="entry-list">
+        <div class="entry"><div class="entry-name">MHRA</div><div class="entry-desc">UK market device safety; UKCA marking; Yellow Card / FSN system.</div></div>
+        <div class="entry"><div class="entry-name">CQC</div><div class="entry-desc">Inspects against Regulation 15 (Premises & Equipment) and Reg 12.</div></div>
+        <div class="entry"><div class="entry-name">HSSIB</div><div class="entry-desc">Systemic failure investigation — "air accident investigators" for healthcare.</div></div>
+        <div class="entry"><div class="entry-name">NHS England PST</div><div class="entry-desc">Issues NatPSAs — 48-hour response required for fatal device flaws.</div></div>
+      </div>
+    </div>
+
+    <div class="key-card violet">
+      <div class="key-card-label" style="color:var(--violet);">📘 Key Guidance</div>
+      <div class="entry-list">
+        <div class="entry"><div class="entry-name">Managing Medical Devices (MHRA)</div><div class="entry-desc">Primary document for EBME legal responsibilities — CQC Reg 15 compliance.</div></div>
+        <div class="entry"><div class="entry-name">HTM 06-01</div><div class="entry-desc">Electrical services "bible" — UPS for theatres, safe supply requirements.</div></div>
+        <div class="entry"><div class="entry-name">HTM 01-01</div><div class="entry-desc">Decontamination standards — protein detection below 5 µg/side.</div></div>
+        <div class="entry"><div class="entry-name">2025 Social Value Playbook</div><div class="entry-desc">10% of contract score based on Net Zero and community impact.</div></div>
+      </div>
+    </div>
+
+    <div class="key-card red">
+      <div class="key-card-label" style="color:var(--red);">📋 Key Policies</div>
+      <div class="entry-list">
+        <div class="entry"><div class="entry-name">PPM Policy</div><div class="entry-desc">All equipment maintained per BS EN 62353. 95% completion KPI.</div></div>
+        <div class="entry"><div class="entry-name">Duty of Candour (Reg 20)</div><div class="entry-desc">Open, honest, apologetic with patients when device failure causes harm.</div></div>
+        <div class="entry"><div class="entry-name">Medical Device Safety Policy</div><div class="entry-desc">Every Trust mandated to have an MDSO managing safety network.</div></div>
+        <div class="entry"><div class="entry-name">Forensic Data Wiping Policy</div><div class="entry-desc">All data wiped from devices at decommissioning — UK GDPR + WEEE.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tip-box" style="margin-top:20px;">
+    <strong>💡 Interview Power Topic — NMEMS:</strong> Mentioning the National Medical Equipment Management System (NMEMS) — the 2026 push to link local CMMS databases into a national data hub — signals you're thinking about the future of NHS medical device infrastructure, not just current compliance.
+  </div>
+</section>
+
+</div><!-- /main -->
+
+<footer>
+  <div>
+    <div class="footer-brand">EBME Clinical Engineering Hub · NHS Legal & Regulatory Framework · regulations/nhs-legal-framework.html</div>
+    <div style="font-size:11px;color:var(--ink4);margin-top:4px;font-family:var(--mono);">Source: NHS Legal Document 2025/26 · Updated for WEEE 2026, HPOA 2026, DUAA 2025, PMS Regs 2024</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px;">
+    <span class="pill pill-amber">UK MDR 2002</span>
+    <span class="pill pill-amber">MHRA</span>
+    <span class="pill pill-green">ISO 14971</span>
+    <span class="pill pill-green">BS EN 62353</span>
+    <span class="pill pill-teal">PSIRF</span>
+    <span class="pill pill-teal">DTAC</span>
+    <span class="pill pill-blue">HTM 06-01</span>
+    <span class="pill pill-blue">CQC Reg 15</span>
+    <span class="pill pill-violet">WEEE 2026</span>
+  </div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('.reg-section');
+  const navBtns  = document.querySelectorAll('.snav-btn');
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navBtns.forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.snav-btn[href="#${e.target.id}"]`);
+        if (btn) btn.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25, rootMargin: '-60px 0px -60% 0px' });
+
+  sections.forEach(s => obs.observe(s));
+
+  document.querySelectorAll('.snav-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      const t = document.querySelector(btn.getAttribute('href'));
+      if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+</script>
+</body>
+</html>
