@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patient Monitor — Clinical Engineering Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --panel: #111720;
+    --panel2: #161e2a;
+    --border: #1e2d3d;
+    --accent: #00d4ff;
+    --accent2: #00ff88;
+    --accent3: #ff6b35;
+    --warn: #ffb347;
+    --text: #c8d8e8;
+    --text2: #6a8099;
+    --red: #ff4466;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--panel);
+  }
+  .header-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    background: var(--accent);
+    color: #000;
+    padding: 2px 8px;
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+  .header h1 {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .header span { color: var(--text2); font-size: 12px; margin-left: auto; font-family: 'IBM Plex Mono', monospace; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    height: calc(100vh - 51px);
+  }
+
+  /* LEFT NAV */
+  .sidenav {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 12px 0;
+  }
+  .nav-section {
+    padding: 6px 16px 2px;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text2);
+    text-transform: uppercase;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .nav-item {
+    padding: 9px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: var(--panel2); }
+  .nav-item.active {
+    background: rgba(0,212,255,0.08);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+  .nav-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* MAIN CANVAS */
+  .main {
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .canvas-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .canvas-subtitle {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  /* SVG DIAGRAM */
+  .diagram-wrap {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 20px;
+    position: relative;
+  }
+  svg text { font-family: 'IBM Plex Mono', monospace; }
+
+  @keyframes flowDots {
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -60; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  @keyframes tracedraw {
+    0% { stroke-dashoffset: 900; }
+    100% { stroke-dashoffset: 0; }
+  }
+  @keyframes cuffPulse {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(1.4); }
+  }
+  .flow-anim { animation: flowDots 1.2s linear infinite; }
+  .pulse-anim { animation: pulse 2s ease-in-out infinite; }
+  .trace-anim { animation: tracedraw 3.2s linear infinite; }
+  .cuff-anim { animation: cuffPulse 1s ease-in-out infinite; transform-origin: bottom; }
+
+  /* INFO CARDS */
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+  }
+  .card-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .card-value {
+    font-size: 22px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+  }
+  .card-unit { font-size: 12px; color: var(--text2); margin-left: 4px; }
+  .card-desc { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+  /* ALARM TABLE */
+  .alarm-table { width: 100%; border-collapse: collapse; }
+  .alarm-table th {
+    text-align: left;
+    padding: 6px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+  }
+  .alarm-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(30,45,61,0.5);
+    font-size: 11px;
+  }
+  .alarm-table tr:hover td { background: var(--panel2); }
+  .tag {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .tag-high { background: rgba(255,68,102,0.2); color: var(--red); border: 1px solid var(--red); }
+  .tag-med { background: rgba(255,179,71,0.15); color: var(--warn); border: 1px solid var(--warn); }
+  .tag-low { background: rgba(0,212,255,0.1); color: var(--accent); border: 1px solid var(--accent); }
+  .tag-ok { background: rgba(0,255,136,0.1); color: var(--accent2); border: 1px solid var(--accent2); }
+
+  /* RIGHT PANEL */
+  .infopanel {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .info-section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(30,45,61,0.5);
+    gap: 8px;
+  }
+  .info-key { color: var(--text2); font-size: 11px; flex-shrink: 0; }
+  .info-val { color: var(--text); font-size: 11px; text-align: right; font-family: 'IBM Plex Mono', monospace; }
+
+  .fault-block {
+    background: rgba(255,68,102,0.05);
+    border: 1px solid rgba(255,68,102,0.3);
+    border-radius: 3px;
+    padding: 10px;
+  }
+  .fault-title {
+    color: var(--red);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .fault-item {
+    font-size: 11px;
+    color: var(--text2);
+    padding: 3px 0;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .fault-item::before { content: '→'; color: var(--red); flex-shrink: 0; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* COMPONENT LIST */
+  .component-list { display: flex; flex-direction: column; gap: 8px; }
+  .component-item {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .component-item:hover { border-color: var(--accent); }
+  .comp-name {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .comp-desc { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+  /* PPM SCHEDULE */
+  .ppm-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(30,45,61,0.5);
+    align-items: center;
+  }
+  .ppm-task { font-size: 11px; }
+  .ppm-freq { font-size: 10px; color: var(--text2); font-family: 'IBM Plex Mono', monospace; }
+
+  .scrollbar-thin::-webkit-scrollbar { width: 4px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* HIDDEN SECTIONS */
+  .section { display: none; }
+  .section.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-badge">EBME</div>
+  <h1>Patient Monitor — Clinical Engineering Reference</h1>
+  <span>IEC 60601-2-27 / -2-30 / -2-34 &nbsp;|&nbsp; Multi-Parameter Bedside Monitor</span>
+</div>
+
+<div class="layout">
+
+  <!-- SIDENAV -->
+  <div class="sidenav scrollbar-thin">
+    <div class="nav-section">Physiological Parameters</div>
+    <div class="nav-item active" data-section="ecg" onclick="showSection('ecg', this)">
+      <div class="nav-dot" style="background:var(--accent)"></div> ECG Acquisition
+    </div>
+    <div class="nav-item" data-section="spo2" onclick="showSection('spo2', this)">
+      <div class="nav-dot" style="background:var(--accent2)"></div> SpO₂ / Pulse Ox
+    </div>
+    <div class="nav-item" data-section="nibp" onclick="showSection('nibp', this)">
+      <div class="nav-dot" style="background:var(--warn)"></div> NIBP (Oscillometric)
+    </div>
+    <div class="nav-item" data-section="ibp-temp" onclick="showSection('ibp-temp', this)">
+      <div class="nav-dot" style="background:#aa88ff"></div> IBP &amp; Temperature
+    </div>
+    <div class="nav-section" style="margin-top:8px">System Architecture</div>
+    <div class="nav-item" data-section="electronics" onclick="showSection('electronics', this)">
+      <div class="nav-dot" style="background:var(--accent)"></div> Electronics &amp; Control
+    </div>
+    <div class="nav-item" data-section="sensors" onclick="showSection('sensors', this)">
+      <div class="nav-dot" style="background:#aa88ff"></div> Sensor / Module Array
+    </div>
+    <div class="nav-section" style="margin-top:8px">Safety Systems</div>
+    <div class="nav-item" data-section="alarms" onclick="showSection('alarms', this)">
+      <div class="nav-dot" style="background:var(--red)"></div> Alarm Logic
+    </div>
+    <div class="nav-item" data-section="artifact" onclick="showSection('artifact', this)">
+      <div class="nav-dot" style="background:var(--accent3)"></div> Artifact &amp; Signal Quality
+    </div>
+    <div class="nav-section" style="margin-top:8px">Servicing</div>
+    <div class="nav-item" data-section="ppm" onclick="showSection('ppm', this)">
+      <div class="nav-dot" style="background:var(--accent2)"></div> PPM Schedule
+    </div>
+    <div class="nav-item" data-section="faults" onclick="showSection('faults', this)">
+      <div class="nav-dot" style="background:var(--red)"></div> Fault Diagnosis
+    </div>
+    <div class="nav-item" data-section="accuracy" onclick="showSection('accuracy', this)">
+      <div class="nav-dot" style="background:var(--accent)"></div> Accuracy &amp; Testing
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main scrollbar-thin">
+
+    <!-- ECG -->
+    <div id="sec-ecg" class="section visible">
+      <div class="canvas-title">ECG Acquisition</div>
+      <div class="canvas-subtitle">Lead System &amp; Signal Conditioning Chain</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 300" width="100%" style="max-height:300px">
+          <defs>
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="700" height="300" fill="url(#grid)"/>
+
+          <!-- Torso outline with electrodes -->
+          <ellipse cx="110" cy="150" rx="55" ry="90" fill="none" stroke="#6a8099" stroke-width="1.5"/>
+          <circle cx="90" cy="80" r="6" fill="#00d4ff"/>
+          <text x="90" y="65" fill="#00d4ff" font-size="8" text-anchor="middle">RA</text>
+          <circle cx="130" cy="80" r="6" fill="#00ff88"/>
+          <text x="130" y="65" fill="#00ff88" font-size="8" text-anchor="middle">LA</text>
+          <circle cx="90" cy="220" r="6" fill="#ff6b35"/>
+          <text x="90" y="238" fill="#ff6b35" font-size="8" text-anchor="middle">RL</text>
+          <circle cx="130" cy="220" r="6" fill="#ffb347"/>
+          <text x="130" y="238" fill="#ffb347" font-size="8" text-anchor="middle">LL</text>
+          <circle cx="110" cy="150" r="6" fill="#aa88ff"/>
+          <text x="110" y="145" fill="#aa88ff" font-size="8" text-anchor="middle">V</text>
+
+          <!-- lead wires -->
+          <path d="M90,80 Q160,60 220,110" fill="none" stroke="#00d4ff" stroke-width="1" stroke-dasharray="3,2"/>
+          <path d="M130,80 Q170,80 220,120" fill="none" stroke="#00ff88" stroke-width="1" stroke-dasharray="3,2"/>
+          <path d="M90,220 Q170,200 220,140" fill="none" stroke="#ff6b35" stroke-width="1" stroke-dasharray="3,2"/>
+          <path d="M130,220 Q180,190 220,150" fill="none" stroke="#ffb347" stroke-width="1" stroke-dasharray="3,2"/>
+          <path d="M110,150 Q170,140 220,130" fill="none" stroke="#aa88ff" stroke-width="1" stroke-dasharray="3,2"/>
+
+          <!-- Patient cable / lead select -->
+          <rect x="220" y="95" width="70" height="70" rx="4" fill="#111720" stroke="#6a8099" stroke-width="1.5"/>
+          <text x="255" y="120" fill="#c8d8e8" font-size="8" text-anchor="middle">LEAD</text>
+          <text x="255" y="132" fill="#c8d8e8" font-size="8" text-anchor="middle">SELECT</text>
+          <text x="255" y="147" fill="#6a8099" font-size="8" text-anchor="middle">RLD drive</text>
+
+          <!-- Instrumentation amp -->
+          <rect x="320" y="90" width="90" height="80" rx="4" fill="#111720" stroke="#00d4ff" stroke-width="1.5"/>
+          <text x="365" y="115" fill="#00d4ff" font-size="9" text-anchor="middle">INSTRUMENTATION</text>
+          <text x="365" y="128" fill="#00d4ff" font-size="9" text-anchor="middle">AMPLIFIER</text>
+          <text x="365" y="145" fill="#6a8099" font-size="8" text-anchor="middle">CMRR &gt;100 dB</text>
+          <text x="365" y="157" fill="#6a8099" font-size="8" text-anchor="middle">gain ~1000×</text>
+
+          <!-- Filters -->
+          <rect x="440" y="90" width="90" height="80" rx="4" fill="#111720" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="485" y="112" fill="#ffb347" font-size="9" text-anchor="middle">FILTER BANK</text>
+          <text x="485" y="128" fill="#6a8099" font-size="8" text-anchor="middle">HPF 0.05/0.5 Hz</text>
+          <text x="485" y="140" fill="#6a8099" font-size="8" text-anchor="middle">LPF 40/150 Hz</text>
+          <text x="485" y="152" fill="#6a8099" font-size="8" text-anchor="middle">notch 50/60 Hz</text>
+
+          <!-- ADC/DSP -->
+          <rect x="560" y="90" width="110" height="80" rx="4" fill="#111720" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="615" y="112" fill="#00ff88" font-size="9" text-anchor="middle">ADC + DSP</text>
+          <text x="615" y="128" fill="#6a8099" font-size="8" text-anchor="middle">QRS detection</text>
+          <text x="615" y="140" fill="#6a8099" font-size="8" text-anchor="middle">HR averaging</text>
+          <text x="615" y="152" fill="#6a8099" font-size="8" text-anchor="middle">arrhythmia analysis</text>
+
+          <!-- connecting lines -->
+          <line x1="290" y1="130" x2="320" y2="130" stroke="#c8d8e8" stroke-width="1.5" marker-end="none"/>
+          <line x1="410" y1="130" x2="440" y2="130" stroke="#c8d8e8" stroke-width="1.5"/>
+          <line x1="530" y1="130" x2="560" y2="130" stroke="#c8d8e8" stroke-width="1.5"/>
+
+          <!-- ECG trace output -->
+          <rect x="60" y="210" width="610" height="70" rx="3" fill="#0d1319" stroke="#1e2d3d" stroke-width="1"/>
+          <text x="70" y="225" fill="#6a8099" font-size="8">Lead II output</text>
+          <path d="M70,255 L120,255 L128,255 L133,235 L138,270 L143,245 L148,255 L200,255
+                   L220,255 L228,255 L233,235 L238,270 L243,245 L248,255 L300,255
+                   L320,255 L328,255 L333,235 L338,270 L343,245 L348,255 L400,255
+                   L420,255 L428,255 L433,235 L438,270 L443,245 L448,255 L500,255
+                   L520,255 L528,255 L533,235 L538,270 L543,245 L548,255 L600,255
+                   L620,255 L628,255 L633,235 L638,270 L643,245 L648,255 L660,255"
+                fill="none" stroke="#00ff88" stroke-width="1.5" stroke-dasharray="900" class="trace-anim"/>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Lead Configuration</div>
+          <div style="font-size:16px;font-weight:600;color:var(--accent)">3, 5, or 10-lead</div>
+          <div class="card-desc">3-lead gives single monitoring lead; 5-lead adds precordial (V); 10-lead derives full 12-lead diagnostic ECG</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Input Impedance</div>
+          <div class="card-value">&gt;2.5<span class="card-unit">MΩ</span></div>
+          <div class="card-desc">High impedance prevents signal loading from skin-electrode interface</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Defibrillator Protection</div>
+          <div style="font-size:16px;font-weight:600;color:var(--warn)">≤5 s Recovery</div>
+          <div class="card-desc">Front-end must survive 5 kV defib discharge and recover trace within 5 seconds per IEC 60601-2-27</div>
+        </div>
+        <div class="card">
+          <div class="card-label">HR Averaging</div>
+          <div class="card-value">±10%<span class="card-unit">or 5 bpm</span></div>
+          <div class="card-desc">Whichever is greater, over the clinically relevant range per IEC 60601-2-27</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPO2 -->
+    <div id="sec-spo2" class="section">
+      <div class="canvas-title">SpO₂ / Pulse Oximetry</div>
+      <div class="canvas-subtitle">Photoplethysmographic Measurement Pathway</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 260" width="100%" style="max-height:260px">
+          <defs>
+            <pattern id="grid2" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="700" height="260" fill="url(#grid2)"/>
+
+          <!-- finger probe cross-section -->
+          <ellipse cx="120" cy="130" rx="70" ry="45" fill="rgba(255,68,102,0.06)" stroke="#6a8099" stroke-width="1.5"/>
+          <text x="120" y="60" fill="#6a8099" font-size="9" text-anchor="middle">DIGIT (capillary bed)</text>
+
+          <!-- LEDs -->
+          <circle cx="70" cy="100" r="8" fill="#ff4466" class="pulse-anim"/>
+          <text x="70" y="85" fill="#ff4466" font-size="8" text-anchor="middle">RED</text>
+          <text x="70" y="128" fill="#6a8099" font-size="7" text-anchor="middle">660 nm</text>
+          <circle cx="70" cy="160" r="8" fill="#aa2266" class="pulse-anim"/>
+          <text x="70" y="180" fill="#aa2266" font-size="8" text-anchor="middle">IR</text>
+          <text x="70" y="192" fill="#6a8099" font-size="7" text-anchor="middle">940 nm</text>
+
+          <!-- light path -->
+          <path d="M78,100 L165,128" stroke="#ff4466" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>
+          <path d="M78,160 L165,132" stroke="#aa2266" stroke-width="1" stroke-dasharray="2,2" opacity="0.6"/>
+
+          <!-- photodiode -->
+          <rect x="165" y="112" width="24" height="32" rx="3" fill="#111720" stroke="#00d4ff" stroke-width="1.5"/>
+          <text x="177" y="155" fill="#00d4ff" font-size="8" text-anchor="middle">PD</text>
+
+          <!-- transimpedance amp -->
+          <rect x="230" y="95" width="110" height="70" rx="4" fill="#111720" stroke="#00d4ff" stroke-width="1.5"/>
+          <text x="285" y="120" fill="#00d4ff" font-size="9" text-anchor="middle">TRANSIMPEDANCE</text>
+          <text x="285" y="133" fill="#00d4ff" font-size="9" text-anchor="middle">AMPLIFIER</text>
+          <text x="285" y="150" fill="#6a8099" font-size="8" text-anchor="middle">time-multiplexed R/IR</text>
+
+          <line x1="189" y1="128" x2="230" y2="128" stroke="#c8d8e8" stroke-width="1.5"/>
+
+          <!-- AC/DC separation -->
+          <rect x="380" y="95" width="110" height="70" rx="4" fill="#111720" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="435" y="118" fill="#ffb347" font-size="9" text-anchor="middle">AC/DC</text>
+          <text x="435" y="131" fill="#ffb347" font-size="9" text-anchor="middle">SEPARATION</text>
+          <text x="435" y="148" fill="#6a8099" font-size="8" text-anchor="middle">pulsatile vs baseline</text>
+          <line x1="340" y1="128" x2="380" y2="128" stroke="#c8d8e8" stroke-width="1.5"/>
+
+          <!-- Ratio of ratios -->
+          <rect x="530" y="90" width="140" height="80" rx="4" fill="#111720" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="600" y="112" fill="#00ff88" font-size="9" text-anchor="middle">RATIO-OF-RATIOS</text>
+          <text x="600" y="130" fill="#c8d8e8" font-size="11" text-anchor="middle" font-weight="600">R = (AC/DC)ᵣₑ𝒹 ÷ (AC/DC)ᵢᵣ</text>
+          <text x="600" y="148" fill="#6a8099" font-size="8" text-anchor="middle">mapped to SpO₂ via</text>
+          <text x="600" y="160" fill="#6a8099" font-size="8" text-anchor="middle">empirical calibration curve</text>
+          <line x1="490" y1="128" x2="530" y2="128" stroke="#c8d8e8" stroke-width="1.5"/>
+
+          <!-- pleth waveform -->
+          <rect x="60" y="200" width="610" height="40" rx="3" fill="#0d1319" stroke="#1e2d3d" stroke-width="1"/>
+          <text x="70" y="212" fill="#6a8099" font-size="8">Plethysmographic waveform</text>
+          <path d="M70,228 C90,228 95,210 110,228 C130,228 135,210 150,228
+                   C170,228 175,210 190,228 C210,228 215,210 230,228
+                   C250,228 255,210 270,228 C290,228 295,210 310,228
+                   C330,228 335,210 350,228 C370,228 375,210 390,228
+                   C410,228 415,210 430,228 C450,228 455,210 470,228
+                   C490,228 495,210 510,228 C530,228 535,210 550,228
+                   C570,228 575,210 590,228 C610,228 615,210 630,228 L660,228"
+                fill="none" stroke="#ff4466" stroke-width="1.5"/>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Wavelengths</div>
+          <div style="font-size:16px;font-weight:600;color:var(--accent)">660 nm / 940 nm</div>
+          <div class="card-desc">Red and infrared LEDs pulsed sequentially (~500 Hz) with a dark period to subtract ambient light</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Accuracy (Arms)</div>
+          <div class="card-value">±2–3<span class="card-unit">% (70–100% SpO₂)</span></div>
+          <div class="card-desc">Validated against arterial co-oximetry (SaO₂) in controlled desaturation studies — required by IEC 80601-2-61</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Averaging Time</div>
+          <div class="card-value">4–12<span class="card-unit">seconds</span></div>
+          <div class="card-desc">Trade-off between response speed and motion-artifact rejection; shorter for neonatal/OR use</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Perfusion Index</div>
+          <div style="font-size:16px;font-weight:600;color:var(--warn)">AC/DC Ratio ×100</div>
+          <div class="card-desc">Low PI (&lt;0.3%) indicates poor peripheral perfusion — reading reliability degrades below this threshold</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NIBP -->
+    <div id="sec-nibp" class="section">
+      <div class="canvas-title">NIBP — Oscillometric Method</div>
+      <div class="canvas-subtitle">Cuff Inflation/Deflation &amp; Envelope Analysis</div>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 260" width="100%" style="max-height:260px">
+          <defs>
+            <pattern id="grid3" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="700" height="260" fill="url(#grid3)"/>
+
+          <!-- arm + cuff -->
+          <rect x="40" y="90" width="120" height="70" rx="30" fill="none" stroke="#6a8099" stroke-width="1.5"/>
+          <rect x="50" y="80" width="100" height="90" rx="16" fill="rgba(0,212,255,0.06)" stroke="#00d4ff" stroke-width="1.5" class="cuff-anim"/>
+          <text x="100" y="65" fill="#00d4ff" font-size="9" text-anchor="middle">CUFF (BRACHIAL)</text>
+
+          <!-- hose -->
+          <path d="M150,125 L210,125" stroke="#c8d8e8" stroke-width="3" stroke-linecap="round"/>
+
+          <!-- pump -->
+          <rect x="210" y="70" width="80" height="55" rx="4" fill="#111720" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="250" y="93" fill="#ffb347" font-size="9" text-anchor="middle">PUMP</text>
+          <text x="250" y="106" fill="#6a8099" font-size="8" text-anchor="middle">inflation</text>
+          <line x1="250" y1="125" x2="250" y2="145" stroke="#ffb347" stroke-width="1.5"/>
+
+          <!-- valve -->
+          <rect x="210" y="145" width="80" height="45" rx="4" fill="#111720" stroke="#ff6b35" stroke-width="1.5"/>
+          <text x="250" y="165" fill="#ff6b35" font-size="9" text-anchor="middle">DEFLATION</text>
+          <text x="250" y="178" fill="#ff6b35" font-size="9" text-anchor="middle">VALVE</text>
+
+          <!-- pressure transducer -->
+          <rect x="320" y="95" width="110" height="65" rx="4" fill="#111720" stroke="#00d4ff" stroke-width="1.5"/>
+          <text x="375" y="118" fill="#00d4ff" font-size="9" text-anchor="middle">PRESSURE</text>
+          <text x="375" y="131" fill="#00d4ff" font-size="9" text-anchor="middle">TRANSDUCER</text>
+          <text x="375" y="148" fill="#6a8099" font-size="8" text-anchor="middle">detects oscillations</text>
+          <line x1="290" y1="125" x2="320" y2="125" stroke="#c8d8e8" stroke-width="1.5"/>
+
+          <!-- algorithm box -->
+          <rect x="460" y="90" width="200" height="75" rx="4" fill="#111720" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="560" y="112" fill="#00ff88" font-size="9" text-anchor="middle">OSCILLOMETRIC ALGORITHM</text>
+          <text x="560" y="128" fill="#6a8099" font-size="8" text-anchor="middle">MAP = max oscillation amplitude</text>
+          <text x="560" y="140" fill="#6a8099" font-size="8" text-anchor="middle">SYS/DIA = empirical ratio</text>
+          <text x="560" y="152" fill="#6a8099" font-size="8" text-anchor="middle">of envelope (proprietary)</text>
+          <line x1="430" y1="128" x2="460" y2="128" stroke="#c8d8e8" stroke-width="1.5"/>
+
+          <!-- Oscillation envelope graph -->
+          <rect x="60" y="195" width="610" height="55" rx="3" fill="#0d1319" stroke="#1e2d3d" stroke-width="1"/>
+          <text x="70" y="207" fill="#6a8099" font-size="8">Cuff pressure decay with oscillation envelope</text>
+          <path d="M70,240 Q150,215 250,213 Q300,212 340,235 Q380,212 420,213 Q520,215 660,238"
+                fill="none" stroke="#6a8099" stroke-width="1" stroke-dasharray="4,3"/>
+          <path d="M100,238 l4,-4 l4,8 l4,-14 l4,18 l4,-10 l4,4
+                   M140,236 l4,-6 l4,12 l4,-20 l4,26 l4,-14 l4,6
+                   M180,234 l4,-9 l4,18 l4,-30 l4,38 l4,-20 l4,9
+                   M220,232 l4,-11 l4,22 l4,-36 l4,46 l4,-24 l4,11
+                   M260,230 l4,-8 l4,16 l4,-26 l4,32 l4,-16 l4,8
+                   M300,232 l4,-5 l4,10 l4,-16 l4,20 l4,-10 l4,5"
+                fill="none" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="240" y="222" fill="#00ff88" font-size="8" text-anchor="middle">peak amplitude ≈ MAP</text>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Primary Measurement</div>
+          <div style="font-size:16px;font-weight:600;color:var(--accent)">MAP (directly measured)</div>
+          <div class="card-desc">Systolic and diastolic are derived using proprietary amplitude-ratio algorithms, not measured directly</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Accuracy Standard</div>
+          <div class="card-value">±5<span class="card-unit">mmHg mean</span></div>
+          <div class="card-desc">SD ≤8 mmHg vs. auscultatory reference, per ISO 81060-2 validation protocol</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Cuff Sizing</div>
+          <div style="font-size:16px;font-weight:600;color:var(--warn)">Width = 40% Limb Circ.</div>
+          <div class="card-desc">Incorrect cuff size is the single most common cause of clinically inaccurate NIBP readings</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Overpressure Limit</div>
+          <div class="card-value">300<span class="card-unit">mmHg (adult)</span></div>
+          <div class="card-desc">Independent hardware pressure-relief safety valve, separate from software limit, per IEC 80601-2-30</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- IBP & TEMP -->
+    <div id="sec-ibp-temp" class="section">
+      <div class="canvas-title">Invasive Pressure &amp; Temperature</div>
+      <div class="canvas-subtitle">Strain-Gauge Transducers &amp; Thermistor Probes</div>
+
+      <div class="component-list">
+        <div class="component-item">
+          <div class="comp-name">Disposable IBP Transducer <span class="tag tag-high">CALIBRATED SENSOR</span></div>
+          <div class="comp-desc">Wheatstone bridge strain gauge referenced to atmosphere at the phlebostatic axis ("zeroing"). Sensitivity standardised at 5 µV/V/mmHg across manufacturers. Used for arterial, CVP, ICP, and PA pressure lines.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Pressure Amplifier Module <span class="tag tag-med">SIGNAL CONDITIONING</span></div>
+          <div class="comp-desc">Bridge excitation voltage, instrumentation amp, and low-pass filter (~40 Hz) to preserve arterial waveform morphology while rejecting catheter whip/resonance artifact.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Zero/Calibration Reference <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Verified with a calibrated mercury or digital manometer at PPM. Zero drift directly biases every subsequent clinical decision (e.g., vasopressor titration) — a leading root cause in reported incidents.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Skin/Core Temperature Probe <span class="tag tag-low">MONITORING</span></div>
+          <div class="comp-desc">NTC thermistor, typically YSI 400-series compatible. Two-channel input allows core-peripheral gradient calculation, used as a perfusion indicator in paediatric and critical care.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Isolation Barrier (Patient Applied Parts) <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Optical or transformer isolation between each patient-connected module and mains-referenced electronics. Verified via patient leakage current test (IEC 60601-1) at every PPM.</div>
+        </div>
+      </div>
+
+      <div class="card-grid" style="margin-top:12px">
+        <div class="card">
+          <div class="card-label">IBP Accuracy</div>
+          <div class="card-value">±2<span class="card-unit">mmHg or ±2%</span></div>
+          <div class="card-desc">Whichever is greater, across the 0–300 mmHg clinical range</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Temperature Accuracy</div>
+          <div class="card-value">±0.1<span class="card-unit">°C</span></div>
+          <div class="card-desc">Over the clinical range 25–45°C, per IEC 80601-2-56</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ELECTRONICS -->
+    <div id="sec-electronics" class="section">
+      <div class="canvas-title">Electronics &amp; Control Architecture</div>
+      <div class="canvas-subtitle">Modular Parameter Bus &amp; Central Processing</div>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 300" width="100%" style="max-height:300px">
+          <defs>
+            <pattern id="grid4" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="700" height="300" fill="url(#grid4)"/>
+
+          <!-- Main CPU -->
+          <rect x="270" y="110" width="160" height="100" rx="4" fill="#161e2a" stroke="#00d4ff" stroke-width="2"/>
+          <text x="350" y="132" fill="#00d4ff" font-size="10" text-anchor="middle" letter-spacing="1">MAIN CPU</text>
+          <text x="350" y="147" fill="#c8d8e8" font-size="8" text-anchor="middle">ARM Cortex-A</text>
+          <text x="350" y="160" fill="#6a8099" font-size="8" text-anchor="middle">trend storage</text>
+          <text x="350" y="172" fill="#6a8099" font-size="8" text-anchor="middle">arrhythmia analysis</text>
+          <text x="350" y="184" fill="#6a8099" font-size="8" text-anchor="middle">network / HL7</text>
+
+          <!-- Safety/alarm CPU -->
+          <rect x="270" y="30" width="160" height="60" rx="4" fill="#161e2a" stroke="#ff4466" stroke-width="2"/>
+          <text x="350" y="52" fill="#ff4466" font-size="10" text-anchor="middle">ALARM CPU</text>
+          <text x="350" y="66" fill="#c8d8e8" font-size="8" text-anchor="middle">watchdog · IEC 60601-1-8</text>
+          <text x="350" y="80" fill="#6a8099" font-size="8" text-anchor="middle">independent audio path</text>
+          <line x1="350" y1="90" x2="350" y2="110" stroke="#ff4466" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+          <!-- Parameter modules -->
+          <rect x="60" y="100" width="140" height="120" rx="3" fill="#161e2a" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="130" y="122" fill="#ffb347" font-size="9" text-anchor="middle">PARAMETER MODULES</text>
+          <text x="130" y="138" fill="#6a8099" font-size="8" text-anchor="middle">ECG / SpO₂</text>
+          <text x="130" y="150" fill="#6a8099" font-size="8" text-anchor="middle">NIBP / IBP</text>
+          <text x="130" y="162" fill="#6a8099" font-size="8" text-anchor="middle">Temp / CO₂ / CO</text>
+          <text x="130" y="178" fill="#6a8099" font-size="8" text-anchor="middle">hot-swappable, plug-in</text>
+          <text x="130" y="192" fill="#6a8099" font-size="8" text-anchor="middle">docking chassis</text>
+          <line x1="200" y1="140" x2="270" y2="150" stroke="#ffb347" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+          <!-- Comms / network module -->
+          <rect x="500" y="110" width="130" height="80" rx="3" fill="#161e2a" stroke="#aa88ff" stroke-width="1.5"/>
+          <text x="565" y="133" fill="#aa88ff" font-size="9" text-anchor="middle">CENTRAL STATION</text>
+          <text x="565" y="146" fill="#aa88ff" font-size="9" text-anchor="middle">LINK</text>
+          <text x="565" y="162" fill="#6a8099" font-size="8" text-anchor="middle">wired / WMTS / Wi-Fi</text>
+          <text x="565" y="175" fill="#6a8099" font-size="8" text-anchor="middle">EMR interface (HL7/FHIR)</text>
+          <line x1="500" y1="150" x2="430" y2="155" stroke="#aa88ff" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+          <!-- Power supply -->
+          <rect x="80" y="240" width="120" height="45" rx="3" fill="#161e2a" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="140" y="260" fill="#00ff88" font-size="9" text-anchor="middle">POWER MGMT</text>
+          <text x="140" y="273" fill="#6a8099" font-size="8" text-anchor="middle">AC/DC + battery, IEC 60601-1</text>
+          <line x1="140" y1="240" x2="140" y2="220" stroke="#00ff88" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- Display -->
+          <rect x="500" y="240" width="130" height="45" rx="3" fill="#161e2a" stroke="#c8d8e8" stroke-width="1.5"/>
+          <text x="565" y="260" fill="#c8d8e8" font-size="9" text-anchor="middle">UI / DISPLAY</text>
+          <text x="565" y="273" fill="#6a8099" font-size="8" text-anchor="middle">colour TFT, waveform + trend</text>
+          <line x1="565" y1="240" x2="430" y2="210" stroke="#c8d8e8" stroke-width="1" stroke-dasharray="3,3"/>
+
+          <!-- Alarm output -->
+          <rect x="270" y="240" width="160" height="45" rx="3" fill="#161e2a" stroke="#ff4466" stroke-width="1"/>
+          <text x="350" y="260" fill="#ff4466" font-size="9" text-anchor="middle">ALARM OUTPUT</text>
+          <text x="350" y="273" fill="#6a8099" font-size="8" text-anchor="middle">visual · audible · nurse-call relay</text>
+          <line x1="350" y1="240" x2="350" y2="210" stroke="#ff4466" stroke-width="1" stroke-dasharray="3,3"/>
+        </svg>
+      </div>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-label">Architecture</div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent)">Modular Parameter Bus</div>
+          <div class="card-desc">Plug-in parameter modules communicate over an internal serial bus; enables per-department configuration (ICU vs. ward vs. theatre).</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Safety Architecture</div>
+          <div style="font-size:14px;font-weight:600;color:var(--red)">Dual-CPU Alarm Path</div>
+          <div class="card-desc">Alarm CPU is independent of main CPU trend/display processing — a main CPU crash must not silence an alarm.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Power Classes</div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent2)">Class I + Internal Battery</div>
+          <div class="card-desc">Mains + Li-ion battery for transport monitoring continuity. Patient leakage &lt;10 µA (CF applied parts for ECG/IBP).</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Software Class</div>
+          <div style="font-size:14px;font-weight:600;color:var(--warn)">IEC 62304 Class C</div>
+          <div class="card-desc">Arrhythmia and alarm-generation logic is highest risk class. Firmware version must be recorded against asset record.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENSORS -->
+    <div id="sec-sensors" class="section">
+      <div class="canvas-title">Sensor / Module Array</div>
+      <div class="canvas-subtitle">Patient-Connected Transducers &amp; Interlocks</div>
+      <div class="component-list">
+        <div class="component-item">
+          <div class="comp-name">ECG Electrodes &amp; Lead Wires <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Ag/AgCl disposable electrodes. High skin-electrode impedance (dried gel, poor prep) is the leading cause of noisy trace and false arrhythmia calls. Lead wires tested for continuity and defib-proof insulation at PPM.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">SpO₂ Probe (Finger/Ear/Neonatal) <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">LED/photodiode pair, reusable or single-patient-use. Reusable probes degrade with cleaning cycles — verify against a calibrated tester or functional tester at PPM. Cross-manufacturer probes are not always compatible.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">NIBP Pump/Valve Assembly <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Diaphragm pump + solenoid deflation valve. Verify inflation rate, deflation rate, and independent hardware over-pressure cutoff annually with a calibrated pressure simulator/manometer.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">IBP Transducer Interface <span class="tag tag-high">SAFETY CRITICAL</span></div>
+          <div class="comp-desc">Standardised 5 µV/V/mmHg bridge input. Verify amplifier gain and zero offset with a calibrated pressure simulator at PPM; check patient isolation.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Temperature Probe Input <span class="tag tag-med">MONITORING</span></div>
+          <div class="comp-desc">YSI 400-compatible thermistor input. Verify against a precision resistance decade box or calibrated probe simulator.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Nurse-Call Relay Output <span class="tag tag-med">INTERLOCK</span></div>
+          <div class="comp-desc">Dry contact relay to ward call system. Verify relay actuation on alarm condition during PPM — a common silent-failure point after ward call-system changes.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALARMS -->
+    <div id="sec-alarms" class="section">
+      <div class="canvas-title">Alarm Logic</div>
+      <div class="canvas-subtitle">IEC 60601-1-8 Physiological Alarm Classification</div>
+      <div class="diagram-wrap" style="padding:12px">
+        <table class="alarm-table">
+          <thead>
+            <tr>
+              <th>Alarm</th>
+              <th>Priority</th>
+              <th>Trigger Condition</th>
+              <th>Monitor Response</th>
+              <th>Service Check</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Asystole</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>No QRS detected &gt;4 s</td>
+              <td>Immediate audible/visual, non-latching</td>
+              <td>Simulator-driven asystole test at PPM</td>
+            </tr>
+            <tr>
+              <td>V-Fib / V-Tach</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Arrhythmia algorithm classification</td>
+              <td>Immediate audible/visual</td>
+              <td>Validate against ANSI/AAMI EC13 arrhythmia test waveforms</td>
+            </tr>
+            <tr>
+              <td>SpO₂ Desaturation</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Below user-set threshold</td>
+              <td>Audible/visual alarm</td>
+              <td>Functional tester verification of alarm threshold</td>
+            </tr>
+            <tr>
+              <td>NIBP Out of Range</td>
+              <td><span class="tag tag-med">MED</span></td>
+              <td>SYS/DIA/MAP beyond limits</td>
+              <td>Audible/visual alarm</td>
+              <td>Simulator-based limit test</td>
+            </tr>
+            <tr>
+              <td>Lead Off / Probe Off</td>
+              <td><span class="tag tag-med">MED</span></td>
+              <td>Impedance out of range on ECG/SpO₂ input</td>
+              <td>Technical alarm, distinct tone</td>
+              <td>Verify distinguishable from physiological alarm tone</td>
+            </tr>
+            <tr>
+              <td>IBP Line Disconnect</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>Pressure trace flat-lines / zero</td>
+              <td>Immediate alarm — exsanguination risk</td>
+              <td>Verify with simulator disconnection test</td>
+            </tr>
+            <tr>
+              <td>Apnoea (Respiration)</td>
+              <td><span class="tag tag-high">HIGH</span></td>
+              <td>No breath detected &gt;20 s (adult)</td>
+              <td>Audible/visual alarm</td>
+              <td>Verify impedance pneumography threshold at PPM</td>
+            </tr>
+            <tr>
+              <td>Battery Low</td>
+              <td><span class="tag tag-med">MED</span></td>
+              <td>Battery &lt;20% capacity</td>
+              <td>Alert; continue on mains</td>
+              <td>Battery capacity/load test</td>
+            </tr>
+            <tr>
+              <td>Alarm Paused / Silenced</td>
+              <td><span class="tag tag-low">LOW</span></td>
+              <td>User-initiated, time-limited</td>
+              <td>Visual countdown indicator; auto-resume</td>
+              <td>Verify max pause duration per Trust policy (typ. ≤2 min)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ARTIFACT -->
+    <div id="sec-artifact" class="section">
+      <div class="canvas-title">Artifact &amp; Signal Quality</div>
+      <div class="canvas-subtitle">Common Interference Patterns</div>
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 700 220" width="100%" style="max-height:220px">
+          <defs>
+            <pattern id="grid5" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/>
+            </pattern>
+          </defs>
+          <rect width="700" height="220" fill="url(#grid5)"/>
+          <text x="20" y="30" fill="#6a8099" font-size="9">Clean ECG</text>
+          <path d="M20,50 L60,50 L66,50 L70,35 L74,65 L78,45 L82,50 L160,50
+                   L166,50 L170,35 L174,65 L178,45 L182,50 L260,50
+                   L266,50 L270,35 L274,65 L278,45 L282,50 L360,50" fill="none" stroke="#00ff88" stroke-width="1.5"/>
+
+          <text x="400" y="30" fill="#6a8099" font-size="9">50 Hz Mains Interference</text>
+          <path d="M400,50 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0
+                    q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0
+                    q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0 q3,-8 6,0"
+                fill="none" stroke="#ff4466" stroke-width="1.2"/>
+          <text x="400" y="72" fill="#ff4466" font-size="8">→ check earth continuity, screen cable routing</text>
+
+          <text x="20" y="120" fill="#6a8099" font-size="9">Motion Artifact (baseline wander)</text>
+          <path d="M20,150 Q60,130 100,160 Q140,180 180,145 Q220,120 260,155 Q300,175 340,140"
+                fill="none" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="20" y="192" fill="#ffb347" font-size="8">→ patient movement, poor electrode adhesion</text>
+
+          <text x="400" y="120" fill="#6a8099" font-size="9">SpO₂ Low Perfusion Noise</text>
+          <path d="M400,155 l3,-2 l3,4 l3,-6 l3,8 l3,-4 l3,2 l3,-3 l3,5 l3,-7 l3,9 l3,-5
+                   l3,3 l3,-4 l3,6 l3,-8 l3,10 l3,-6 l3,4 l3,-5" fill="none" stroke="#aa88ff" stroke-width="1.2"/>
+          <text x="400" y="192" fill="#aa88ff" font-size="8">→ cold extremity, poor probe siting, nail polish</text>
+        </svg>
+      </div>
+      <div class="component-list">
+        <div class="component-item">
+          <div class="comp-name">Mains Interference (50/60 Hz) <span class="tag tag-med">ENVIRONMENTAL</span></div>
+          <div class="comp-desc">Enters via poorly screened lead wires or broken earth reference. Check notch filter engagement, cable screening continuity, and nearby equipment earthing.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Electromyographic (EMG) Noise <span class="tag tag-low">PHYSIOLOGICAL</span></div>
+          <div class="comp-desc">Muscle tremor or shivering contaminates the ECG high-frequency band. Not a device fault — verify filter settings match clinical context (monitor vs. diagnostic mode).</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">Motion / Baseline Wander <span class="tag tag-med">MECHANICAL</span></div>
+          <div class="comp-desc">Low-frequency drift from electrode movement or respiration. Verify electrode adhesive condition and skin prep; check high-pass filter corner frequency.</div>
+        </div>
+        <div class="component-item">
+          <div class="comp-name">SpO₂ Motion / Perfusion Artifact <span class="tag tag-low">PHYSIOLOGICAL</span></div>
+          <div class="comp-desc">Modern algorithms use adaptive filtering (e.g. Masimo SET, Nellcor OxiMax) to reject motion — confirm algorithm version is current and licensed if module supports it.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PPM -->
+    <div id="sec-ppm" class="section">
+      <div class="canvas-title">Planned Preventive Maintenance</div>
+      <div class="canvas-subtitle">Typical Annual PPM Schedule</div>
+      <div class="diagram-wrap" style="padding:12px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text2);letter-spacing:2px;margin-bottom:10px;text-transform:uppercase">Ref: Manufacturer Service Manual + MHRA Device Bulletin</div>
+        <div class="ppm-row" style="border-bottom:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase">TASK</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase">FREQUENCY</div>
+          <div style="font-size:9px;color:var(--text2);letter-spacing:1px;text-transform:uppercase">STATUS</div>
+        </div>
+        <div class="ppm-row"><div class="ppm-task">Visual inspection — casing, cables, connectors, display</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">PASS</span></div>
+        <div class="ppm-row"><div class="ppm-task">Electrical safety test — earth continuity, leakage current</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">PASS</span></div>
+        <div class="ppm-row"><div class="ppm-task">ECG simulator test — rate accuracy, arrhythmia detection (EC13 waveforms)</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">SpO₂ functional tester verification</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">NIBP calibration — reference manometer, leak test, over-pressure cutoff</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">IBP zero/gain calibration — pressure simulator</div><div class="ppm-freq">Annual</div><span class="tag tag-high">CRITICAL</span></div>
+        <div class="ppm-row"><div class="ppm-task">Temperature channel verification — decade box / calibrated probe</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Alarm audio level and priority distinction (IEC 60601-1-8)</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Nurse-call relay function test</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Battery capacity test — load test to 80% DoD</div><div class="ppm-freq">Annual</div><span class="tag tag-med">CHECK</span></div>
+        <div class="ppm-row"><div class="ppm-task">Firmware version verification + update if applicable</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">VERIFY</span></div>
+        <div class="ppm-row"><div class="ppm-task">Network / central station connectivity check</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">VERIFY</span></div>
+        <div class="ppm-row"><div class="ppm-task">Clean casing, connectors, and cuff hose fittings</div><div class="ppm-freq">Annual</div><span class="tag tag-ok">CLEAN</span></div>
+        <div class="ppm-row"><div class="ppm-task">Replace worn NIBP hose, SpO₂ cable strain relief</div><div class="ppm-freq">As needed</div><span class="tag tag-low">CONDITION</span></div>
+      </div>
+    </div>
+
+    <!-- FAULTS -->
+    <div id="sec-faults" class="section">
+      <div class="canvas-title">Fault Diagnosis</div>
+      <div class="canvas-subtitle">Systematic Fault Tree</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="fault-block">
+          <div class="fault-title">⚠ SYMPTOM: Persistent "Lead Off" / Noisy ECG Trace</div>
+          <div class="fault-item">Dried or expired electrode gel — replace electrodes, check expiry date</div>
+          <div class="fault-item">Lead wire continuity fault — inspect strain relief points; test wire-to-wire resistance</div>
+          <div class="fault-item">Poor skin preparation — clinical practice issue, not device fault; document accordingly</div>
+          <div class="fault-item">Patient module connector pins corroded/bent — inspect and clean docking connector</div>
+        </div>
+        <div class="fault-block" style="border-color:rgba(255,179,71,0.3);background:rgba(255,179,71,0.03)">
+          <div class="fault-title" style="color:var(--warn)">⚠ SYMPTOM: SpO₂ Fails to Read or Reads Intermittently</div>
+          <div class="fault-item">LED or photodiode degraded — verify with dedicated SpO₂ functional tester, not just visual check</div>
+          <div class="fault-item">Probe cable fracture near connector — a very common failure point from repeated flexing</div>
+          <div class="fault-item">Ambient light interference — check probe housing seal and clinical shielding</div>
+          <div class="fault-item">Incompatible third-party probe — verify probe/monitor compatibility list against manufacturer IFU</div>
+        </div>
+        <div class="fault-block" style="border-color:rgba(170,136,255,0.3);background:rgba(170,136,255,0.03)">
+          <div class="fault-title" style="color:#aa88ff">⚠ SYMPTOM: NIBP Repeated "Unable to Measure" Errors</div>
+          <div class="fault-item">Cuff hose leak — pressurise closed system and check for decay against reference gauge</div>
+          <div class="fault-item">Pump motor degraded — inflation time exceeds spec; measure inflation rate directly</div>
+          <div class="fault-item">Incorrect cuff size for limb — clinical/user issue; verify against cuff sizing chart</div>
+          <div class="fault-item">Valve solenoid sticking — deflation rate outside spec; test with calibrated pressure simulator</div>
+        </div>
+        <div class="fault-block" style="border-color:rgba(0,255,136,0.2);background:rgba(0,255,136,0.02)">
+          <div class="fault-title" style="color:var(--accent2)">⚠ SYMPTOM: IBP Trace Damped or Zero Drifting</div>
+          <div class="fault-item">Air bubble in pressure line — flush line, verify with disposable transducer replacement</div>
+          <div class="fault-item">Transducer zero drift — recalibrate against reference manometer; replace if outside tolerance</div>
+          <div class="fault-item">Loose or corroded module connector — inspect docking interface and cable pins</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCURACY -->
+    <div id="sec-accuracy" class="section">
+      <div class="canvas-title">Accuracy Testing &amp; Verification</div>
+      <div class="canvas-subtitle">Simulator-Based Method — Multi-Parameter Compliant</div>
+      <div class="card-grid" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-label">Method</div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent)">Patient Simulator</div>
+          <div class="card-desc">Calibrated multi-parameter simulator (e.g. Fluke ProSim, Datrend) injects known ECG, SpO₂, NIBP, IBP, and temperature signals for direct comparison against displayed values.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">ECG Rate Accuracy</div>
+          <div class="card-value">±10%<span class="card-unit">or 5 bpm</span></div>
+          <div class="card-desc">Whichever is greater, across the clinically relevant HR range, per IEC 60601-2-27.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Arrhythmia Validation</div>
+          <div style="font-size:14px;font-weight:600;color:var(--accent2)">ANSI/AAMI EC13</div>
+          <div class="card-desc">Standard test waveform library (VF, VT, asystole, PVCs) run through simulator to verify correct classification and alarm response.</div>
+        </div>
+        <div class="card">
+          <div class="card-label">NIBP Validation</div>
+          <div class="card-value">ISO 81060-2<span class="card-unit"></span></div>
+          <div class="card-desc">Mean difference ≤5 mmHg, SD ≤8 mmHg vs. auscultatory reference across the validated population range.</div>
+        </div>
+      </div>
+      <div class="diagram-wrap" style="padding:12px">
+        <div style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--accent);letter-spacing:1px;margin-bottom:10px;text-transform:uppercase">Acceptance Criteria Decision Tree</div>
+        <svg viewBox="0 0 680 160" width="100%" style="max-height:160px">
+          <defs><pattern id="grid6" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e2d3d" stroke-width="0.5"/></pattern></defs>
+          <rect width="680" height="160" fill="url(#grid6)"/>
+          <rect x="270" y="10" width="140" height="36" rx="20" fill="#161e2a" stroke="#00d4ff" stroke-width="1.5"/>
+          <text x="340" y="26" fill="#00d4ff" font-size="9" text-anchor="middle">Simulator Result</text>
+          <text x="340" y="38" fill="#c8d8e8" font-size="9" text-anchor="middle">vs. reference value</text>
+          <line x1="340" y1="46" x2="340" y2="66" stroke="#6a8099" stroke-width="1"/>
+          <polygon points="340,66 380,90 340,114 300,90" fill="#161e2a" stroke="#ffb347" stroke-width="1.5"/>
+          <text x="340" y="87" fill="#ffb347" font-size="8" text-anchor="middle">within</text>
+          <text x="340" y="98" fill="#ffb347" font-size="8" text-anchor="middle">spec ?</text>
+          <line x1="380" y1="90" x2="470" y2="90" stroke="#00ff88" stroke-width="1.5"/>
+          <rect x="470" y="72" width="90" height="36" rx="3" fill="rgba(0,255,136,0.1)" stroke="#00ff88" stroke-width="1.5"/>
+          <text x="515" y="88" fill="#00ff88" font-size="9" text-anchor="middle">PASS</text>
+          <text x="515" y="100" fill="#6a8099" font-size="8" text-anchor="middle">Return to service</text>
+          <text x="425" y="84" fill="#00ff88" font-size="8">YES</text>
+          <line x1="340" y1="114" x2="340" y2="134" stroke="#ff4466" stroke-width="1.5"/>
+          <line x1="300" y1="90" x2="200" y2="90" stroke="#ff4466" stroke-width="1.5"/>
+          <text x="245" y="84" fill="#ff4466" font-size="8">NO</text>
+          <rect x="100" y="72" width="100" height="36" rx="3" fill="rgba(255,68,102,0.1)" stroke="#ff4466" stroke-width="1.5"/>
+          <text x="150" y="86" fill="#ff4466" font-size="9" text-anchor="middle">FAIL</text>
+          <text x="150" y="99" fill="#6a8099" font-size="8" text-anchor="middle">Investigate &amp; repair</text>
+          <rect x="270" y="134" width="140" height="24" rx="3" fill="#161e2a" stroke="#6a8099" stroke-width="1"/>
+          <text x="340" y="150" fill="#6a8099" font-size="8" text-anchor="middle">Log in asset management (Equatrace/Insite)</text>
+        </svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT INFO PANEL -->
+  <div class="infopanel scrollbar-thin">
+    <div>
+      <div class="info-section-title">Quick Specs</div>
+      <div class="info-row"><span class="info-key">ECG leads</span><span class="info-val">3 / 5 / 10-lead</span></div>
+      <div class="info-row"><span class="info-key">HR accuracy</span><span class="info-val">±10% or 5 bpm</span></div>
+      <div class="info-row"><span class="info-key">SpO₂ accuracy</span><span class="info-val">±2–3% Arms</span></div>
+      <div class="info-row"><span class="info-key">NIBP accuracy</span><span class="info-val">≤5 mmHg mean</span></div>
+      <div class="info-row"><span class="info-key">IBP accuracy</span><span class="info-val">±2 mmHg or ±2%</span></div>
+      <div class="info-row"><span class="info-key">Temp accuracy</span><span class="info-val">±0.1°C</span></div>
+      <div class="info-row"><span class="info-key">Leakage</span><span class="info-val">&lt;10 µA (CF)</span></div>
+      <div class="info-row"><span class="info-key">Applied part class</span><span class="info-val">CF (ECG/IBP)</span></div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Key Standards</div>
+      <div class="info-row"><span class="info-key">Safety</span><span class="info-val">IEC 60601-1</span></div>
+      <div class="info-row"><span class="info-key">ECG monitors</span><span class="info-val">IEC 60601-2-27</span></div>
+      <div class="info-row"><span class="info-key">NIBP</span><span class="info-val">IEC 80601-2-30</span></div>
+      <div class="info-row"><span class="info-key">SpO₂</span><span class="info-val">IEC 80601-2-61</span></div>
+      <div class="info-row"><span class="info-key">Temperature</span><span class="info-val">IEC 80601-2-56</span></div>
+      <div class="info-row"><span class="info-key">Alarms</span><span class="info-val">IEC 60601-1-8</span></div>
+      <div class="info-row"><span class="info-key">Software</span><span class="info-val">IEC 62304 Class C</span></div>
+      <div class="info-row"><span class="info-key">Risk mgmt</span><span class="info-val">ISO 14971</span></div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Clinical Risk Notes</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.7">
+        <div style="margin-bottom:6px">⚠ <span style="color:var(--red)">Alarm fatigue:</span> Excessive nuisance alarms lead to desensitisation — a recognised patient safety hazard. Review threshold settings during PPM.</div>
+        <div style="margin-bottom:6px">⚠ <span style="color:var(--warn)">IBP zero drift:</span> Undetected drift biases clinical decisions (vasopressor titration, ICP management). Verify at every line change and PPM.</div>
+        <div style="margin-bottom:6px">⚠ <span style="color:var(--accent)">Cuff sizing:</span> Wrong NIBP cuff size is the most common source of clinically significant BP error — a training issue as much as an engineering one.</div>
+        <div>⚠ <span style="color:var(--accent2)">Cross-infection:</span> Reusable SpO₂ probes and BP cuffs are a recognised fomite risk — verify Trust decontamination policy compliance.</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="info-section-title">Asset Management</div>
+      <div class="info-row"><span class="info-key">CMMS</span><span class="info-val">Equatrace / Insite</span></div>
+      <div class="info-row"><span class="info-key">Label</span><span class="info-val">Asset + PPM date</span></div>
+      <div class="info-row"><span class="info-key">Retirement</span><span class="info-val">Per OEM hours/cycles</span></div>
+      <div class="info-row"><span class="info-key">Incidents</span><span class="info-val">MHRA StEIS / Datix</span></div>
+      <div class="info-row"><span class="info-key">UDI</span><span class="info-val">Record per EUDAMED</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('visible'));
+  document.getElementById('sec-' + id).classList.add('visible');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
