@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Defibrillator — Hazard, Alarm & Safety Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f8f5;
+  --white: #ffffff;
+  --ink: #12100e;
+  --ink2: #3d3830;
+  --ink3: #7a7268;
+  --ink4: #b0a898;
+  --rule: #e2ddd6;
+  --rule2: #ede9e2;
+
+  --patient: #c0392b;
+  --patient-bg: #fdf3f2;
+  --patient-light: #fae5e3;
+  --patient-border: #f5b7b1;
+
+  --user: #1a5276;
+  --user-bg: #eaf2f8;
+  --user-light: #d6eaf8;
+  --user-border: #85c1e9;
+
+  --eng: #1e8449;
+  --eng-bg: #eafaf1;
+  --eng-light: #d5f5e3;
+  --eng-border: #82e0aa;
+
+  --alarm: #7d3c98;
+  --alarm-bg: #f5eef8;
+  --alarm-light: #e8daef;
+
+  --safe: #1a5276;
+  --safe-bg: #eaf2f8;
+
+  --crit: #922b21;
+  --maj: #784212;
+  --mod: #4d611b;
+
+  --shadow: 0 1px 3px rgba(18,16,14,0.08), 0 4px 16px rgba(18,16,14,0.05);
+  --shadow-hover: 0 4px 12px rgba(18,16,14,0.12), 0 12px 32px rgba(18,16,14,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.masthead {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+.masthead-inner {
+  padding: 44px 52px 36px;
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: flex-end;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(249,248,245,0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  z-index: 1;
+}
+.masthead-rule { width: 48px; height: 3px; background: var(--patient); margin-bottom: 14px; }
+.masthead-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(249,248,245,0.45); margin-bottom: 10px; }
+.masthead h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 4vw, 52px); font-weight: 900; line-height: 1.0; letter-spacing: -1px; margin-bottom: 10px; }
+.masthead h1 em { font-style: italic; font-weight: 400; color: rgba(249,248,245,0.5); }
+.masthead-sub { font-size: 13px; color: rgba(249,248,245,0.5); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; margin-top: 6px; }
+.masthead-pills { display: flex; flex-direction: column; gap: 7px; align-items: flex-end; padding-bottom: 4px; }
+.mpill { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 12px; border-radius: 2px; border: 1px solid; font-weight: 500; }
+.mpill-p { color: #f5b7b1; border-color: #f5b7b1; }
+.mpill-u { color: #85c1e9; border-color: #85c1e9; }
+.mpill-e { color: #82e0aa; border-color: #82e0aa; }
+
+.navbar { background: var(--white); border-bottom: 2px solid var(--rule); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(18,16,14,0.07); }
+.navbar-inner { display: flex; overflow-x: auto; padding: 0 52px; gap: 0; scrollbar-width: none; }
+.navbar-inner::-webkit-scrollbar { display: none; }
+.ntab { padding: 16px 20px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.ntab:hover { color: var(--ink); }
+.ntab-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ntab.active-p { color: var(--patient); border-bottom-color: var(--patient); }
+.ntab.active-u { color: var(--user); border-bottom-color: var(--user); }
+.ntab.active-e { color: var(--eng); border-bottom-color: var(--eng); }
+.ntab.active-n { color: var(--ink); border-bottom-color: var(--ink); }
+
+.shell { max-width: 1360px; margin: 0 auto; padding: 48px 52px; }
+.section { display: none; }
+.section.on { display: block; animation: appear 0.3s ease both; }
+@keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.sec-hd { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: flex-end; padding-bottom: 20px; border-bottom: 1px solid var(--rule); margin-bottom: 32px; }
+.sec-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
+.sec-title { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 900; line-height: 1.1; letter-spacing: -0.5px; }
+.sec-note { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--ink3); max-width: 380px; text-align: right; line-height: 1.55; }
+
+.matrix-card { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow); }
+.matrix-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 3px; color: var(--ink4); text-transform: uppercase; margin-bottom: 4px; }
+.matrix-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+.rm { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 3px; }
+.rc { padding: 10px 6px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; border-radius: 2px; letter-spacing: 0.5px; }
+.rc-head { background: var(--ink); color: var(--bg); letter-spacing: 1px; }
+.rc-side { background: var(--rule2); color: var(--ink2); text-align: right; padding-right: 12px; display: flex; align-items: center; justify-content: flex-end; font-size: 9px; }
+.rc-neg { background: #d5f5e3; color: #145a32; }
+.rc-acc { background: #fef9c3; color: #7d6608; }
+.rc-alarp { background: #fde8c8; color: #784212; }
+.rc-un { background: #fadbd8; color: #922b21; font-weight: 700; }
+
+.ov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+.ov-card { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 24px; box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.ov-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.ov-card.cp::before { background: var(--patient); }
+.ov-card.cu::before { background: var(--user); }
+.ov-card.ce::before { background: var(--eng); }
+.ov-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+
+.ov-hd { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+.ov-icon { font-size: 22px; line-height: 1; }
+.ov-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; line-height: 1; }
+.ov-role { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+
+.ov-stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule2); font-size: 11px; gap: 10px; }
+.ov-stat:last-child { border-bottom: none; }
+.ov-stat-label { color: var(--ink2); }
+
+.sev { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; letter-spacing: 1px; font-weight: 600; text-transform: uppercase; white-space: nowrap; border: 1px solid; }
+.sev-crit { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.sev-maj { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.sev-mod { background: #fdfefe; color: var(--mod); border-color: #a9cce3; }
+.sev-min { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+.hz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.hz { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; box-shadow: var(--shadow); transition: all 0.2s; }
+.hz:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.hz-top { padding: 16px 20px; border-bottom: 1px solid; display: flex; align-items: flex-start; gap: 12px; }
+.hz-glyph { font-size: 20px; line-height: 1; margin-top: 3px; }
+.hz-meta { flex: 1; min-width: 0; }
+.hz-id { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 2px; margin-bottom: 3px; }
+.hz-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.2; }
+.hz-body { padding: 16px 20px; }
+.hz-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--rule2); font-size: 12px; align-items: flex-start; }
+.hz-row:last-child { border-bottom: none; padding-bottom: 0; }
+.hz-k { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; padding-top: 2px; }
+.hz-v { color: var(--ink); line-height: 1.5; }
+
+.atbl { width: 100%; border-collapse: collapse; }
+.atbl th { text-align: left; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); background: var(--ink); font-weight: 500; }
+.atbl td { padding: 12px 14px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.atbl tr:hover td { background: var(--rule2); }
+.atbl td:first-child { font-weight: 600; color: var(--ink); font-size: 12px; }
+.pri { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; border: 1px solid; }
+.p-h { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.p-m { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.p-l { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+
+.sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px; }
+.sm { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 22px; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+.sm:hover { border-color: var(--ink3); box-shadow: var(--shadow-hover); }
+.sm-bg-num { position: absolute; right: 14px; top: 8px; font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 900; color: rgba(18,16,14,0.04); line-height: 1; }
+.sm-icon-wrap { width: 38px; height: 38px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+.sm-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin-bottom: 4px; }
+.sm-name { font-size: 14px; font-weight: 700; font-family: 'IBM Plex Sans', sans-serif; margin-bottom: 8px; line-height: 1.25; }
+.sm-desc { font-size: 12px; color: var(--ink3); line-height: 1.55; margin-bottom: 10px; }
+.sm-std { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 0.5px; padding-top: 8px; border-top: 1px dashed var(--rule2); }
+
+.def-wrap { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; box-shadow: var(--shadow); overflow: hidden; }
+.def-row { display: grid; grid-template-columns: 72px 1fr; border-bottom: 1px solid var(--rule); }
+.def-row:last-child { border-bottom: none; }
+.def-num { padding: 24px 16px; border-right: 1px solid var(--rule); display: flex; align-items: flex-start; justify-content: center; padding-top: 28px; }
+.def-roman { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; color: var(--ink4); font-style: italic; }
+.def-body { padding: 22px 28px; }
+.def-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.def-desc { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
+.def-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.dtag { padding: 2px 9px; border-radius: 2px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.3px; border: 1px solid; }
+.dtag-p { background: var(--patient-light); color: var(--patient); border-color: var(--patient-border); }
+.dtag-u { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+.dtag-e { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+.stbl { width: 100%; border-collapse: collapse; }
+.stbl th { text-align: left; padding: 12px 16px; background: var(--ink); color: var(--bg); font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; }
+.stbl td { padding: 12px 16px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.stbl tr:hover td { background: var(--rule2); }
+.stbl td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--ink); font-size: 11px; white-space: nowrap; }
+
+.banner { display: flex; gap: 12px; padding: 14px 18px; border-radius: 3px; margin-bottom: 20px; font-size: 13px; line-height: 1.55; border-left: 4px solid; }
+.banner-e { background: var(--eng-bg); border-color: var(--eng); color: var(--eng); }
+.banner-p { background: var(--patient-bg); border-color: var(--patient); color: var(--patient); }
+.banner strong { font-weight: 700; display: block; margin-bottom: 3px; }
+
+.pri-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.pri-card { padding: 20px; border-radius: 3px; border: 1px solid; }
+.pc-h { background: #fdedec; border-color: #f1948a; }
+.pc-m { background: #fef5e4; border-color: #f0b27a; }
+.pc-l { background: var(--user-bg); border-color: var(--user-border); }
+.pc-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+.pc-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; font-family: 'IBM Plex Sans', sans-serif; }
+.pc-items { font-size: 11px; line-height: 1.8; color: var(--ink2); }
+
+.vtype-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+.vtype { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 18px; box-shadow: var(--shadow); }
+.vtype-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+.vtype-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+.vtype-desc { font-size: 11px; color: var(--ink3); line-height: 1.6; }
+
+.waveform-wrap { background: var(--ink); border-radius: 3px; padding: 20px; margin-bottom: 20px; overflow: hidden; }
+
+@media (max-width: 1000px) {
+  .masthead-inner { grid-template-columns: 1fr; }
+  .masthead-pills { flex-direction: row; }
+  .ov-grid, .hz-grid, .sm-grid, .pri-grid { grid-template-columns: 1fr; }
+  .vtype-grid { grid-template-columns: repeat(2, 1fr); }
+  .shell { padding: 28px 20px; }
+  .navbar-inner { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-eyebrow">IEC 60601-2-4 · IEC 60601-1-8 · ISO 14971 · Clinical Engineering Reference</div>
+      <div class="masthead-rule"></div>
+      <h1>Defibrillator<br><em>Hazard, Alarm &<br>Safety Analysis</em></h1>
+      <div class="masthead-sub">Risk across patient · clinical user · service engineer</div>
+    </div>
+    <div class="masthead-pills">
+      <span class="mpill mpill-p">● Patient Risk</span>
+      <span class="mpill mpill-u">● Clinical User</span>
+      <span class="mpill mpill-e">● Service Engineer</span>
+    </div>
+  </div>
+</div>
+
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="ntab active-n" id="t-over" onclick="go('over',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Overview</div>
+    <div class="ntab" id="t-pat" onclick="go('pat',this,'active-p')"><div class="ntab-dot" style="background:var(--patient)"></div>Patient Hazards</div>
+    <div class="ntab" id="t-usr" onclick="go('usr',this,'active-u')"><div class="ntab-dot" style="background:var(--user)"></div>User Hazards</div>
+    <div class="ntab" id="t-eng" onclick="go('eng',this,'active-e')"><div class="ntab-dot" style="background:var(--eng)"></div>Engineer Hazards</div>
+    <div class="ntab" id="t-alm" onclick="go('alm',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Alarm System</div>
+    <div class="ntab" id="t-saf" onclick="go('saf',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Safety Mechanisms</div>
+    <div class="ntab" id="t-def" onclick="go('def',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Defence-in-Depth</div>
+    <div class="ntab" id="t-std" onclick="go('std',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Standards</div>
+  </div>
+</div>
+
+<div class="shell">
+
+<!-- OVERVIEW -->
+<div id="sec-over" class="section on">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 00 · Stakeholder Risk Map</div>
+      <div class="sec-title">The Defibrillator<br>Risk Landscape</div>
+    </div>
+    <div class="sec-note">A defibrillator stores and delivers hundreds of joules through a patient in milliseconds. The same stored energy that saves a life in cardiac arrest is capable of killing a bystander or engineer if released uncontrolled.</div>
+  </div>
+
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink4);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Device Scope</div>
+  <div class="vtype-grid">
+    <div class="vtype">
+      <div class="vtype-name">Manual Biphasic Defibrillator</div>
+      <div class="vtype-sub">Resus trolley · ICU · ED · Theatre</div>
+      <div class="vtype-desc">Clinician-selected energy, manual paddles or pads, sync cardioversion, pacing option. Requires trained rhythm interpretation.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">AED (Automated External)</div>
+      <div class="vtype-sub">Ward · Public access · Community</div>
+      <div class="vtype-desc">Automated rhythm analysis and voice-prompted shock advisory. Designed for lay-rescuer and first-responder use.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">Combined Monitor/Defibrillator</div>
+      <div class="vtype-sub">Critical care transport · Ambulance</div>
+      <div class="vtype-desc">Integrated ECG/SpO₂/NIBP monitoring with defibrillation and pacing in one device — used through the full peri-arrest pathway.</div>
+    </div>
+  </div>
+
+  <div class="ov-grid">
+    <div class="ov-card cp" onclick="go('pat',document.getElementById('t-pat'),'active-p')">
+      <div class="ov-hd"><div class="ov-icon">🫀</div><div><div class="ov-name" style="color:var(--patient)">Patient</div><div class="ov-role">Direct physiological consequence</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Failed / delayed energy delivery</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Missed shockable rhythm (AED)</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Skin burns — poor contact/arcing</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Sync failure — shock on T-wave</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Energy outside tolerance</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Fire in O₂-enriched atmosphere</span><span class="sev sev-crit">CRITICAL</span></div>
+    </div>
+
+    <div class="ov-card cu" onclick="go('usr',document.getElementById('t-usr'),'active-u')">
+      <div class="ov-hd"><div class="ov-icon">👩‍⚕️</div><div><div class="ov-name" style="color:var(--user)">Clinical User</div><div class="ov-role">Use error & human factors</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Shock to rescuer — not "clear"</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Wrong mode (sync vs. async)</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Expired pads / dried gel</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Trolley device not charged/ready</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Voice prompt ignored (AED)</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Delay from unfamiliar model</span><span class="sev sev-maj">MAJOR</span></div>
+    </div>
+
+    <div class="ov-card ce" onclick="go('eng',document.getElementById('t-eng'),'active-e')">
+      <div class="ov-hd"><div class="ov-icon">🔧</div><div><div class="ov-name" style="color:var(--eng)">Engineer</div><div class="ov-role">Occupational & patient-forward</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Residual HV capacitor shock</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Post-service energy inaccuracy</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Biological exposure — pads/paddles</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Firmware/algorithm error (AED)</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Missed self-test failure</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Arc flash from analyzer test rig</span><span class="sev sev-mod">MODERATE</span></div>
+    </div>
+  </div>
+
+  <div class="matrix-card">
+    <div class="matrix-label">ISO 14971:2019</div>
+    <div class="matrix-title">Risk Acceptability Matrix — Defibrillator Hazard Positions</div>
+    <div class="rm">
+      <div class="rc" style="background:transparent;border:none"></div>
+      <div class="rc rc-head">Negligible</div>
+      <div class="rc rc-head">Minor</div>
+      <div class="rc rc-head">Moderate</div>
+      <div class="rc rc-head">Serious</div>
+      <div class="rc rc-head">Catastrophic</div>
+
+      <div class="rc rc-side">Improbable</div>
+      <div class="rc rc-neg">Neg</div><div class="rc rc-neg">Neg</div><div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div>
+
+      <div class="rc rc-side">Remote</div>
+      <div class="rc rc-neg">Neg</div><div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Occasional</div>
+      <div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Probable</div>
+      <div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Frequent</div>
+      <div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:var(--ink3);line-height:1.6;font-style:italic">
+      Pre-mitigation: <strong>Failed capacitor auto-discharge → residual HV shock to engineer</strong> → Catastrophic × Occasional → Unacceptable — mitigated by dump-resistor design, PPM verification, LOTO. <strong>Sync failure → shock on T-wave</strong> → Catastrophic × Remote → Unacceptable — mitigated by R-wave gate, sync-mode indicator, PPM timing test.
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT -->
+<div id="sec-pat" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 01 · Patient Hazards</div>
+      <div class="sec-title" style="color:var(--patient)">Direct Physiological Risk</div>
+    </div>
+    <div class="sec-note">Patient harm here is measured in seconds — either the wrong action delivered instantly, or the right action delayed. Both cost myocardium and brain tissue.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">⏱️</div><div class="hz-meta"><div class="hz-id">P.01</div><div class="hz-name">Failed or Delayed Energy Delivery</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Capacitor fails to charge; battery depleted; pad impedance out of range blocking charge; charge timeout before shock delivered.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Every minute without defibrillation in VF reduces survival by ~7–10%. Delay directly costs survivable rhythm window.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Daily/weekly automated self-test; battery capacity PPM; charge-time verification against spec; spare charged device on resus trolley.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-2-4 §201.12 — charge time limits</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">📉</div><div class="hz-meta"><div class="hz-id">P.02</div><div class="hz-name">Missed Shockable Rhythm (AED Mode)</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Rhythm classification algorithm misclassifies fine VF as asystole; CPR artefact corrupts ECG signal during analysis; outdated algorithm version.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">No shock advised when one is needed — arrest progresses untreated. Reportable incident under MHRA vigilance.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Validated against ANSI/AAMI DF80 rhythm library at manufacture; firmware version control; CPR artefact-filtering algorithms; do not modify analysis algorithm without OEM authorisation.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🔥</div><div class="hz-meta"><div class="hz-id">P.03</div><div class="hz-name">Skin Burns — Poor Contact / Arcing</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Dried/expired pad gel; excess chest hair without shaving; pads placed over jewellery, ECG electrodes, or transdermal patches; paddle pressure too low.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Second-degree skin burns at contact points; energy loss to arcing reduces effective delivered dose to myocardium.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Pad impedance gating blocks charge outside safe range; pre-use skin prep protocol; pad expiry stock control; remove transdermal patches/metal before placement.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">💔</div><div class="hz-meta"><div class="hz-id">P.04</div><div class="hz-name">Sync Failure — Shock on Vulnerable Period</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Sync mode not selected for cardioversion; R-wave detection fails on low-amplitude or artefact-laden ECG; sync marker misaligned.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Shock delivered during the T-wave vulnerable period can induce VF — converting a stable rhythm into a cardiac arrest.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Sync mode visibly indicated with marker on each QRS; device withholds shock if no valid R-wave detected; PPM verification of sync timing on simulator.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-2-4 §201.8.101 — synchronised mode</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">⚡</div><div class="hz-meta"><div class="hz-id">P.05</div><div class="hz-name">Energy Delivered Outside Tolerance</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Aged/degraded HV capacitor; current-sense feedback fault; impedance compensation not functioning across patient range.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Under-delivery: ineffective defibrillation, arrest continues. Over-delivery: myocardial injury, increased post-shock arrhythmia risk.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Annual defibrillator analyzer test across impedance range (25–200 Ω); waveform capture comparison; capacitor replacement per OEM service life.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🔥</div><div class="hz-meta"><div class="hz-id">P.06</div><div class="hz-name">Fire in Oxygen-Enriched Atmosphere</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Defibrillation attempted with free-flowing O₂ near the chest (nasal cannula, non-rebreathe mask left running) generating a spark at pad contact.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Flash fire directly on or near the patient's chest during resuscitation — a documented, entirely preventable cause of severe burns.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Resuscitation Council/AHA guidance: remove or direct O₂ source away from chest before shock; use self-adhesive pads (fewer sparks than paddles + gel); staff training.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">Resuscitation Council UK guidance · HTM 02-01</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🔋</div><div class="hz-meta"><div class="hz-id">P.07</div><div class="hz-name">Pacing Capture Failure (if fitted)</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Pacing current set too low for transthoracic threshold; poor pad contact; underlying rhythm misread as captured.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Bradycardia/asystole untreated despite apparent pacing activity — a false sense of security for the treating team.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Always confirm mechanical capture (palpable pulse), not just electrical pacing spikes; verify pacing output against test load at PPM.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🦠</div><div class="hz-meta"><div class="hz-id">P.08</div><div class="hz-name">Cross-Infection via Reused Paddles</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Reusable paddles not decontaminated between patients; shared gel pot; paddle surface pitting harbouring biological material.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Bloodborne or skin pathogen transmission between patients — relevant given resus scenarios often involve open wounds or fluids.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Single-use self-adhesive pads preferred; decontamination protocol for reusable paddles; inspect paddle face condition at PPM.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USER -->
+<div id="sec-usr" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 02 · Clinical User Hazards</div>
+      <div class="sec-title" style="color:var(--user)">Use Error &<br>Human Factors</div>
+    </div>
+    <div class="sec-note">Defibrillation happens under extreme time pressure with a crowded resuscitation team. This is precisely the environment where checklists and interlocks matter most.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🙅</div><div class="hz-meta"><div class="hz-id">U.01</div><div class="hz-name">Shock Delivered Without "All Clear"</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Team member still in contact with patient/bed/trolley during shock; verbal "clear" call skipped under pressure; oxygen mask left touching chest.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Electric shock to rescuer — burns, cardiac arrhythmia in the responder themselves, particularly with wet skin/gloves.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory visual scan and verbal "clear" before shock button; team training (ALS/ACLS); shock button requires deliberate press, not proximity-triggered.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔀</div><div class="hz-meta"><div class="hz-id">U.02</div><div class="hz-name">Wrong Mode — Sync vs. Asynchronous</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Cardioversion attempted in default (async) mode; sync mode selected but not re-armed after each shock (many devices default back to async after delivery).</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Unsynchronised shock on unstable tachycardia risks inducing VF; conversely, treating true VF in sync mode may delay shock waiting for a (non-existent) R-wave.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Clear on-screen sync indicator; device design requiring active re-selection per shock; team training on mode selection for the specific arrhythmia.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">📅</div><div class="hz-meta"><div class="hz-id">U.03</div><div class="hz-name">Expired Pads / Dried Gel</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Pad expiry date not checked as part of daily trolley check; pads stored in hot/dry environment accelerating gel degradation.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">High impedance blocks charge or reduces delivered energy at the exact moment it's needed — no time to source new pads mid-arrest.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Daily resus trolley check includes pad expiry; stock rotation (first-expiry-first-out); spare pad set sealed with trolley.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔴</div><div class="hz-meta"><div class="hz-id">U.04</div><div class="hz-name">Resus Trolley Device Not Ready</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Battery not on charge after last use; self-test failure not actioned; device borrowed from trolley and not returned; tamper seal broken but not checked.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Device unavailable or non-functional at the point of a cardiac arrest call — a completely preventable failure mode.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Daily documented trolley/defibrillator check (self-test pass, battery status, tamper seal, pad expiry) per Resuscitation Council standards.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔊</div><div class="hz-meta"><div class="hz-id">U.05</div><div class="hz-name">Voice Prompt Ignored or Misunderstood (AED)</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Noisy environment masking voice prompts; language barrier for lay rescuer; panic overriding prompt-following behaviour.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Delayed or incorrect action during a public-access AED event — the entire safety model relies on prompt compliance.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Combined voice + visual/text prompts; volume adequate for public spaces; regular public AED awareness training; simple, jargon-free prompt wording (IEC 62366 usability testing).</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔄</div><div class="hz-meta"><div class="hz-id">U.06</div><div class="hz-name">Delay from Unfamiliar Device Model</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Multiple defibrillator models/manufacturers across a Trust with different button layouts, energy-select mechanisms, and pad connectors.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Seconds to minutes lost while a clinician searches for the charge button or energy selector on an unfamiliar unit — directly costs survival odds.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Trust-wide standardisation on a single model where possible; mandatory induction training on all in-use models; consistent trolley layout across sites.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENGINEER -->
+<div id="sec-eng" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 03 · Service Engineer Hazards</div>
+      <div class="sec-title" style="color:var(--eng)">Occupational &<br>Patient-Forward Risk</div>
+    </div>
+    <div class="sec-note">Defibrillators store lethal energy internally even when powered off. No other device in the EBME workshop carries this specific residual-energy risk profile.</div>
+  </div>
+
+  <div class="banner banner-e">
+    <span style="font-size:18px">⚠</span>
+    <div><strong>Never assume discharged</strong> A defibrillator capacitor can retain a lethal charge after mains and battery removal. Always verify auto-discharge function and follow manufacturer lockout procedure before opening the case.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">⚡</div><div class="hz-meta"><div class="hz-id">E.01</div><div class="hz-name">Residual HV Capacitor Shock</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Internal work performed without confirming capacitor discharge; dump-resistor circuit itself faulty; assumption that power-off equals safe.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Up to ~2000 V stored energy — capable of causing cardiac arrest in the engineer. This is the single highest-consequence hazard in defibrillator service.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Verify auto-discharge via service menu/test point before opening case; manufacturer-specified wait time; insulated tools; never bridge HV terminals directly.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">Electricity at Work Regs 1989 · manufacturer service manual LOTO</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">📊</div><div class="hz-meta"><div class="hz-id">E.02</div><div class="hz-name">Post-Service Energy Delivery Inaccuracy</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Capacitor or H-bridge replaced without full defibrillator analyzer verification across the impedance range; charge-feedback divider not recalibrated.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Device returned to the resus trolley delivers inaccurate energy on its next real use — directly affects survival outcome in a future arrest.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory energy accuracy test at low/mid/max settings across ≥3 impedances before return to service; documented in asset record with analyzer serial number.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🩸</div><div class="hz-meta"><div class="hz-id">E.03</div><div class="hz-name">Biological Exposure — Pads &amp; Paddles</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Device returned for repair still carrying blood, vomit, or gel residue from a resuscitation event; reusable paddles not decontaminated before handover to EBME.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Bloodborne pathogen exposure; contact with bodily fluids from a peri-arrest event, often without warning that the device was just used clinically.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Decontamination certificate required before EBME accepts device; universal precautions; PPE; treat every post-use device as contaminated until proven otherwise.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">💾</div><div class="hz-meta"><div class="hz-id">E.04</div><div class="hz-name">Firmware / Rhythm Algorithm Error</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Firmware update interrupted or rolled back to an unvalidated version; rhythm analysis algorithm version mismatch with manufacturer's current DF80-validated release.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Shock advisory accuracy degraded on an AED unit — a subtle fault with no obvious symptom until a real arrest event.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">OEM-approved update path only; verify version before/after; functional rhythm-simulator test post-update; document in asset/firmware record.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">IEC 62304 · MHRA FSN process</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🔍</div><div class="hz-meta"><div class="hz-id">E.05</div><div class="hz-name">Self-Test Failure Missed at PPM</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Event log not reviewed at PPM; transient self-test failures dismissed without investigation; log cleared before root cause identified.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">A device with an intermittent fault is returned to the resus trolley and may fail at the point of clinical need.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory event log review before every PPM sign-off; investigate any repeated fault code even if the device currently "passes"; do not clear logs until root cause is resolved.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">💥</div><div class="hz-meta"><div class="hz-id">E.06</div><div class="hz-name">Arc Flash from Analyzer Test Rig</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Defibrillator analyzer test leads damaged or incorrectly connected; test performed at maximum energy with poor connection contact.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Arc flash burn to engineer; damage to test equipment; inaccurate reading leading to a false pass.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Inspect analyzer leads before each use; secure connections before charge; maintain analyzer per its own calibration schedule.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALARMS -->
+<div id="sec-alm" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 04 · Alarm System</div>
+      <div class="sec-title">IEC 60601-1-8<br>Alarm & Advisory Classification</div>
+    </div>
+    <div class="sec-note">Unlike continuous monitoring alarms, many defibrillator alerts are event-driven prompts rather than sustained conditions — but their timing is just as safety-critical.</div>
+  </div>
+
+  <div class="pri-grid">
+    <div class="pri-card pc-h">
+      <div class="pc-label" style="color:#922b21">HIGH PRIORITY</div>
+      <div class="pc-title" style="color:#922b21">Immediate Action</div>
+      <div class="pc-items">· Red flashing visual<br>· Distinct repeating tone<br>· ≥65 dBA at 1 m<br>· Cannot be permanently silenced</div>
+    </div>
+    <div class="pri-card pc-m">
+      <div class="pc-label" style="color:#784212">MEDIUM PRIORITY</div>
+      <div class="pc-title" style="color:#784212">Prompt Response</div>
+      <div class="pc-items">· Amber visual<br>· 3-pulse burst<br>· ≥45 dBA at 1 m<br>· Time-limited silence</div>
+    </div>
+    <div class="pri-card pc-l">
+      <div class="pc-label" style="color:var(--user)">LOW PRIORITY</div>
+      <div class="pc-title" style="color:var(--user)">Awareness</div>
+      <div class="pc-items">· Cyan / steady visual<br>· Single chime<br>· Advisory only</div>
+    </div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px;">
+    <table class="atbl">
+      <thead><tr><th style="width:18%">Alert</th><th style="width:9%">Priority</th><th style="width:22%">Trigger Condition</th><th style="width:22%">Device Response</th><th style="width:29%">Engineer's Service Check</th></tr></thead>
+      <tbody>
+        <tr><td>Shockable Rhythm Advised</td><td><span class="pri p-h">HIGH</span></td><td>VF/pulseless VT detected (AED)</td><td>Voice prompt + charge sequence</td><td>Validate against ANSI/AAMI DF80 rhythm library</td></tr>
+        <tr><td>No Shock Advised</td><td><span class="pri p-m">MED</span></td><td>Non-shockable rhythm classified</td><td>Voice prompt: continue CPR</td><td>Verify with non-shockable test rhythms</td></tr>
+        <tr><td>Check Electrodes / Poor Contact</td><td><span class="pri p-h">HIGH</span></td><td>Pad impedance out of range</td><td>Blocks charge until resolved</td><td>Impedance simulator test across full range</td></tr>
+        <tr><td>Charge Ready</td><td><span class="pri p-m">MED</span></td><td>Capacitor reaches target energy</td><td>Tone + steady indicator; enables shock button</td><td>Verify tone audibility ≥ IEC 60601-1-8 threshold</td></tr>
+        <tr><td>Sync Mode Active / Sync Failure</td><td><span class="pri p-h">HIGH</span></td><td>No R-wave detected in sync mode</td><td>Withholds shock; alerts operator</td><td>Verify sync marker aligns with R-wave on simulator</td></tr>
+        <tr><td>Battery Low / Depleted</td><td><span class="pri p-h">HIGH</span></td><td>Battery below usable threshold</td><td>Warning; may block shock</td><td>Battery capacity/load test at PPM</td></tr>
+        <tr><td>Self-Test Failure</td><td><span class="pri p-h">HIGH</span></td><td>Automated self-test detects fault</td><td>Visible fault indicator; device flagged not ready</td><td>Review event log; investigate, do not override</td></tr>
+        <tr><td>Pacing Capture Loss (if fitted)</td><td><span class="pri p-m">MED</span></td><td>No captured beat post-pacing pulse</td><td>Visual/audible alert</td><td>Verify with pacing test load per manufacturer spec</td></tr>
+        <tr><td>Charge Timeout</td><td><span class="pri p-m">MED</span></td><td>Shock not delivered in window after charge</td><td>Auto-discharges capacitor via dump resistor</td><td>Verify auto-discharge function every PPM</td></tr>
+        <tr><td>CPR Prompt (metronome)</td><td><span class="pri p-l">LOW</span></td><td>Time-based, guides compression rate</td><td>Audible metronome / visual feedback</td><td>Verify against manufacturer test rig if fitted</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SAFETY MECHANISMS -->
+<div id="sec-saf" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 05 · Engineered Controls</div>
+      <div class="sec-title">Built-In Safety<br>Mechanisms</div>
+    </div>
+    <div class="sec-note">Each of these must be individually verified during PPM — a functioning "Charge Ready" tone tells you nothing about whether the dump resistor still works.</div>
+  </div>
+
+  <div class="sm-grid">
+    <div class="sm">
+      <div class="sm-bg-num">01</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🔻</div>
+      <div class="sm-eyebrow">Electrical · Engineer &amp; Patient</div>
+      <div class="sm-name">Automatic Dump-Resistor Discharge</div>
+      <div class="sm-desc">Bleeds the HV capacitor safely if no shock is delivered within the timeout window or the energy setting is changed. The single most important safety mechanism for anyone handling the device internally.</div>
+      <div class="sm-std">Manufacturer service manual — verify every PPM</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">02</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🧠</div>
+      <div class="sm-eyebrow">Electronic · Safety Architecture</div>
+      <div class="sm-name">Independent HV Enable Path</div>
+      <div class="sm-desc">Shock trigger and HV enable circuit are gated separately from the main analysis CPU, so a single software fault cannot cause an unintended discharge.</div>
+      <div class="sm-std">IEC 60601-2-4 §201.15 — single-fault safe</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">03</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🎯</div>
+      <div class="sm-eyebrow">Software · Patient</div>
+      <div class="sm-name">Pad Impedance Gating</div>
+      <div class="sm-desc">Charge and shock are blocked outside the validated 25–200 Ω window, preventing ineffective delivery or excessive current on a low-impedance patient.</div>
+      <div class="sm-std">IEC 60601-2-4 — impedance compensation range</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">04</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">💓</div>
+      <div class="sm-eyebrow">Software · Clinical Safety</div>
+      <div class="sm-name">Sync Mode R-Wave Gate</div>
+      <div class="sm-desc">In cardioversion mode, discharge is withheld until a valid R-wave is detected, avoiding delivery during the T-wave vulnerable period.</div>
+      <div class="sm-std">IEC 60601-2-4 §201.8.101</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">05</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🎚️</div>
+      <div class="sm-eyebrow">Electronic · Patient</div>
+      <div class="sm-name">Impedance-Compensated Current Sensing</div>
+      <div class="sm-desc">Real-time current feedback adjusts pulse duration and tilt during discharge, keeping delivered energy consistent across a wide range of patient impedances.</div>
+      <div class="sm-std">IEC 60601-2-4 — waveform accuracy</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">06</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🔋</div>
+      <div class="sm-eyebrow">Electrical · Continuity</div>
+      <div class="sm-name">Automated Self-Test</div>
+      <div class="sm-desc">Daily/weekly automated check of battery, capacitor charge/discharge path, and internal circuitry without full energy delivery. Result logged to event history.</div>
+      <div class="sm-std">Reviewed at PPM — do not dismiss transient failures</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">07</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🔒</div>
+      <div class="sm-eyebrow">Mechanical · User</div>
+      <div class="sm-name">Deliberate Two-Action Shock Trigger</div>
+      <div class="sm-desc">Manual mode requires a distinct charge action followed by a separate, deliberate shock-button press — reducing the chance of accidental discharge during handling.</div>
+      <div class="sm-std">IEC 62366 usability engineering</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">08</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🩹</div>
+      <div class="sm-eyebrow">Electrical · Patient</div>
+      <div class="sm-name">Defib-Proof ECG Isolation</div>
+      <div class="sm-desc">ECG front-end is isolated to survive the HV discharge pulse without damage and recover trace display within the standard-mandated window.</div>
+      <div class="sm-std">IEC 60601-2-27 — defib protection &amp; recovery</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">09</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">📒</div>
+      <div class="sm-eyebrow">Software · Forensic</div>
+      <div class="sm-name">Event Log with Waveform Capture</div>
+      <div class="sm-desc">Non-volatile log of every shock delivered, energy setting, impedance measured, and self-test result. Essential for post-incident review and PPM verification.</div>
+      <div class="sm-std">IEC 62304 · MHRA incident investigation</div>
+    </div>
+  </div>
+</div>
+
+<!-- DEFENCE -->
+<div id="sec-def" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 06 · Swiss Cheese Model</div>
+      <div class="sec-title">Defence-in-Depth</div>
+    </div>
+    <div class="sec-note">Each layer has holes. Harm reaches the patient — or the engineer — only when holes align across all layers simultaneously.</div>
+  </div>
+
+  <div class="def-wrap">
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">I</div></div>
+      <div class="def-body">
+        <div class="def-title">Inherent Design Controls</div>
+        <div class="def-desc">Hazard eliminated at the engineering stage. Pad impedance gating prevents charge on poor contact. Sync gate prevents T-wave shock by design. Independent HV enable path prevents single-fault discharge.</div>
+        <div class="def-tags"><span class="dtag dtag-p">Impedance gating</span><span class="dtag dtag-p">Sync R-wave gate</span><span class="dtag dtag-p">Independent HV enable</span><span class="dtag dtag-p">Defib-proof ECG isolation</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">II</div></div>
+      <div class="def-body">
+        <div class="def-title">Automatic Protection Devices</div>
+        <div class="def-desc">Dump-resistor auto-discharge bleeds the capacitor on timeout. Impedance-compensated current sensing keeps energy consistent. Automated self-test flags faults without human prompting.</div>
+        <div class="def-tags"><span class="dtag dtag-p">Auto-discharge</span><span class="dtag dtag-p">Current-sense compensation</span><span class="dtag dtag-p">Automated self-test</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">III</div></div>
+      <div class="def-body">
+        <div class="def-title">Alarms &amp; Prompts</div>
+        <div class="def-desc">Charge-ready tone, check-electrodes warning, sync-failure alert, and voice-prompted AED guidance all require operator attention at the correct moment.</div>
+        <div class="def-tags"><span class="dtag dtag-u">Charge ready tone</span><span class="dtag dtag-u">Check electrodes</span><span class="dtag dtag-u">AED voice prompts</span><span class="dtag dtag-u">Sync failure alert</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">IV</div></div>
+      <div class="def-body">
+        <div class="def-title">Clinical Procedures &amp; Human Factors</div>
+        <div class="def-desc">ALS/ACLS training, verbal "all clear" protocol, daily resus trolley checks, standardisation on a single model per Trust where feasible.</div>
+        <div class="def-tags"><span class="dtag dtag-u">Verbal "clear" protocol</span><span class="dtag dtag-u">Daily trolley check</span><span class="dtag dtag-u">ALS/ACLS training</span><span class="dtag dtag-u">Model standardisation</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">V</div></div>
+      <div class="def-body">
+        <div class="def-title">Planned Preventive Maintenance (EBME)</div>
+        <div class="def-desc">Annual defibrillator analyzer test across the full energy and impedance range, dump-resistor verification, waveform capture comparison, sync timing test, event log review.</div>
+        <div class="def-tags"><span class="dtag dtag-e">Energy accuracy test</span><span class="dtag dtag-e">Dump-resistor test</span><span class="dtag dtag-e">Waveform capture</span><span class="dtag dtag-e">Sync timing test</span><span class="dtag dtag-e">Event log review</span></div>
+      </div>
+    </div>
+    <div class="def-row" style="border-bottom:none">
+      <div class="def-num"><div class="def-roman">VI</div></div>
+      <div class="def-body">
+        <div class="def-title">Post-Market Surveillance &amp; Vigilance</div>
+        <div class="def-desc">MHRA Yellow Card and MIR reporting, FSCA response, trend analysis across the resus-equipment fleet, ECRI/AAMI hazard alert dissemination.</div>
+        <div class="def-tags"><span class="dtag dtag-e">MHRA Yellow Card</span><span class="dtag dtag-e">Datix incident</span><span class="dtag dtag-e">FSN response</span><span class="dtag dtag-e">ECRI alerts</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STANDARDS -->
+<div id="sec-std" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 07 · Normative Framework</div>
+      <div class="sec-title">Applicable Standards<br>&amp; Regulations</div>
+    </div>
+    <div class="sec-note">Defibrillators sit at the intersection of high-voltage electrical safety, cardiac physiology, and emergency human factors — reflected in a distinct standards landscape.</div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow)">
+    <table class="stbl">
+      <thead><tr><th style="width:18%">Standard / Reg</th><th style="width:28%">Scope</th><th style="width:16%">Applies To</th><th style="width:38%">Key Requirements for EBME</th></tr></thead>
+      <tbody>
+        <tr><td>IEC 60601-2-4</td><td>Particular requirements for cardiac defibrillators</td><td>Manufacturer · EBME</td><td>Energy accuracy ±15%/±3J; charge time limits; sync mode timing; impedance compensation range</td></tr>
+        <tr><td>IEC 60601-1</td><td>General ME equipment — electrical, mechanical safety</td><td>Manufacturer · EBME</td><td>CF applied part leakage; earth continuity; MOOP/MOPP; enclosure safety around HV components</td></tr>
+        <tr><td>IEC 60601-1-8</td><td>Alarm systems for ME equipment</td><td>Manufacturer · EBME · Users</td><td>3-priority alarm characteristics; audibility; independent alarm signal path</td></tr>
+        <tr><td>IEC 60601-1-2</td><td>EMC — electromagnetic disturbances</td><td>Manufacturer · EBME</td><td>Immunity to nearby electrosurgery/mobile devices; emission limits</td></tr>
+        <tr><td>IEC 62366</td><td>Usability engineering</td><td>Manufacturer · Users</td><td>Use-error risk analysis for high-stress emergency use; formative/summative usability testing</td></tr>
+        <tr><td>IEC 62304</td><td>Medical device software lifecycle</td><td>Manufacturer · EBME</td><td>Class C software (rhythm analysis, shock control); firmware change management; SOUP</td></tr>
+        <tr><td>IEC 62353</td><td>Recurrent test and test after repair</td><td>EBME</td><td>Electrical safety re-test after any repair; earth continuity; leakage current thresholds</td></tr>
+        <tr><td>ANSI/AAMI DF80</td><td>Medical electrical equipment — defibrillators</td><td>Manufacturer</td><td>Shock advisory algorithm validation against standard rhythm library</td></tr>
+        <tr><td>ISO 14971:2019</td><td>Risk management for medical devices</td><td>Manufacturer · EBME</td><td>Hazard identification; ALARP; residual risk acceptability; risk management file</td></tr>
+        <tr><td>Resuscitation Council UK / ERC Guidelines</td><td>Clinical resuscitation practice</td><td>Clinical Users</td><td>All-clear protocol; O₂ removal before shock; daily trolley check standard</td></tr>
+        <tr><td>UK MDR 2002 / EU MDR 2017/745</td><td>Medical device regulation</td><td>Manufacturer · EBME · Trust</td><td>Class III classification; UKCA/CE marking; incident reporting; FSCA obligations</td></tr>
+        <tr><td>Electricity at Work 1989</td><td>Electrical safety at work</td><td>EBME Engineer</td><td>Competence for HV work; LOTO; discharge verification before internal access</td></tr>
+        <tr><td>COSHH 2002</td><td>Control of substances hazardous to health</td><td>EBME · Clinical</td><td>Decontamination requirement before device handover to EBME</td></tr>
+        <tr><td>MHRA DB2010(02)</td><td>Managing medical devices</td><td>EBME · Trust</td><td>Asset management; resus-equipment specific check protocols; incident management</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<script>
+function go(id, el, cls) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.getElementById('sec-' + id).classList.add('on');
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active-p','active-u','active-e','active-n'));
+  el.classList.add(cls);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

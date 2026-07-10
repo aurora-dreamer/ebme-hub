@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anaesthesia Machine — Hazard, Alarm & Safety Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f8f5;
+  --white: #ffffff;
+  --ink: #12100e;
+  --ink2: #3d3830;
+  --ink3: #7a7268;
+  --ink4: #b0a898;
+  --rule: #e2ddd6;
+  --rule2: #ede9e2;
+
+  --patient: #c0392b;
+  --patient-bg: #fdf3f2;
+  --patient-light: #fae5e3;
+  --patient-border: #f5b7b1;
+
+  --user: #1a5276;
+  --user-bg: #eaf2f8;
+  --user-light: #d6eaf8;
+  --user-border: #85c1e9;
+
+  --eng: #1e8449;
+  --eng-bg: #eafaf1;
+  --eng-light: #d5f5e3;
+  --eng-border: #82e0aa;
+
+  --alarm: #7d3c98;
+  --alarm-bg: #f5eef8;
+  --alarm-light: #e8daef;
+
+  --safe: #1a5276;
+  --safe-bg: #eaf2f8;
+
+  --crit: #922b21;
+  --maj: #784212;
+  --mod: #4d611b;
+
+  --shadow: 0 1px 3px rgba(18,16,14,0.08), 0 4px 16px rgba(18,16,14,0.05);
+  --shadow-hover: 0 4px 12px rgba(18,16,14,0.12), 0 12px 32px rgba(18,16,14,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.masthead { background: var(--ink); color: var(--bg); padding: 0; position: relative; overflow: hidden; }
+.masthead-inner { padding: 44px 52px 36px; position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: flex-end; }
+.masthead::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(249,248,245,0.07) 1px, transparent 1px); background-size: 22px 22px; z-index: 1; }
+.masthead-rule { width: 48px; height: 3px; background: var(--patient); margin-bottom: 14px; }
+.masthead-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(249,248,245,0.45); margin-bottom: 10px; }
+.masthead h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 4vw, 52px); font-weight: 900; line-height: 1.0; letter-spacing: -1px; margin-bottom: 10px; }
+.masthead h1 em { font-style: italic; font-weight: 400; color: rgba(249,248,245,0.5); }
+.masthead-sub { font-size: 13px; color: rgba(249,248,245,0.5); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; margin-top: 6px; }
+.masthead-pills { display: flex; flex-direction: column; gap: 7px; align-items: flex-end; padding-bottom: 4px; }
+.mpill { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 12px; border-radius: 2px; border: 1px solid; font-weight: 500; }
+.mpill-p { color: #f5b7b1; border-color: #f5b7b1; }
+.mpill-u { color: #85c1e9; border-color: #85c1e9; }
+.mpill-e { color: #82e0aa; border-color: #82e0aa; }
+
+.navbar { background: var(--white); border-bottom: 2px solid var(--rule); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(18,16,14,0.07); }
+.navbar-inner { display: flex; overflow-x: auto; padding: 0 52px; gap: 0; scrollbar-width: none; }
+.navbar-inner::-webkit-scrollbar { display: none; }
+.ntab { padding: 16px 20px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.ntab:hover { color: var(--ink); }
+.ntab-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ntab.active-p { color: var(--patient); border-bottom-color: var(--patient); }
+.ntab.active-u { color: var(--user); border-bottom-color: var(--user); }
+.ntab.active-e { color: var(--eng); border-bottom-color: var(--eng); }
+.ntab.active-n { color: var(--ink); border-bottom-color: var(--ink); }
+
+.shell { max-width: 1360px; margin: 0 auto; padding: 48px 52px; }
+.section { display: none; }
+.section.on { display: block; animation: appear 0.3s ease both; }
+@keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.sec-hd { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: flex-end; padding-bottom: 20px; border-bottom: 1px solid var(--rule); margin-bottom: 32px; }
+.sec-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
+.sec-title { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 900; line-height: 1.1; letter-spacing: -0.5px; }
+.sec-note { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--ink3); max-width: 380px; text-align: right; line-height: 1.55; }
+
+.matrix-card { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow); }
+.matrix-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 3px; color: var(--ink4); text-transform: uppercase; margin-bottom: 4px; }
+.matrix-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+.rm { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 3px; }
+.rc { padding: 10px 6px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; border-radius: 2px; letter-spacing: 0.5px; }
+.rc-head { background: var(--ink); color: var(--bg); letter-spacing: 1px; }
+.rc-side { background: var(--rule2); color: var(--ink2); text-align: right; padding-right: 12px; display: flex; align-items: center; justify-content: flex-end; font-size: 9px; }
+.rc-neg { background: #d5f5e3; color: #145a32; }
+.rc-acc { background: #fef9c3; color: #7d6608; }
+.rc-alarp { background: #fde8c8; color: #784212; }
+.rc-un { background: #fadbd8; color: #922b21; font-weight: 700; }
+
+.ov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+.ov-card { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 24px; box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.ov-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.ov-card.cp::before { background: var(--patient); }
+.ov-card.cu::before { background: var(--user); }
+.ov-card.ce::before { background: var(--eng); }
+.ov-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+
+.ov-hd { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+.ov-icon { font-size: 22px; line-height: 1; }
+.ov-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; line-height: 1; }
+.ov-role { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+
+.ov-stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule2); font-size: 11px; gap: 10px; }
+.ov-stat:last-child { border-bottom: none; }
+.ov-stat-label { color: var(--ink2); }
+
+.sev { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; letter-spacing: 1px; font-weight: 600; text-transform: uppercase; white-space: nowrap; border: 1px solid; }
+.sev-crit { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.sev-maj { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.sev-mod { background: #fdfefe; color: var(--mod); border-color: #a9cce3; }
+.sev-min { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+.hz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.hz { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; box-shadow: var(--shadow); transition: all 0.2s; }
+.hz:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.hz-top { padding: 16px 20px; border-bottom: 1px solid; display: flex; align-items: flex-start; gap: 12px; }
+.hz-glyph { font-size: 20px; line-height: 1; margin-top: 3px; }
+.hz-meta { flex: 1; min-width: 0; }
+.hz-id { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 2px; margin-bottom: 3px; }
+.hz-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.2; }
+.hz-body { padding: 16px 20px; }
+.hz-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--rule2); font-size: 12px; align-items: flex-start; }
+.hz-row:last-child { border-bottom: none; padding-bottom: 0; }
+.hz-k { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; padding-top: 2px; }
+.hz-v { color: var(--ink); line-height: 1.5; }
+
+.atbl { width: 100%; border-collapse: collapse; }
+.atbl th { text-align: left; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); background: var(--ink); font-weight: 500; }
+.atbl td { padding: 12px 14px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.atbl tr:hover td { background: var(--rule2); }
+.atbl td:first-child { font-weight: 600; color: var(--ink); font-size: 12px; }
+.pri { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; border: 1px solid; }
+.p-h { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.p-m { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.p-l { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+
+.sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px; }
+.sm { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 22px; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+.sm:hover { border-color: var(--ink3); box-shadow: var(--shadow-hover); }
+.sm-bg-num { position: absolute; right: 14px; top: 8px; font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 900; color: rgba(18,16,14,0.04); line-height: 1; }
+.sm-icon-wrap { width: 38px; height: 38px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+.sm-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin-bottom: 4px; }
+.sm-name { font-size: 14px; font-weight: 700; font-family: 'IBM Plex Sans', sans-serif; margin-bottom: 8px; line-height: 1.25; }
+.sm-desc { font-size: 12px; color: var(--ink3); line-height: 1.55; margin-bottom: 10px; }
+.sm-std { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 0.5px; padding-top: 8px; border-top: 1px dashed var(--rule2); }
+
+.def-wrap { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; box-shadow: var(--shadow); overflow: hidden; }
+.def-row { display: grid; grid-template-columns: 72px 1fr; border-bottom: 1px solid var(--rule); }
+.def-row:last-child { border-bottom: none; }
+.def-num { padding: 24px 16px; border-right: 1px solid var(--rule); display: flex; align-items: flex-start; justify-content: center; padding-top: 28px; }
+.def-roman { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; color: var(--ink4); font-style: italic; }
+.def-body { padding: 22px 28px; }
+.def-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.def-desc { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
+.def-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.dtag { padding: 2px 9px; border-radius: 2px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.3px; border: 1px solid; }
+.dtag-p { background: var(--patient-light); color: var(--patient); border-color: var(--patient-border); }
+.dtag-u { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+.dtag-e { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+.stbl { width: 100%; border-collapse: collapse; }
+.stbl th { text-align: left; padding: 12px 16px; background: var(--ink); color: var(--bg); font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; }
+.stbl td { padding: 12px 16px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.stbl tr:hover td { background: var(--rule2); }
+.stbl td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--ink); font-size: 11px; white-space: nowrap; }
+
+.banner { display: flex; gap: 12px; padding: 14px 18px; border-radius: 3px; margin-bottom: 20px; font-size: 13px; line-height: 1.55; border-left: 4px solid; }
+.banner-e { background: var(--eng-bg); border-color: var(--eng); color: var(--eng); }
+.banner-p { background: var(--patient-bg); border-color: var(--patient); color: var(--patient); }
+.banner strong { font-weight: 700; display: block; margin-bottom: 3px; }
+
+.pri-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.pri-card { padding: 20px; border-radius: 3px; border: 1px solid; }
+.pc-h { background: #fdedec; border-color: #f1948a; }
+.pc-m { background: #fef5e4; border-color: #f0b27a; }
+.pc-l { background: var(--user-bg); border-color: var(--user-border); }
+.pc-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+.pc-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; font-family: 'IBM Plex Sans', sans-serif; }
+.pc-items { font-size: 11px; line-height: 1.8; color: var(--ink2); }
+
+.vtype-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+.vtype { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 18px; box-shadow: var(--shadow); }
+.vtype-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+.vtype-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+.vtype-desc { font-size: 11px; color: var(--ink3); line-height: 1.6; }
+
+.waveform-wrap { background: var(--ink); border-radius: 3px; padding: 20px; margin-bottom: 20px; overflow: hidden; }
+
+@media (max-width: 1000px) {
+  .masthead-inner { grid-template-columns: 1fr; }
+  .masthead-pills { flex-direction: row; }
+  .ov-grid, .hz-grid, .sm-grid, .pri-grid { grid-template-columns: 1fr; }
+  .vtype-grid { grid-template-columns: repeat(2, 1fr); }
+  .shell { padding: 28px 20px; }
+  .navbar-inner { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-eyebrow">ISO 80601-2-13 · ISO 8835 · IEC 60601-1-8 · Clinical Engineering Reference</div>
+      <div class="masthead-rule"></div>
+      <h1>Anaesthesia Machine<br><em>Hazard, Alarm &<br>Safety Analysis</em></h1>
+      <div class="masthead-sub">Risk across patient · clinical user · service engineer</div>
+    </div>
+    <div class="masthead-pills">
+      <span class="mpill mpill-p">● Patient Risk</span>
+      <span class="mpill mpill-u">● Clinical User</span>
+      <span class="mpill mpill-e">● Service Engineer</span>
+    </div>
+  </div>
+</div>
+
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="ntab active-n" id="t-over" onclick="go('over',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Overview</div>
+    <div class="ntab" id="t-pat" onclick="go('pat',this,'active-p')"><div class="ntab-dot" style="background:var(--patient)"></div>Patient Hazards</div>
+    <div class="ntab" id="t-usr" onclick="go('usr',this,'active-u')"><div class="ntab-dot" style="background:var(--user)"></div>User Hazards</div>
+    <div class="ntab" id="t-eng" onclick="go('eng',this,'active-e')"><div class="ntab-dot" style="background:var(--eng)"></div>Engineer Hazards</div>
+    <div class="ntab" id="t-alm" onclick="go('alm',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Alarm System</div>
+    <div class="ntab" id="t-saf" onclick="go('saf',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Safety Mechanisms</div>
+    <div class="ntab" id="t-def" onclick="go('def',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Defence-in-Depth</div>
+    <div class="ntab" id="t-std" onclick="go('std',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Standards</div>
+  </div>
+</div>
+
+<div class="shell">
+
+<!-- OVERVIEW -->
+<div id="sec-over" class="section on">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 00 · Stakeholder Risk Map</div>
+      <div class="sec-title">The Anaesthesia Machine<br>Risk Landscape</div>
+    </div>
+    <div class="sec-note">An anaesthesia machine simultaneously controls oxygenation, ventilation, and consciousness. Its failure modes uniquely combine hypoxic risk, awareness risk, and occupational gas-exposure risk in one device.</div>
+  </div>
+
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink4);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Device Scope</div>
+  <div class="vtype-grid">
+    <div class="vtype">
+      <div class="vtype-name">Theatre Anaesthesia Workstation</div>
+      <div class="vtype-sub">Draeger Perseus/Primus · GE Aisys · Getinge Flow</div>
+      <div class="vtype-desc">Full workstation: gas blending, vaporizer(s), circle circuit, CO₂ absorber, integrated ventilator, agent/gas monitoring, scavenging.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">Field / Draw-Over Anaesthesia</div>
+      <div class="vtype-sub">Triservice apparatus · Austere environments</div>
+      <div class="vtype-desc">Simplified, minimal-power systems used in resource-limited or military settings, relying on patient's own respiratory effort to draw gas through the vaporizer.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">MRI-Compatible Anaesthesia System</div>
+      <div class="vtype-sub">Non-ferromagnetic construction</div>
+      <div class="vtype-desc">Adapted for use within or near the MRI suite, with materials and monitoring compatible with the magnetic field environment.</div>
+    </div>
+  </div>
+
+  <div class="ov-grid">
+    <div class="ov-card cp" onclick="go('pat',document.getElementById('t-pat'),'active-p')">
+      <div class="ov-hd"><div class="ov-icon">🫁</div><div><div class="ov-name" style="color:var(--patient)">Patient</div><div class="ov-role">Direct physiological consequence</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Hypoxic gas mixture delivery</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Awareness under anaesthesia</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Circuit disconnection / leak</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">CO₂ absorbent exhaustion — hypercapnia</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Vaporizer overdose</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Compound A / absorbent fire risk</span><span class="sev sev-mod">MODERATE</span></div>
+    </div>
+
+    <div class="ov-card cu" onclick="go('usr',document.getElementById('t-usr'),'active-u')">
+      <div class="ov-hd"><div class="ov-icon">👩‍⚕️</div><div><div class="ov-name" style="color:var(--user)">Clinical User</div><div class="ov-role">Use error & human factors</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Machine check (WHO/AAGBI) skipped</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Wrong agent filled into vaporizer</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Vaporizer left on after case</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Flowmeter misread</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Occupational waste gas exposure</span><span class="sev sev-mod">MODERATE</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">APL valve mismanagement</span><span class="sev sev-maj">MAJOR</span></div>
+    </div>
+
+    <div class="ov-card ce" onclick="go('eng',document.getElementById('t-eng'),'active-e')">
+      <div class="ov-hd"><div class="ov-icon">🔧</div><div><div class="ov-name" style="color:var(--eng)">Engineer</div><div class="ov-role">Occupational & patient-forward</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Vaporizer calibration error</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Pipeline gas crossover after install/repair</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Hypoxic guard bypass during test</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Biological exposure — breathing circuit</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">High-pressure gas release</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Absorbent canister reseal incomplete</span><span class="sev sev-mod">MODERATE</span></div>
+    </div>
+  </div>
+
+  <div class="matrix-card">
+    <div class="matrix-label">ISO 14971:2019</div>
+    <div class="matrix-title">Risk Acceptability Matrix — Anaesthesia Machine Hazard Positions</div>
+    <div class="rm">
+      <div class="rc" style="background:transparent;border:none"></div>
+      <div class="rc rc-head">Negligible</div><div class="rc rc-head">Minor</div><div class="rc rc-head">Moderate</div><div class="rc rc-head">Serious</div><div class="rc rc-head">Catastrophic</div>
+
+      <div class="rc rc-side">Improbable</div>
+      <div class="rc rc-neg">Neg</div><div class="rc rc-neg">Neg</div><div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div>
+
+      <div class="rc rc-side">Remote</div>
+      <div class="rc rc-neg">Neg</div><div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Occasional</div>
+      <div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Probable</div>
+      <div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Frequent</div>
+      <div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:var(--ink3);line-height:1.6;font-style:italic">
+      Pre-mitigation: <strong>Hypoxic gas mixture delivered</strong> → Catastrophic × Remote → Unacceptable — mitigated by the mechanical hypoxic guard (proportioning linkage), O₂ failure alarm, and FiO₂ monitoring. <strong>Vaporizer calibration error after service</strong> → Catastrophic × Occasional → Unacceptable — mitigated by mandatory agent-analyser verification before return to service.
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT -->
+<div id="sec-pat" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 01 · Patient Hazards</div>
+      <div class="sec-title" style="color:var(--patient)">Direct Physiological Risk</div>
+    </div>
+    <div class="sec-note">A patient under general anaesthesia cannot compensate for or report a developing problem — every safeguard here substitutes for a patient who cannot say "something's wrong."</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🫧</div><div class="hz-meta"><div class="hz-id">P.01</div><div class="hz-name">Hypoxic Gas Mixture Delivery</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">O₂ pipeline failure with N₂O/air still flowing; proportioning (hypoxic guard) linkage worn or bypassed; flowmeter/rotameter tube crack causing false reading.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Hypoxic brain injury within minutes — one of the most catastrophic and preventable anaesthesia hazards on record.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mechanical hypoxic guard enforcing minimum ~21–25% O₂ regardless of N₂O flow setting; O₂ failure cut-off (Bosch/Ritchie whistle); independent FiO₂/O₂ analyser in the circuit.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">ISO 80601-2-13 §201.12.1.101 — hypoxic guard</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">😳</div><div class="hz-meta"><div class="hz-id">P.02</div><div class="hz-name">Awareness Under Anaesthesia</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Vaporizer empty/undetected running low; agent delivery interrupted by a leak; TIVA pump occlusion without volatile backup; agent monitor not in use or miscalibrated.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Intraoperative awareness with recall — a recognised cause of severe, long-term psychological harm (PTSD) to the patient.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Continuous end-tidal agent monitoring with low-MAC alarm; vaporizer fill-level visible gauge; BIS/depth-of-anaesthesia monitoring where indicated.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">ISO 80601-2-13 §201.12.1 — agent monitoring</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🔌</div><div class="hz-meta"><div class="hz-id">P.03</div><div class="hz-name">Breathing Circuit Disconnection / Leak</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Circuit connector not fully seated; cracked corrugated tubing; APL valve left open; bag/bellows leak from a perished seal.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Loss of ventilation and/or anaesthetic gas delivery under paralysis — the patient cannot breathe for themselves and cannot signal distress.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory low airway pressure/disconnect alarm (cannot be disabled); pre-use leak test (WHO/AAGBI checklist); capnography confirms ongoing ventilation breath-by-breath.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🌬️</div><div class="hz-meta"><div class="hz-id">P.04</div><div class="hz-name">CO₂ Absorbent Exhaustion — Hypercapnia</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Soda lime/absorbent not changed at the recommended interval or colour-change indicator not checked; channelling in the canister reducing effective absorption.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Rebreathing of CO₂ → hypercapnia → tachycardia, arrhythmia, and (in severe cases) cardiovascular collapse.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Capnography with rising inspired CO₂ alarm (earliest and most reliable indicator); absorbent colour-change indicator dye; scheduled replacement protocol.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">💊</div><div class="hz-meta"><div class="hz-id">P.05</div><div class="hz-name">Vaporizer Overdose</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Vaporizer tipped, allowing liquid agent into the bypass chamber; wrong agent filled (e.g., desflurane into a sevoflurane vaporizer); internal calibration drift.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Sudden high-concentration agent delivery causes profound hypotension, bradycardia, or cardiovascular collapse.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Agent-specific keyed filling ports (Pin Index/agent-specific filler system prevents wrong-agent filling); end-tidal agent monitoring with high-MAC alarm; interlock preventing two vaporizers running simultaneously.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">ISO 5360 — anaesthetic vaporizer requirements</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🔥</div><div class="hz-meta"><div class="hz-id">P.06</div><div class="hz-name">Compound A / Absorbent Fire Risk</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Desiccated (dried-out) CO₂ absorbent reacting exothermically with sevoflurane or desflurane, producing Compound A or, in extreme cases, a canister fire.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Nephrotoxic potential from Compound A (sevoflurane); rare but documented absorbent canister fires causing burns and equipment damage.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Turn off fresh gas flow when machine is not in use for extended periods; use low-desiccation absorbents; replace absorbent per schedule regardless of apparent colour change.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🌡️</div><div class="hz-meta"><div class="hz-id">P.07</div><div class="hz-name">Barotrauma from APL/Pressure Relief Fault</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Adjustable pressure-limiting (APL) valve stuck closed; ventilator relief valve fault; fresh gas flow too high with valve closed during manual ventilation.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Circuit pressure rises uncontrolled → barotrauma, pneumothorax, particularly dangerous in paediatric anaesthesia with smaller lung volumes.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">High airway pressure alarm; independent mechanical pressure-relief valve; PPM verification of APL valve function across its full range.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🌡️</div><div class="hz-meta"><div class="hz-id">P.08</div><div class="hz-name">Malignant Hyperthermia Trigger Cross-Contamination</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Machine previously used with a volatile agent not adequately flushed/decontaminated before use on an MH-susceptible patient requiring a trigger-free anaesthetic.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Residual volatile agent traces can precipitate a malignant hyperthermia crisis in a susceptible patient — a life-threatening hypermetabolic emergency.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Dedicated "MH-clean" machine or validated flushing protocol (fresh gas flow flush + absorbent/circuit change) per AAGBI guidance; activated charcoal filters where used.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">Association of Anaesthetists MH guidance</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USER -->
+<div id="sec-usr" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 02 · Clinical User Hazards</div>
+      <div class="sec-title" style="color:var(--user)">Use Error &<br>Human Factors</div>
+    </div>
+    <div class="sec-note">The pre-use machine check is the single most important human defence layer in anaesthesia — and the one most vulnerable to time pressure between cases.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">✅</div><div class="hz-meta"><div class="hz-id">U.01</div><div class="hz-name">Pre-Use Machine Check Skipped or Rushed</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">WHO/Association of Anaesthetists checklist skipped between cases under time pressure; assumption that "it was fine this morning" carries through the list.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Undetected leak, absorbent exhaustion, or gas supply fault carried directly into the next case with an anaesthetised patient.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory documented checklist before every case (Association of Anaesthetists Checklist for Anaesthetic Equipment); electronic self-test integrated into modern workstations.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🧴</div><div class="hz-meta"><div class="hz-id">U.02</div><div class="hz-name">Wrong Agent Filled Into Vaporizer</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Bypassing the agent-specific keyed filler system; using a non-keyed funnel; mislabelled agent bottle.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Delivery of an unintended agent at an uncalibrated concentration — unpredictable depth of anaesthesia and cardiovascular effect.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Agent-specific keyed filling systems must never be bypassed; two-person check on vaporizer filling; colour-coded agent labelling per ISO standard.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔛</div><div class="hz-meta"><div class="hz-id">U.03</div><div class="hz-name">Vaporizer Left On After Case</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Vaporizer dial not returned to zero at end of case; distraction during handover/turnover.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Unintended agent exposure to recovery staff or the next patient if fresh gas flow is started before the dial is checked.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">End-of-case checklist item; audible/visual indicator of non-zero vaporizer setting on modern workstations.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">📏</div><div class="hz-meta"><div class="hz-id">U.04</div><div class="hz-name">Flowmeter / Fresh Gas Flow Misread</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Traditional rotameter tube misread (ball position parallax); confusion between O₂ and N₂O/air flow controls under time pressure.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Inappropriate FiO₂ delivered; risk compounded on older machines without electronic gas mixture display.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Electronic gas mixture display on modern workstations; standardised flow-control knob shapes/colours (O₂ always distinct); independent O₂ analyser cross-check.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">💨</div><div class="hz-meta"><div class="hz-id">U.05</div><div class="hz-name">Occupational Waste Gas Exposure</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Scavenging system disconnected, blocked, or not activated; poor mask seal during induction; high fresh gas flows without adequate extraction.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Chronic low-level volatile agent exposure to theatre staff — associated in the literature with headache, fatigue, and reproductive health concerns at sustained high exposure.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Active scavenging system with flow verification; theatre air-change rate compliance (HTM 03-01); occupational exposure monitoring where indicated.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">COSHH 2002 · HTM 03-01</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🎛️</div><div class="hz-meta"><div class="hz-id">U.06</div><div class="hz-name">APL Valve Mismanagement (Manual Ventilation)</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">APL valve left fully closed during bag-mask ventilation; valve position not adjusted when switching between spontaneous and controlled ventilation.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Excessive circuit pressure delivered to the patient — particularly hazardous in paediatric cases with a low pressure-injury threshold.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Training on APL valve function and correct positioning for each ventilation mode; pressure gauge always visible during manual ventilation.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENGINEER -->
+<div id="sec-eng" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 03 · Service Engineer Hazards</div>
+      <div class="sec-title" style="color:var(--eng)">Occupational &<br>Patient-Forward Risk</div>
+    </div>
+    <div class="sec-note">Anaesthesia machine servicing uniquely combines pressurised medical gas work with precision vaporizer calibration — errors in either propagate directly to an anaesthetised, non-consenting-in-the-moment patient.</div>
+  </div>
+
+  <div class="banner banner-e">
+    <span style="font-size:18px">⚠</span>
+    <div><strong>Regulatory context</strong> Vaporizer and gas-delivery calibration errors are among the most serious reportable events in anaesthesia equipment servicing. Post-service agent-analyser verification is not optional.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">📊</div><div class="hz-meta"><div class="hz-id">E.01</div><div class="hz-name">Vaporizer Calibration Error</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Vaporizer serviced/refilled and returned without agent-analyser verification across the dial range; wrong agent used during bench test; internal temperature-compensation bellows fault.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Machine delivers an incorrect anaesthetic concentration on its next clinical use — directly causes either awareness (under-delivery) or cardiovascular collapse (over-delivery).</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory calibrated gas analyser (Riken/agent-specific) verification across the full dial range before return to service; documented with analyser serial number and traceability certificate.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">ISO 5360 · manufacturer service manual</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🔀</div><div class="hz-meta"><div class="hz-id">E.02</div><div class="hz-name">Pipeline Gas Crossover After Install/Repair</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Non-interchangeable (NIST/Schrader) gas fittings bypassed or incorrectly reassembled after pipeline or machine-side work; hose assembly error during installation.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Wrong gas delivered to the patient port (e.g., N₂O where O₂ is expected) — a catastrophic, well-documented category of anaesthesia incident.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory gas-specific crossover test after any pipeline or machine gas-supply work, per HTM 02-01; never defeat or adapt non-interchangeable fittings.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">HTM 02-01 · MHRA gas safety guidance</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🛡️</div><div class="hz-meta"><div class="hz-id">E.03</div><div class="hz-name">Hypoxic Guard Bypassed During Test</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Proportioning linkage disconnected for testing and not correctly reassembled/re-verified; test performed with the O₂ failure alarm disabled and not re-enabled.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Machine returned to service with its principal defence against hypoxic gas delivery silently disabled.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory hypoxic guard function test (progressively reduce O₂ flow and confirm N₂O cuts out at the correct ratio) before every return to service; checklist sign-off.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🩸</div><div class="hz-meta"><div class="hz-id">E.04</div><div class="hz-name">Biological Exposure — Breathing Circuit</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Circuit, absorber, or bellows returned with secretions/blood contamination; no decontamination certificate accompanying the returned machine.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Bloodborne pathogen or respiratory pathogen exposure to the engineer during disassembly.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Decontamination certificate required before EBME accepts the machine; universal precautions; PPE for circuit and absorber handling.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">COSHH 2002 · MHRA DB2006(06)</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">💨</div><div class="hz-meta"><div class="hz-id">E.05</div><div class="hz-name">High-Pressure Gas Release Hazard</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Pipeline or cylinder hose disconnected under pressure; regulator failure; work performed on a pressurised line without depressurising first.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">High-pressure hose whip injury; rapid decompression burns; O₂-enriched atmosphere near an ignition source.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Depressurise before disconnecting; oil-free tools near O₂ connections; no grease on O₂ fittings; ventilate the work area.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">HTM 02-01</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🧪</div><div class="hz-meta"><div class="hz-id">E.06</div><div class="hz-name">CO₂ Absorbent Canister Reseal Incomplete</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Absorber canister disassembled for inspection/replacement and reseated without a proper gasket seal; O-ring degraded and not replaced.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Circuit leak reducing effective CO₂ scrubbing and fresh gas delivery — may not be caught by a routine leak test if the leak is small.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Full circuit leak test after any absorber work; visual gasket/O-ring inspection at every PPM; replace seals per OEM service interval.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALARMS -->
+<div id="sec-alm" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 04 · Alarm System</div>
+      <div class="sec-title">IEC 60601-1-8<br>Alarm Classification</div>
+    </div>
+    <div class="sec-note">Anaesthesia alarms span gas supply, circuit integrity, agent delivery, and ventilation — a broader alarm surface than almost any other device class in the operating theatre.</div>
+  </div>
+
+  <div class="pri-grid">
+    <div class="pri-card pc-h">
+      <div class="pc-label" style="color:#922b21">HIGH PRIORITY</div>
+      <div class="pc-title" style="color:#922b21">Immediate Action</div>
+      <div class="pc-items">· Red flashing visual<br>· 10-pulse repeating burst<br>· ≥65 dBA at 1 m<br>· Cannot be disabled (O₂ failure)</div>
+    </div>
+    <div class="pri-card pc-m">
+      <div class="pc-label" style="color:#784212">MEDIUM PRIORITY</div>
+      <div class="pc-title" style="color:#784212">Prompt Response</div>
+      <div class="pc-items">· Amber visual<br>· 3-pulse burst<br>· ≥45 dBA at 1 m<br>· Time-limited silence</div>
+    </div>
+    <div class="pri-card pc-l">
+      <div class="pc-label" style="color:var(--user)">LOW PRIORITY</div>
+      <div class="pc-title" style="color:var(--user)">Awareness</div>
+      <div class="pc-items">· Cyan / steady visual<br>· Single chime<br>· Advisory only</div>
+    </div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px;">
+    <table class="atbl">
+      <thead><tr><th style="width:18%">Alarm</th><th style="width:9%">Priority</th><th style="width:22%">Trigger Condition</th><th style="width:22%">Machine Response</th><th style="width:29%">Engineer's Service Check</th></tr></thead>
+      <tbody>
+        <tr><td>O₂ Supply Failure</td><td><span class="pri p-h">HIGH</span></td><td>O₂ pipeline pressure &lt; ~2.5 bar</td><td>Audible whistle/alarm; cuts N₂O supply automatically</td><td>O₂ failure cut-off function test; pressure sensor verification</td></tr>
+        <tr><td>Hypoxic Guard Activation</td><td><span class="pri p-h">HIGH</span></td><td>O₂ fraction would fall below safe minimum</td><td>Limits/prevents further N₂O increase</td><td>Proportioning linkage test across flow range</td></tr>
+        <tr><td>Low Circuit Pressure / Disconnect</td><td><span class="pri p-h">HIGH</span></td><td>Airway pressure below threshold for set duration</td><td>Immediate alarm</td><td>Leak test; pressure sensor calibration</td></tr>
+        <tr><td>High Circuit Pressure</td><td><span class="pri p-h">HIGH</span></td><td>Airway pressure exceeds set limit</td><td>Alarm; may trigger relief valve</td><td>APL/relief valve function test; pressure sensor calibration</td></tr>
+        <tr><td>Low/High Agent Concentration</td><td><span class="pri p-h">HIGH</span></td><td>End-tidal agent outside set MAC-equivalent range</td><td>Alarm — awareness/overdose risk</td><td>Agent analyser verification across dial range</td></tr>
+        <tr><td>High Inspired CO₂</td><td><span class="pri p-h">HIGH</span></td><td>Rising inspired CO₂ — absorbent exhaustion</td><td>Alarm</td><td>Capnograph calibration; absorbent condition check</td></tr>
+        <tr><td>Low Minute Volume</td><td><span class="pri p-h">HIGH</span></td><td>Delivered MV below set threshold</td><td>Alarm</td><td>Flow sensor calibration; leak test</td></tr>
+        <tr><td>Vaporizer Interlock Fault</td><td><span class="pri p-m">MED</span></td><td>Two vaporizers appear engaged simultaneously</td><td>Prevents dual-agent delivery</td><td>Interlock mechanism function test</td></tr>
+        <tr><td>Scavenging System Fault</td><td><span class="pri p-m">MED</span></td><td>Extraction flow outside expected range</td><td>Alarm — occupational exposure risk</td><td>Scavenging flow rate verification</td></tr>
+        <tr><td>Battery Low (integrated ventilator)</td><td><span class="pri p-m">MED</span></td><td>Battery &lt;20% capacity</td><td>Alert; continues on mains</td><td>Battery capacity/load test</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SAFETY MECHANISMS -->
+<div id="sec-saf" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 05 · Engineered Controls</div>
+      <div class="sec-title">Built-In Safety<br>Mechanisms</div>
+    </div>
+    <div class="sec-note">These are the design-embedded defences that act before any human response is required — several are purely mechanical, by deliberate design choice, so they work even during a total power loss.</div>
+  </div>
+
+  <div class="sm-grid">
+    <div class="sm">
+      <div class="sm-bg-num">01</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🛡️</div>
+      <div class="sm-eyebrow">Mechanical · Patient</div>
+      <div class="sm-name">Hypoxic Guard (Proportioning Linkage)</div>
+      <div class="sm-desc">A purely mechanical linkage between the O₂ and N₂O flow controls physically prevents the O₂ fraction from falling below a safe minimum, regardless of electronic failure.</div>
+      <div class="sm-std">ISO 80601-2-13 §201.12.1.101</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">02</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🔊</div>
+      <div class="sm-eyebrow">Mechanical/Pneumatic · Patient</div>
+      <div class="sm-name">O₂ Failure Alarm (Bosch/Ritchie Whistle)</div>
+      <div class="sm-desc">A pneumatically powered whistle sounds on loss of O₂ pipeline pressure, independent of the machine's electrical supply — works even during total power failure.</div>
+      <div class="sm-std">ISO 80601-2-13 — independent of electrical power</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">03</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🧴</div>
+      <div class="sm-eyebrow">Mechanical · Patient</div>
+      <div class="sm-name">Agent-Specific Keyed Filling System</div>
+      <div class="sm-desc">Vaporizer filling ports are keyed to a specific agent, physically preventing the wrong volatile agent from being introduced.</div>
+      <div class="sm-std">ISO 5360 — vaporizer filling systems</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">04</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🔒</div>
+      <div class="sm-eyebrow">Mechanical · Patient</div>
+      <div class="sm-name">Vaporizer Interlock</div>
+      <div class="sm-desc">Prevents more than one vaporizer being engaged into the fresh gas pathway at the same time, eliminating unintended dual-agent delivery.</div>
+      <div class="sm-std">ISO 80601-2-13 — interlock requirement</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">05</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🔌</div>
+      <div class="sm-eyebrow">Mechanical · Patient</div>
+      <div class="sm-name">Non-Interchangeable Gas Fittings (NIST/Schrader)</div>
+      <div class="sm-desc">Gas-specific connector geometry physically prevents cross-connection between O₂, N₂O, air, and vacuum lines at the pipeline and machine level.</div>
+      <div class="sm-std">ISO 5359 — pipeline hose assemblies</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">06</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">📈</div>
+      <div class="sm-eyebrow">Electronic · Patient</div>
+      <div class="sm-name">Continuous Agent &amp; Capnography Monitoring</div>
+      <div class="sm-desc">End-tidal agent concentration and CO₂ are monitored breath-by-breath, providing the earliest and most reliable warning of awareness risk or absorbent exhaustion.</div>
+      <div class="sm-std">ISO 80601-2-55 — respiratory gas monitors</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">07</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🎚️</div>
+      <div class="sm-eyebrow">Mechanical · Patient</div>
+      <div class="sm-name">Adjustable Pressure-Limiting (APL) / Relief Valve</div>
+      <div class="sm-desc">Provides a manually or automatically controlled pressure ceiling in the breathing circuit, backed by an independent mechanical relief valve for absolute overpressure protection.</div>
+      <div class="sm-std">ISO 80601-2-13 §201.11</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">08</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🌬️</div>
+      <div class="sm-eyebrow">Mechanical · Occupational</div>
+      <div class="sm-name">Active Scavenging System</div>
+      <div class="sm-desc">Continuously extracts waste anaesthetic gas from the circuit and theatre environment, protecting staff from chronic low-level exposure.</div>
+      <div class="sm-std">HTM 03-01 · COSHH 2002</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">09</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🧪</div>
+      <div class="sm-eyebrow">Chemical · Patient</div>
+      <div class="sm-name">CO₂ Absorbent Colour-Change Indicator</div>
+      <div class="sm-desc">Dye additive in the soda lime changes colour as absorptive capacity is exhausted, giving a simple visual cue for timely replacement.</div>
+      <div class="sm-std">Manufacturer product specification</div>
+    </div>
+  </div>
+</div>
+
+<!-- DEFENCE -->
+<div id="sec-def" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 06 · Swiss Cheese Model</div>
+      <div class="sec-title">Defence-in-Depth</div>
+    </div>
+    <div class="sec-note">Each layer has holes. Harm reaches the patient only when holes align across all layers simultaneously.</div>
+  </div>
+
+  <div class="def-wrap">
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">I</div></div>
+      <div class="def-body">
+        <div class="def-title">Inherent Design Controls</div>
+        <div class="def-desc">The hypoxic guard, non-interchangeable gas fittings, and agent-specific keyed vaporizer fillers all remove hazards mechanically, at source, independent of any electronic system.</div>
+        <div class="def-tags"><span class="dtag dtag-p">Hypoxic guard</span><span class="dtag dtag-p">NIST/Schrader fittings</span><span class="dtag dtag-p">Keyed vaporizer filler</span><span class="dtag dtag-p">Vaporizer interlock</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">II</div></div>
+      <div class="def-body">
+        <div class="def-title">Automatic Protection Devices</div>
+        <div class="def-desc">O₂ failure whistle sounds without electrical power. Mechanical pressure-relief valve caps circuit pressure independent of software.</div>
+        <div class="def-tags"><span class="dtag dtag-p">O₂ failure whistle</span><span class="dtag dtag-p">Mechanical relief valve</span><span class="dtag dtag-p">Absorbent colour indicator</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">III</div></div>
+      <div class="def-body">
+        <div class="def-title">Alarms &amp; Warnings</div>
+        <div class="def-desc">Continuous agent monitoring, capnography, and circuit pressure alarms all require the anaesthetist's attention at the correct moment.</div>
+        <div class="def-tags"><span class="dtag dtag-u">Agent concentration alarm</span><span class="dtag dtag-u">CO₂ alarm</span><span class="dtag dtag-u">Circuit pressure alarm</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">IV</div></div>
+      <div class="def-body">
+        <div class="def-title">Clinical Procedures &amp; Human Factors</div>
+        <div class="def-desc">WHO/Association of Anaesthetists pre-use checklist, two-person vaporizer filling check, end-of-case dial-zero verification, MH-clean machine protocol.</div>
+        <div class="def-tags"><span class="dtag dtag-u">Pre-use checklist</span><span class="dtag dtag-u">Two-person fill check</span><span class="dtag dtag-u">End-of-case check</span><span class="dtag dtag-u">MH-clean protocol</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">V</div></div>
+      <div class="def-body">
+        <div class="def-title">Planned Preventive Maintenance (EBME)</div>
+        <div class="def-desc">Annual hypoxic guard function test, agent-analyser calibration verification across the dial range, gas crossover test after any pipeline work, circuit leak test, scavenging flow verification.</div>
+        <div class="def-tags"><span class="dtag dtag-e">Hypoxic guard test</span><span class="dtag dtag-e">Agent analyser cal.</span><span class="dtag dtag-e">Crossover test</span><span class="dtag dtag-e">Leak test</span><span class="dtag dtag-e">Scavenging test</span></div>
+      </div>
+    </div>
+    <div class="def-row" style="border-bottom:none">
+      <div class="def-num"><div class="def-roman">VI</div></div>
+      <div class="def-body">
+        <div class="def-title">Post-Market Surveillance &amp; Vigilance</div>
+        <div class="def-desc">MHRA Yellow Card and MIR reporting, FSCA response, incident investigation for any awareness or hypoxia event, ECRI/AAMI hazard alert dissemination.</div>
+        <div class="def-tags"><span class="dtag dtag-e">MHRA Yellow Card</span><span class="dtag dtag-e">Datix incident</span><span class="dtag dtag-e">FSN response</span><span class="dtag dtag-e">ECRI alerts</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STANDARDS -->
+<div id="sec-std" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 07 · Normative Framework</div>
+      <div class="sec-title">Applicable Standards<br>&amp; Regulations</div>
+    </div>
+    <div class="sec-note">Anaesthesia machines are covered by a distinctive standards landscape spanning gas delivery, vaporizer performance, respiratory monitoring, and occupational gas safety.</div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow)">
+    <table class="stbl">
+      <thead><tr><th style="width:18%">Standard / Reg</th><th style="width:28%">Scope</th><th style="width:16%">Applies To</th><th style="width:38%">Key Requirements for EBME</th></tr></thead>
+      <tbody>
+        <tr><td>ISO 80601-2-13</td><td>Particular requirements for anaesthetic workstations</td><td>Manufacturer · EBME</td><td>Hypoxic guard; O₂ failure alarm; agent interlock; pressure relief; alarm requirements</td></tr>
+        <tr><td>ISO 8835 series</td><td>Anaesthetic and respiratory equipment — general requirements</td><td>Manufacturer · EBME</td><td>Breathing system, absorber, and vaporizer performance requirements across the series</td></tr>
+        <tr><td>ISO 5360</td><td>Anaesthetic vaporizers — requirements</td><td>Manufacturer · EBME</td><td>Agent-specific keyed filling; accuracy across temperature and flow range</td></tr>
+        <tr><td>ISO 5359</td><td>Low-pressure hose assemblies for medical gases</td><td>Manufacturer · EBME · Estates</td><td>Non-interchangeable connector requirements; crossover test after any pipeline work</td></tr>
+        <tr><td>ISO 80601-2-55</td><td>Respiratory gas monitors</td><td>Manufacturer · EBME</td><td>Agent and CO₂ monitoring accuracy; alarm limits</td></tr>
+        <tr><td>IEC 60601-1</td><td>General ME equipment — electrical, mechanical safety</td><td>Manufacturer · EBME</td><td>Electrical safety; mechanical hazards; MOOP/MOPP</td></tr>
+        <tr><td>IEC 60601-1-8</td><td>Alarm systems for ME equipment</td><td>Manufacturer · EBME · Users</td><td>3-priority alarm characteristics; O₂ failure alarm cannot be disabled</td></tr>
+        <tr><td>IEC 62304</td><td>Medical device software lifecycle</td><td>Manufacturer · EBME</td><td>Class C software for integrated ventilator/monitoring functions</td></tr>
+        <tr><td>IEC 62353</td><td>Recurrent test and test after repair</td><td>EBME</td><td>Electrical safety re-test after any mains-side repair</td></tr>
+        <tr><td>ISO 14971:2019</td><td>Risk management for medical devices</td><td>Manufacturer · EBME</td><td>Hazard identification; ALARP; residual risk acceptability</td></tr>
+        <tr><td>HTM 02-01</td><td>Medical gas pipeline systems</td><td>EBME · Estates</td><td>Pipeline integrity; crossover testing; pressure verification; NIST/Schrader fitting compliance</td></tr>
+        <tr><td>HTM 03-01</td><td>Ventilation in healthcare premises</td><td>EBME · Estates</td><td>Theatre air-change rates; scavenging exhaust compliance</td></tr>
+        <tr><td>Association of Anaesthetists Checklist</td><td>Pre-use anaesthetic equipment check</td><td>Clinical Users</td><td>Mandatory pre-use machine check standard referenced by Trust policy</td></tr>
+        <tr><td>COSHH 2002</td><td>Control of substances hazardous to health</td><td>EBME · Clinical</td><td>Waste anaesthetic gas exposure; biological exposure before service</td></tr>
+        <tr><td>UK MDR 2002 / EU MDR 2017/745</td><td>Medical device regulation</td><td>Manufacturer · EBME · Trust</td><td>UKCA/CE marking; incident reporting; FSCA obligations</td></tr>
+        <tr><td>MHRA DB2010(02)</td><td>Managing medical devices</td><td>EBME · Trust</td><td>Asset management; maintenance record retention; incident management</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<script>
+function go(id, el, cls) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.getElementById('sec-' + id).classList.add('on');
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active-p','active-u','active-e','active-n'));
+  el.classList.add(cls);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

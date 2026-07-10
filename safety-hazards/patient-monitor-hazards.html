@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patient Monitor — Hazard, Alarm & Safety Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f8f5;
+  --white: #ffffff;
+  --ink: #12100e;
+  --ink2: #3d3830;
+  --ink3: #7a7268;
+  --ink4: #b0a898;
+  --rule: #e2ddd6;
+  --rule2: #ede9e2;
+
+  --patient: #c0392b;
+  --patient-bg: #fdf3f2;
+  --patient-light: #fae5e3;
+  --patient-border: #f5b7b1;
+
+  --user: #1a5276;
+  --user-bg: #eaf2f8;
+  --user-light: #d6eaf8;
+  --user-border: #85c1e9;
+
+  --eng: #1e8449;
+  --eng-bg: #eafaf1;
+  --eng-light: #d5f5e3;
+  --eng-border: #82e0aa;
+
+  --alarm: #7d3c98;
+  --alarm-bg: #f5eef8;
+  --alarm-light: #e8daef;
+
+  --safe: #1a5276;
+  --safe-bg: #eaf2f8;
+
+  --crit: #922b21;
+  --maj: #784212;
+  --mod: #4d611b;
+
+  --shadow: 0 1px 3px rgba(18,16,14,0.08), 0 4px 16px rgba(18,16,14,0.05);
+  --shadow-hover: 0 4px 12px rgba(18,16,14,0.12), 0 12px 32px rgba(18,16,14,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.masthead { background: var(--ink); color: var(--bg); padding: 0; position: relative; overflow: hidden; }
+.masthead-inner { padding: 44px 52px 36px; position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: flex-end; }
+.masthead::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(249,248,245,0.07) 1px, transparent 1px); background-size: 22px 22px; z-index: 1; }
+.masthead-rule { width: 48px; height: 3px; background: var(--patient); margin-bottom: 14px; }
+.masthead-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(249,248,245,0.45); margin-bottom: 10px; }
+.masthead h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 4vw, 52px); font-weight: 900; line-height: 1.0; letter-spacing: -1px; margin-bottom: 10px; }
+.masthead h1 em { font-style: italic; font-weight: 400; color: rgba(249,248,245,0.5); }
+.masthead-sub { font-size: 13px; color: rgba(249,248,245,0.5); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; margin-top: 6px; }
+.masthead-pills { display: flex; flex-direction: column; gap: 7px; align-items: flex-end; padding-bottom: 4px; }
+.mpill { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 12px; border-radius: 2px; border: 1px solid; font-weight: 500; }
+.mpill-p { color: #f5b7b1; border-color: #f5b7b1; }
+.mpill-u { color: #85c1e9; border-color: #85c1e9; }
+.mpill-e { color: #82e0aa; border-color: #82e0aa; }
+
+.navbar { background: var(--white); border-bottom: 2px solid var(--rule); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(18,16,14,0.07); }
+.navbar-inner { display: flex; overflow-x: auto; padding: 0 52px; gap: 0; scrollbar-width: none; }
+.navbar-inner::-webkit-scrollbar { display: none; }
+.ntab { padding: 16px 20px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.ntab:hover { color: var(--ink); }
+.ntab-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ntab.active-p { color: var(--patient); border-bottom-color: var(--patient); }
+.ntab.active-u { color: var(--user); border-bottom-color: var(--user); }
+.ntab.active-e { color: var(--eng); border-bottom-color: var(--eng); }
+.ntab.active-n { color: var(--ink); border-bottom-color: var(--ink); }
+
+.shell { max-width: 1360px; margin: 0 auto; padding: 48px 52px; }
+.section { display: none; }
+.section.on { display: block; animation: appear 0.3s ease both; }
+@keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.sec-hd { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: flex-end; padding-bottom: 20px; border-bottom: 1px solid var(--rule); margin-bottom: 32px; }
+.sec-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
+.sec-title { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 900; line-height: 1.1; letter-spacing: -0.5px; }
+.sec-note { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--ink3); max-width: 380px; text-align: right; line-height: 1.55; }
+
+.matrix-card { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow); }
+.matrix-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 3px; color: var(--ink4); text-transform: uppercase; margin-bottom: 4px; }
+.matrix-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+.rm { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 3px; }
+.rc { padding: 10px 6px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; border-radius: 2px; letter-spacing: 0.5px; }
+.rc-head { background: var(--ink); color: var(--bg); letter-spacing: 1px; }
+.rc-side { background: var(--rule2); color: var(--ink2); text-align: right; padding-right: 12px; display: flex; align-items: center; justify-content: flex-end; font-size: 9px; }
+.rc-neg { background: #d5f5e3; color: #145a32; }
+.rc-acc { background: #fef9c3; color: #7d6608; }
+.rc-alarp { background: #fde8c8; color: #784212; }
+.rc-un { background: #fadbd8; color: #922b21; font-weight: 700; }
+
+.ov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+.ov-card { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 24px; box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.ov-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.ov-card.cp::before { background: var(--patient); }
+.ov-card.cu::before { background: var(--user); }
+.ov-card.ce::before { background: var(--eng); }
+.ov-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+
+.ov-hd { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+.ov-icon { font-size: 22px; line-height: 1; }
+.ov-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; line-height: 1; }
+.ov-role { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+
+.ov-stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule2); font-size: 11px; gap: 10px; }
+.ov-stat:last-child { border-bottom: none; }
+.ov-stat-label { color: var(--ink2); }
+
+.sev { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; letter-spacing: 1px; font-weight: 600; text-transform: uppercase; white-space: nowrap; border: 1px solid; }
+.sev-crit { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.sev-maj { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.sev-mod { background: #fdfefe; color: var(--mod); border-color: #a9cce3; }
+.sev-min { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+.hz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.hz { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; box-shadow: var(--shadow); transition: all 0.2s; }
+.hz:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.hz-top { padding: 16px 20px; border-bottom: 1px solid; display: flex; align-items: flex-start; gap: 12px; }
+.hz-glyph { font-size: 20px; line-height: 1; margin-top: 3px; }
+.hz-meta { flex: 1; min-width: 0; }
+.hz-id { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 2px; margin-bottom: 3px; }
+.hz-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.2; }
+.hz-body { padding: 16px 20px; }
+.hz-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--rule2); font-size: 12px; align-items: flex-start; }
+.hz-row:last-child { border-bottom: none; padding-bottom: 0; }
+.hz-k { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; padding-top: 2px; }
+.hz-v { color: var(--ink); line-height: 1.5; }
+
+.atbl { width: 100%; border-collapse: collapse; }
+.atbl th { text-align: left; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); background: var(--ink); font-weight: 500; }
+.atbl td { padding: 12px 14px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.atbl tr:hover td { background: var(--rule2); }
+.atbl td:first-child { font-weight: 600; color: var(--ink); font-size: 12px; }
+.pri { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; border: 1px solid; }
+.p-h { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.p-m { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.p-l { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+
+.sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px; }
+.sm { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 22px; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+.sm:hover { border-color: var(--ink3); box-shadow: var(--shadow-hover); }
+.sm-bg-num { position: absolute; right: 14px; top: 8px; font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 900; color: rgba(18,16,14,0.04); line-height: 1; }
+.sm-icon-wrap { width: 38px; height: 38px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+.sm-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin-bottom: 4px; }
+.sm-name { font-size: 14px; font-weight: 700; font-family: 'IBM Plex Sans', sans-serif; margin-bottom: 8px; line-height: 1.25; }
+.sm-desc { font-size: 12px; color: var(--ink3); line-height: 1.55; margin-bottom: 10px; }
+.sm-std { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 0.5px; padding-top: 8px; border-top: 1px dashed var(--rule2); }
+
+.def-wrap { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; box-shadow: var(--shadow); overflow: hidden; }
+.def-row { display: grid; grid-template-columns: 72px 1fr; border-bottom: 1px solid var(--rule); }
+.def-row:last-child { border-bottom: none; }
+.def-num { padding: 24px 16px; border-right: 1px solid var(--rule); display: flex; align-items: flex-start; justify-content: center; padding-top: 28px; }
+.def-roman { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; color: var(--ink4); font-style: italic; }
+.def-body { padding: 22px 28px; }
+.def-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.def-desc { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
+.def-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.dtag { padding: 2px 9px; border-radius: 2px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.3px; border: 1px solid; }
+.dtag-p { background: var(--patient-light); color: var(--patient); border-color: var(--patient-border); }
+.dtag-u { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+.dtag-e { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+.stbl { width: 100%; border-collapse: collapse; }
+.stbl th { text-align: left; padding: 12px 16px; background: var(--ink); color: var(--bg); font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; }
+.stbl td { padding: 12px 16px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.stbl tr:hover td { background: var(--rule2); }
+.stbl td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--ink); font-size: 11px; white-space: nowrap; }
+
+.banner { display: flex; gap: 12px; padding: 14px 18px; border-radius: 3px; margin-bottom: 20px; font-size: 13px; line-height: 1.55; border-left: 4px solid; }
+.banner-e { background: var(--eng-bg); border-color: var(--eng); color: var(--eng); }
+.banner-p { background: var(--patient-bg); border-color: var(--patient); color: var(--patient); }
+.banner strong { font-weight: 700; display: block; margin-bottom: 3px; }
+
+.pri-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.pri-card { padding: 20px; border-radius: 3px; border: 1px solid; }
+.pc-h { background: #fdedec; border-color: #f1948a; }
+.pc-m { background: #fef5e4; border-color: #f0b27a; }
+.pc-l { background: var(--user-bg); border-color: var(--user-border); }
+.pc-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+.pc-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; font-family: 'IBM Plex Sans', sans-serif; }
+.pc-items { font-size: 11px; line-height: 1.8; color: var(--ink2); }
+
+.vtype-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+.vtype { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 18px; box-shadow: var(--shadow); }
+.vtype-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+.vtype-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+.vtype-desc { font-size: 11px; color: var(--ink3); line-height: 1.6; }
+
+.waveform-wrap { background: var(--ink); border-radius: 3px; padding: 20px; margin-bottom: 20px; overflow: hidden; }
+
+@media (max-width: 1000px) {
+  .masthead-inner { grid-template-columns: 1fr; }
+  .masthead-pills { flex-direction: row; }
+  .ov-grid, .hz-grid, .sm-grid, .pri-grid { grid-template-columns: 1fr; }
+  .vtype-grid { grid-template-columns: repeat(2, 1fr); }
+  .shell { padding: 28px 20px; }
+  .navbar-inner { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-eyebrow">IEC 60601-2-27 · IEC 60601-1-8 · ISO 14971 · Clinical Engineering Reference</div>
+      <div class="masthead-rule"></div>
+      <h1>Patient Monitor<br><em>Hazard, Alarm &<br>Safety Analysis</em></h1>
+      <div class="masthead-sub">Risk across patient · clinical user · service engineer</div>
+    </div>
+    <div class="masthead-pills">
+      <span class="mpill mpill-p">● Patient Risk</span>
+      <span class="mpill mpill-u">● Clinical User</span>
+      <span class="mpill mpill-e">● Service Engineer</span>
+    </div>
+  </div>
+</div>
+
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="ntab active-n" id="t-over" onclick="go('over',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Overview</div>
+    <div class="ntab" id="t-pat" onclick="go('pat',this,'active-p')"><div class="ntab-dot" style="background:var(--patient)"></div>Patient Hazards</div>
+    <div class="ntab" id="t-usr" onclick="go('usr',this,'active-u')"><div class="ntab-dot" style="background:var(--user)"></div>User Hazards</div>
+    <div class="ntab" id="t-eng" onclick="go('eng',this,'active-e')"><div class="ntab-dot" style="background:var(--eng)"></div>Engineer Hazards</div>
+    <div class="ntab" id="t-alm" onclick="go('alm',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Alarm System</div>
+    <div class="ntab" id="t-saf" onclick="go('saf',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Safety Mechanisms</div>
+    <div class="ntab" id="t-def" onclick="go('def',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Defence-in-Depth</div>
+    <div class="ntab" id="t-std" onclick="go('std',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Standards</div>
+  </div>
+</div>
+
+<div class="shell">
+
+<!-- OVERVIEW -->
+<div id="sec-over" class="section on">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 00 · Stakeholder Risk Map</div>
+      <div class="sec-title">The Patient Monitor<br>Risk Landscape</div>
+    </div>
+    <div class="sec-note">Patient monitors don't intervene — they watch. Their entire clinical value rests on trustworthy alarms; a monitor that silently fails is arguably more dangerous than no monitor at all.</div>
+  </div>
+
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink4);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Device Scope</div>
+  <div class="vtype-grid">
+    <div class="vtype">
+      <div class="vtype-name">ICU / Critical Care Monitor</div>
+      <div class="vtype-sub">Full parameter set · Central station linked</div>
+      <div class="vtype-desc">ECG, SpO₂, NIBP, IBP, temperature, CO₂. Continuous multi-parameter surveillance for the sickest patients on the unit.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">Ward / Step-Down Monitor</div>
+      <div class="vtype-sub">Vital signs spot-check or continuous</div>
+      <div class="vtype-desc">Simplified parameter set (SpO₂, NIBP, HR), often mobile on a trolley, used for lower-acuity continuous or intermittent monitoring.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">Transport Monitor</div>
+      <div class="vtype-sub">Battery-powered · Compact</div>
+      <div class="vtype-desc">Used during intra/inter-hospital transfer. Must maintain continuity of monitoring through handovers with no gap in surveillance.</div>
+    </div>
+  </div>
+
+  <div class="ov-grid">
+    <div class="ov-card cp" onclick="go('pat',document.getElementById('t-pat'),'active-p')">
+      <div class="ov-hd"><div class="ov-icon">📉</div><div><div class="ov-name" style="color:var(--patient)">Patient</div><div class="ov-role">Direct physiological consequence</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Missed deterioration (false negative)</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">NIBP cuff nerve/skin injury</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">IBP zero drift — wrong clinical decision</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">SpO₂ probe pressure injury</span><span class="sev sev-mod">MODERATE</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Electrical micro-shock (CF)</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Cross-infection — reusable probes</span><span class="sev sev-mod">MODERATE</span></div>
+    </div>
+
+    <div class="ov-card cu" onclick="go('usr',document.getElementById('t-usr'),'active-u')">
+      <div class="ov-hd"><div class="ov-icon">👩‍⚕️</div><div><div class="ov-name" style="color:var(--user)">Clinical User</div><div class="ov-role">Use error & human factors</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Alarm fatigue / limits too wide</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Wrong lead/probe placement</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Alarm silenced and not restored</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Wrong patient/bed association</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Incorrect cuff size selected</span><span class="sev sev-mod">MODERATE</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Central station disconnect unnoticed</span><span class="sev sev-maj">MAJOR</span></div>
+    </div>
+
+    <div class="ov-card ce" onclick="go('eng',document.getElementById('t-eng'),'active-e')">
+      <div class="ov-hd"><div class="ov-icon">🔧</div><div><div class="ov-name" style="color:var(--eng)">Engineer</div><div class="ov-role">Occupational & patient-forward</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Electric shock (mains)</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Post-service IBP/NIBP miscalibration</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Biological exposure — cables/probes</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Firmware update removes alarm logic</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Nurse-call relay untested</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">ESR skipped after repair</span><span class="sev sev-maj">MAJOR</span></div>
+    </div>
+  </div>
+
+  <div class="matrix-card">
+    <div class="matrix-label">ISO 14971:2019</div>
+    <div class="matrix-title">Risk Acceptability Matrix — Patient Monitor Hazard Positions</div>
+    <div class="rm">
+      <div class="rc" style="background:transparent;border:none"></div>
+      <div class="rc rc-head">Negligible</div><div class="rc rc-head">Minor</div><div class="rc rc-head">Moderate</div><div class="rc rc-head">Serious</div><div class="rc rc-head">Catastrophic</div>
+
+      <div class="rc rc-side">Improbable</div>
+      <div class="rc rc-neg">Neg</div><div class="rc rc-neg">Neg</div><div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div>
+
+      <div class="rc rc-side">Remote</div>
+      <div class="rc rc-neg">Neg</div><div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Occasional</div>
+      <div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Probable</div>
+      <div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Frequent</div>
+      <div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:var(--ink3);line-height:1.6;font-style:italic">
+      Pre-mitigation: <strong>Alarm silenced permanently, deterioration missed</strong> → Catastrophic × Probable → Unacceptable — mitigated by mandatory alarm re-arm timers, non-latching high-priority alarms, IEC 60601-1-8. <strong>IBP zero drift undetected</strong> → Serious × Occasional → Unacceptable — mitigated by mandatory zeroing protocol and PPM calibration verification.
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT -->
+<div id="sec-pat" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 01 · Patient Hazards</div>
+      <div class="sec-title" style="color:var(--patient)">Direct Physiological Risk</div>
+    </div>
+    <div class="sec-note">A monitor's failure mode is rarely dramatic — it is usually a quiet absence of warning while a patient deteriorates unobserved.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">📉</div><div class="hz-meta"><div class="hz-id">P.01</div><div class="hz-name">Missed Deterioration — False Negative</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Alarm limits set too wide; sensor disconnected without triggering a technical alarm; arrhythmia algorithm fails to classify a genuine event.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Cardiac arrest, respiratory failure, or haemorrhage progresses unobserved until a clinician happens to check the patient.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory alarm limits per protocol; validated arrhythmia algorithm (ANSI/AAMI EC13); technical "lead off"/"probe off" alarms distinct from physiological silence.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-2-27 §201.12 — HR alarm accuracy</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🩹</div><div class="hz-meta"><div class="hz-id">P.02</div><div class="hz-name">NIBP Cuff — Nerve / Skin Injury</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Over-frequent automatic cycling on a limb with poor perfusion; pump/valve fault causing prolonged inflation; wrong cuff size causing excessive local pressure.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Petechiae, bruising, compartment syndrome (rare but reported), transient nerve palsy from prolonged high cuff pressure.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Independent hardware over-pressure relief valve separate from software limit; maximum cycle-frequency clinical protocol; cuff-site rotation for frequent monitoring.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 80601-2-30 — overpressure protection</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">💉</div><div class="hz-meta"><div class="hz-id">P.03</div><div class="hz-name">IBP Zero Drift — Wrong Clinical Decision</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Transducer not re-zeroed after patient repositioning; drift in the amplifier/bridge circuit; reference level not at the phlebostatic axis.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Vasopressor titration or ICP management based on a biased pressure reading — a documented cause of serious harm in critical care.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory zeroing at shift start and after any position change; PPM calibration against a reference manometer; visual confirmation of transducer height.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🖐️</div><div class="hz-meta"><div class="hz-id">P.04</div><div class="hz-name">SpO₂ Probe Pressure Injury</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Probe left on the same digit for prolonged continuous monitoring, particularly in neonates or patients with poor peripheral perfusion.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Localised pressure necrosis or thermal injury from LED heating, especially in low-perfusion states where tissue tolerance is reduced.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Probe site rotation protocol; correct probe size for patient (adult/paediatric/neonatal); skin inspection at routine intervals.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">⚡</div><div class="hz-meta"><div class="hz-id">P.05</div><div class="hz-name">Electrical Micro-shock (CF Applied Part)</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Leakage current via ECG or IBP lead to patient; insulation breakdown in a parameter module; fluid ingress at a connector.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">VF at ≥10 µA via an intracardiac path (CF classification) — highest risk when an IBP or CVP line is also in place.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">CF applied part ≤10 µA leakage (normal); IEC 62353 annual re-test; isolation barrier verification on every parameter module.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-1 Table 1 · IEC 62353</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🦠</div><div class="hz-meta"><div class="hz-id">P.06</div><div class="hz-name">Cross-Infection — Reusable Probes / Cuffs</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Reusable SpO₂ probes and NIBP cuffs not decontaminated between patients per Trust protocol; damaged probe casing harbouring biological material.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Fomite transmission of pathogens including MRSA and C. difficile between successive patients.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Decontamination protocol enforced between patients; single-patient-use disposables for high-risk/isolation patients; probe casing inspected at PPM.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🔌</div><div class="hz-meta"><div class="hz-id">P.07</div><div class="hz-name">IBP Line Disconnection — Exsanguination</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Arterial or central line disconnects from the transducer set; three-way tap left open; pressure trace flat-lines undetected.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Rapid, potentially life-threatening blood loss from an arterial line if disconnection goes unnoticed — a well-documented critical-care incident type.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory IBP disconnect alarm (flat/zero trace); luer-lock connections; visible tubing runs; line checked at every handover.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🌡️</div><div class="hz-meta"><div class="hz-id">P.08</div><div class="hz-name">Temperature Probe Miscalibration</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Thermistor drift outside spec; wrong probe type connected (skin vs. core) without software reconfiguration; poor probe contact.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Missed hypothermia/hyperthermia in vulnerable patients (neonates, post-op); incorrect core-peripheral gradient perfusion assessment.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Annual verification against a precision resistance decade box or calibrated probe simulator at PPM.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USER -->
+<div id="sec-usr" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 02 · Clinical User Hazards</div>
+      <div class="sec-title" style="color:var(--user)">Use Error &<br>Human Factors</div>
+    </div>
+    <div class="sec-note">Alarm fatigue is the single most studied hazard in patient monitoring, and it is fundamentally a human factors problem rather than a device fault.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔔</div><div class="hz-meta"><div class="hz-id">U.01</div><div class="hz-name">Alarm Fatigue</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">ICU/ward beds generate hundreds of alarms per day; the large majority are non-actionable (artefact, technical). Staff become desensitised and slower to respond.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">A genuine critical alarm is missed among the noise — ECRI Institute has ranked alarm hazards among the top hospital technology hazards for over a decade.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">IEC 60601-1-8 three-priority framework; individualised, clinically appropriate alarm limits; smart/delayed alarm algorithms; EBME feedback loop on nuisance-alarm rate by ward.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-1-8 · AAMI/ECRI Alarm Safety guidance</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">📍</div><div class="hz-meta"><div class="hz-id">U.02</div><div class="hz-name">Wrong Lead / Probe Placement</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">ECG electrodes on incorrect anatomical positions; SpO₂ probe on a poorly perfused digit; IBP transducer at wrong height relative to the patient.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Misleading waveform morphology, inaccurate SpO₂ readings, or biased pressure values driving incorrect clinical decisions.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Colour-coded electrode/lead labelling; standardised placement diagrams at the bedside; nurse/HCA training and competency sign-off.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔇</div><div class="hz-meta"><div class="hz-id">U.03</div><div class="hz-name">Alarm Silenced and Not Restored</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Alarms paused for a procedure (repositioning, line change) and the pause is not manually cancelled or does not auto-resume as expected.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Monitor is effectively silent through a critical event, with the display suggesting normal surveillance is active.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Time-limited pause with mandatory auto-resume (typically ≤2 min per Trust policy); visible on-screen countdown; cannot be indefinitely silenced by design.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🛏️</div><div class="hz-meta"><div class="hz-id">U.04</div><div class="hz-name">Wrong Patient / Bed Association at Central Station</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Bed move not updated at the central monitoring station; monitor swapped between patients without re-labelling; network configuration error.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Alarm attributed to the wrong patient — remote monitoring staff respond to (or ignore) the wrong bed entirely.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory bed/patient re-association check at every transfer; visual confirmation at central station; periodic audit of monitor-bed mapping.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">📏</div><div class="hz-meta"><div class="hz-id">U.05</div><div class="hz-name">Incorrect NIBP Cuff Size</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Cuff selected by convenience/availability rather than measured limb circumference; adult cuff used on a paediatric or bariatric patient.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">The single most common cause of clinically significant NIBP inaccuracy — driving incorrect treatment of apparent hyper/hypotension.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Cuff sizing chart at the bedside; multiple cuff sizes stocked per bay; training reinforcement during induction.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">📡</div><div class="hz-meta"><div class="hz-id">U.06</div><div class="hz-name">Central Station Disconnect Unnoticed</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Wireless/WMTS signal dropout between bedside monitor and central station; network outage; telemetry battery depleted.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Remote monitoring staff believe surveillance is continuing when the feed has silently dropped — a documented root cause in reported incidents.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Central station "signal lost" technical alarm distinct from physiological alarms; network redundancy; telemetry battery-life protocol.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENGINEER -->
+<div id="sec-eng" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 03 · Service Engineer Hazards</div>
+      <div class="sec-title" style="color:var(--eng)">Occupational &<br>Patient-Forward Risk</div>
+    </div>
+    <div class="sec-note">A monitor's failures are often invisible until the next clinical decision is made on a biased reading — post-service verification is where EBME carries most of the patient-forward risk.</div>
+  </div>
+
+  <div class="banner banner-e">
+    <span style="font-size:18px">⚠</span>
+    <div><strong>Regulatory context</strong> Post-service verification of every parameter module affected by a repair is mandatory under UK MDR 2002. Failure to verify performance after repair is a potential MHRA reportable event if patient harm results.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">⚡</div><div class="hz-meta"><div class="hz-id">E.01</div><div class="hz-name">Electric Shock — Mains Voltage</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Live PCB fault-finding on the main power supply; probing an energised module without isolation; damaged test leads.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">230 V AC contact — VF risk, flash burns, muscle tetany preventing self-release.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">LOTO; isolation transformer for live diagnostics; Cat-rated test leads; competency sign-off; two-person rule for live mains probing.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">Electricity at Work Regs 1989 · IEC 61010-1</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">📊</div><div class="hz-meta"><div class="hz-id">E.02</div><div class="hz-name">Post-Service IBP / NIBP Miscalibration</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Parameter module replaced or repaired without re-verification against a calibrated pressure simulator/manometer; zero offset not confirmed.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Patient returns to a monitor delivering biased pressure readings — directly affects vasopressor titration and BP management decisions.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory simulator verification across the clinical range post-service; documented in asset record with reference equipment serial number.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🩸</div><div class="hz-meta"><div class="hz-id">E.03</div><div class="hz-name">Biological Exposure — Cables &amp; Probes</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">ECG leads, SpO₂ probes, and NIBP hoses returned for repair still carrying bodily fluids or secretions; no decontamination certificate.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Bloodborne pathogen exposure; contact with MRSA or other resistant organisms carried on returned accessories.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Decontamination certificate required before EBME accepts the device; universal precautions; PPE for all cable/probe handling.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">COSHH 2002 · MHRA DB2006(06)</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">💾</div><div class="hz-meta"><div class="hz-id">E.04</div><div class="hz-name">Firmware Update Removes/Alters Alarm Logic</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Firmware update resets alarm configuration to factory defaults; older firmware installed on a replacement board lacking current alarm logic.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">A ward-specific mandated alarm setting is silently lost — patients monitored under an unintended default configuration.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Verify firmware version and alarm configuration before/after any update; OEM-approved update path only; functional alarm test post-update.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">IEC 62304 · MHRA FSN process</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">☎️</div><div class="hz-meta"><div class="hz-id">E.05</div><div class="hz-name">Nurse-Call Relay Left Untested</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Relay contact function not verified at PPM; ward call-system upgraded independently, breaking compatibility with the monitor's relay output.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">A silent-failure point — the bedside alarm sounds correctly, but the corridor/nurse-station notification never fires.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Mandatory nurse-call relay actuation test at every PPM; re-verify after any ward call-system change, even if the monitor itself wasn't serviced.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🔬</div><div class="hz-meta"><div class="hz-id">E.06</div><div class="hz-name">Inadequate Electrical Safety Re-test After Repair</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Parameter module or PSU repaired without full IEC 62353 re-test; earth conductor not correctly reconnected on reassembly.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Undetected earth fault raises leakage current beyond CF classification via the ECG or IBP patient connection.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">IEC 62353 after any mains-side repair: earth ≤0.1 Ω; CF patient leakage ≤10 µA. Log test results with analyser serial number.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">IEC 62353 · NHS HTM 06-01</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALARMS -->
+<div id="sec-alm" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 04 · Alarm System</div>
+      <div class="sec-title">IEC 60601-1-8<br>Physiological Alarm Classification</div>
+    </div>
+    <div class="sec-note">Patient monitor alarm design must balance sensitivity (catching real events) against nuisance rate (preventing fatigue) — a tension at the heart of most reported incidents.</div>
+  </div>
+
+  <div class="pri-grid">
+    <div class="pri-card pc-h">
+      <div class="pc-label" style="color:#922b21">HIGH PRIORITY</div>
+      <div class="pc-title" style="color:#922b21">Immediate Action</div>
+      <div class="pc-items">· Red flashing visual<br>· 10-pulse repeating burst<br>· ≥65 dBA at 1 m<br>· Max 2 min silence<br>· Cannot be disabled</div>
+    </div>
+    <div class="pri-card pc-m">
+      <div class="pc-label" style="color:#784212">MEDIUM PRIORITY</div>
+      <div class="pc-title" style="color:#784212">Prompt Response</div>
+      <div class="pc-items">· Yellow flashing visual<br>· 3-pulse burst<br>· ≥45 dBA at 1 m<br>· Max 15 min silence</div>
+    </div>
+    <div class="pri-card pc-l">
+      <div class="pc-label" style="color:var(--user)">LOW PRIORITY</div>
+      <div class="pc-title" style="color:var(--user)">Awareness</div>
+      <div class="pc-items">· Cyan / steady visual<br>· Single chime or none<br>· Advisory only</div>
+    </div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px;">
+    <table class="atbl">
+      <thead><tr><th style="width:18%">Alarm</th><th style="width:9%">Priority</th><th style="width:22%">Trigger Condition</th><th style="width:22%">Monitor Response</th><th style="width:29%">Engineer's Service Check</th></tr></thead>
+      <tbody>
+        <tr><td>Asystole</td><td><span class="pri p-h">HIGH</span></td><td>No QRS detected &gt;4 s</td><td>Immediate audible/visual, non-latching</td><td>Simulator-driven asystole test at PPM</td></tr>
+        <tr><td>V-Fib / V-Tach</td><td><span class="pri p-h">HIGH</span></td><td>Arrhythmia algorithm classification</td><td>Immediate audible/visual</td><td>Validate against ANSI/AAMI EC13 test waveforms</td></tr>
+        <tr><td>SpO₂ Desaturation</td><td><span class="pri p-h">HIGH</span></td><td>Below user-set threshold</td><td>Audible/visual alarm</td><td>Functional tester verification of alarm threshold</td></tr>
+        <tr><td>NIBP Out of Range</td><td><span class="pri p-m">MED</span></td><td>SYS/DIA/MAP beyond limits</td><td>Audible/visual alarm</td><td>Simulator-based limit test</td></tr>
+        <tr><td>Lead Off / Probe Off</td><td><span class="pri p-m">MED</span></td><td>Impedance out of range on ECG/SpO₂ input</td><td>Distinct technical alarm tone</td><td>Verify distinguishable from physiological alarm tone</td></tr>
+        <tr><td>IBP Line Disconnect</td><td><span class="pri p-h">HIGH</span></td><td>Pressure trace flat-lines / zero</td><td>Immediate alarm — exsanguination risk</td><td>Verify with simulator disconnection test</td></tr>
+        <tr><td>Apnoea (Respiration)</td><td><span class="pri p-h">HIGH</span></td><td>No breath detected &gt;20 s (adult)</td><td>Audible/visual alarm</td><td>Verify impedance pneumography threshold at PPM</td></tr>
+        <tr><td>Battery Low</td><td><span class="pri p-m">MED</span></td><td>Battery &lt;20% capacity</td><td>Alert; continue on mains</td><td>Battery capacity/load test</td></tr>
+        <tr><td>Signal Lost (Central Station)</td><td><span class="pri p-h">HIGH</span></td><td>Telemetry/network link dropped</td><td>Distinct alarm at central station</td><td>Network/telemetry connectivity check</td></tr>
+        <tr><td>Alarm Paused / Silenced</td><td><span class="pri p-l">LOW</span></td><td>User-initiated, time-limited</td><td>Visual countdown; auto-resume</td><td>Verify max pause duration per Trust policy</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SAFETY MECHANISMS -->
+<div id="sec-saf" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 05 · Engineered Controls</div>
+      <div class="sec-title">Built-In Safety<br>Mechanisms</div>
+    </div>
+    <div class="sec-note">These design-embedded defences must be individually verified at PPM — a monitor that "looks fine" on screen tells you nothing about whether its alarm CPU is truly independent.</div>
+  </div>
+
+  <div class="sm-grid">
+    <div class="sm">
+      <div class="sm-bg-num">01</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🧠</div>
+      <div class="sm-eyebrow">Electronic · Safety Architecture</div>
+      <div class="sm-name">Dual-CPU Alarm Path</div>
+      <div class="sm-desc">Alarm generation runs on a processor independent from the main trend/display CPU, so a main CPU crash cannot silently disable alarms.</div>
+      <div class="sm-std">IEC 62304 Class C · IEC 60601-1-8</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">02</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🔒</div>
+      <div class="sm-eyebrow">Software · Patient</div>
+      <div class="sm-name">Non-Latching High Priority Alarms with Silence Limit</div>
+      <div class="sm-desc">High-priority alarms cannot be permanently silenced; any pause auto-resumes within a bounded time window, preventing an indefinitely muted critical alarm.</div>
+      <div class="sm-std">IEC 60601-1-8 — silence time limits</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">03</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🎚️</div>
+      <div class="sm-eyebrow">Mechanical · Patient</div>
+      <div class="sm-name">NIBP Independent Over-Pressure Relief</div>
+      <div class="sm-desc">A hardware pressure-relief valve vents the cuff independently of software control if pressure exceeds a fixed safety threshold.</div>
+      <div class="sm-std">IEC 80601-2-30 §201.11.2</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">04</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">⚡</div>
+      <div class="sm-eyebrow">Electrical · Patient</div>
+      <div class="sm-name">CF Applied Part Isolation</div>
+      <div class="sm-desc">Every patient-connected parameter module is electrically isolated from mains via optocouplers/isolation transformers, limiting leakage current to ≤10 µA.</div>
+      <div class="sm-std">IEC 60601-1 Table 1 — CF classification</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">05</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🔋</div>
+      <div class="sm-eyebrow">Electrical · Continuity</div>
+      <div class="sm-name">Internal Battery for Transport Continuity</div>
+      <div class="sm-desc">Battery autonomy ensures uninterrupted monitoring during transfer between mains supplies — verified with an annual load/capacity test.</div>
+      <div class="sm-std">IEC 60601-1 · site transport protocol</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">06</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">☎️</div>
+      <div class="sm-eyebrow">Electrical · Interlock</div>
+      <div class="sm-name">Nurse-Call Relay Output</div>
+      <div class="sm-desc">Dry-contact relay signals the ward call system independently of the on-screen alarm, extending notification beyond the bedside.</div>
+      <div class="sm-std">Verify actuation at every PPM</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">07</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🫀</div>
+      <div class="sm-eyebrow">Software · Patient</div>
+      <div class="sm-name">Validated Arrhythmia Detection Algorithm</div>
+      <div class="sm-desc">ECG rhythm classification is validated against the ANSI/AAMI EC13 test waveform library before release, and re-verified at PPM.</div>
+      <div class="sm-std">ANSI/AAMI EC13</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">08</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">📒</div>
+      <div class="sm-eyebrow">Software · Forensic</div>
+      <div class="sm-name">Event Log / Audit Trail</div>
+      <div class="sm-desc">Non-volatile log of alarm events, silences, parameter changes, and technical faults — reviewed at PPM and after any reported incident.</div>
+      <div class="sm-std">IEC 62304 · MHRA incident investigation</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">09</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">📡</div>
+      <div class="sm-eyebrow">Software · System</div>
+      <div class="sm-name">Central Station "Signal Lost" Alarm</div>
+      <div class="sm-desc">Network or telemetry link dropout triggers its own distinct alarm at the central station, separate from physiological alarms, so a communication gap is never mistaken for a stable patient.</div>
+      <div class="sm-std">Network redundancy design</div>
+    </div>
+  </div>
+</div>
+
+<!-- DEFENCE -->
+<div id="sec-def" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 06 · Swiss Cheese Model</div>
+      <div class="sec-title">Defence-in-Depth</div>
+    </div>
+    <div class="sec-note">Each layer has holes. Harm reaches the patient only when holes align across all layers simultaneously.</div>
+  </div>
+
+  <div class="def-wrap">
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">I</div></div>
+      <div class="def-body">
+        <div class="def-title">Inherent Design Controls</div>
+        <div class="def-desc">CF isolation removes the micro-shock pathway. NIBP over-pressure relief is independent of software. Dual-CPU alarm architecture separates alarm generation from trend/display processing.</div>
+        <div class="def-tags"><span class="dtag dtag-p">CF isolation</span><span class="dtag dtag-p">NIBP overpressure relief</span><span class="dtag dtag-p">Dual-CPU alarm path</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">II</div></div>
+      <div class="def-body">
+        <div class="def-title">Automatic Protection Devices</div>
+        <div class="def-desc">Validated arrhythmia algorithm classifies dangerous rhythms automatically. Signal-lost detection flags a broken telemetry link without waiting for a human to notice.</div>
+        <div class="def-tags"><span class="dtag dtag-p">Arrhythmia algorithm</span><span class="dtag dtag-p">Signal-lost detection</span><span class="dtag dtag-p">Non-latching high alarms</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">III</div></div>
+      <div class="def-body">
+        <div class="def-title">Alarms &amp; Warnings</div>
+        <div class="def-desc">IEC 60601-1-8 three-priority framework requires clinician attention. This layer fails when alarm fatigue causes silencing or when limits are set too wide to fire at all.</div>
+        <div class="def-tags"><span class="dtag dtag-u">Asystole alarm</span><span class="dtag dtag-u">Desaturation alarm</span><span class="dtag dtag-u">IBP disconnect alarm</span><span class="dtag dtag-u">Nurse-call relay</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">IV</div></div>
+      <div class="def-body">
+        <div class="def-title">Clinical Procedures &amp; Human Factors</div>
+        <div class="def-desc">Alarm limit verification at shift handover, cuff-sizing protocol, IBP zeroing protocol, standardised lead-placement diagrams, IEC 62366 usability engineering.</div>
+        <div class="def-tags"><span class="dtag dtag-u">Alarm limit checklist</span><span class="dtag dtag-u">Cuff sizing chart</span><span class="dtag dtag-u">IBP zeroing protocol</span><span class="dtag dtag-u">IEC 62366 usability</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">V</div></div>
+      <div class="def-body">
+        <div class="def-title">Planned Preventive Maintenance (EBME)</div>
+        <div class="def-desc">Annual ECG/arrhythmia simulator test, NIBP calibration and over-pressure test, IBP simulator verification, nurse-call relay test, IEC 62353 electrical safety re-test, battery capacity test.</div>
+        <div class="def-tags"><span class="dtag dtag-e">Simulator verification</span><span class="dtag dtag-e">NIBP calibration</span><span class="dtag dtag-e">IEC 62353 ESR</span><span class="dtag dtag-e">Nurse-call test</span><span class="dtag dtag-e">Battery capacity</span></div>
+      </div>
+    </div>
+    <div class="def-row" style="border-bottom:none">
+      <div class="def-num"><div class="def-roman">VI</div></div>
+      <div class="def-body">
+        <div class="def-title">Post-Market Surveillance &amp; Vigilance</div>
+        <div class="def-desc">MHRA Yellow Card and MIR reporting, FSCA response, trend analysis of nuisance-alarm rates across the fleet, ECRI/AAMI hazard alert dissemination.</div>
+        <div class="def-tags"><span class="dtag dtag-e">MHRA Yellow Card</span><span class="dtag dtag-e">Datix incident</span><span class="dtag dtag-e">FSN response</span><span class="dtag dtag-e">ECRI alerts</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STANDARDS -->
+<div id="sec-std" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 07 · Normative Framework</div>
+      <div class="sec-title">Applicable Standards<br>&amp; Regulations</div>
+    </div>
+    <div class="sec-note">Patient monitors are subject to a parameter-specific family of standards on top of the general electrical and alarm requirements.</div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow)">
+    <table class="stbl">
+      <thead><tr><th style="width:18%">Standard / Reg</th><th style="width:28%">Scope</th><th style="width:16%">Applies To</th><th style="width:38%">Key Requirements for EBME</th></tr></thead>
+      <tbody>
+        <tr><td>IEC 60601-2-27</td><td>Particular requirements for ECG monitoring equipment</td><td>Manufacturer · EBME</td><td>HR accuracy ±10%/5bpm; defib-proof recovery; arrhythmia algorithm validation</td></tr>
+        <tr><td>IEC 80601-2-30</td><td>Automated non-invasive blood pressure monitors</td><td>Manufacturer · EBME</td><td>Overpressure protection; ISO 81060-2 accuracy validation; cuff labelling requirements</td></tr>
+        <tr><td>IEC 80601-2-61</td><td>Pulse oximeter equipment</td><td>Manufacturer · EBME</td><td>SpO₂ accuracy (Arms); motion artefact performance; probe compatibility labelling</td></tr>
+        <tr><td>IEC 80601-2-49</td><td>Multifunction patient monitoring equipment</td><td>Manufacturer · EBME</td><td>Combined-parameter safety and performance requirements across modules</td></tr>
+        <tr><td>IEC 80601-2-56</td><td>Clinical thermometers</td><td>Manufacturer · EBME</td><td>Temperature accuracy across clinical range</td></tr>
+        <tr><td>IEC 60601-1</td><td>General ME equipment — electrical, mechanical safety</td><td>Manufacturer · EBME</td><td>CF leakage ≤10 µA; earth continuity; MOOP/MOPP</td></tr>
+        <tr><td>IEC 60601-1-8</td><td>Alarm systems for ME equipment</td><td>Manufacturer · EBME · Users</td><td>3-priority alarm characteristics; silence time limits; independent alarm signal path</td></tr>
+        <tr><td>ANSI/AAMI EC13</td><td>Cardiac monitor / arrhythmia detection performance</td><td>Manufacturer</td><td>Arrhythmia algorithm validation against standard test waveform library</td></tr>
+        <tr><td>ISO 81060-2</td><td>Clinical validation of NIBP measurement</td><td>Manufacturer</td><td>Mean/SD accuracy vs. auscultatory reference across validated population</td></tr>
+        <tr><td>IEC 62304</td><td>Medical device software lifecycle</td><td>Manufacturer · EBME</td><td>Class C software (arrhythmia/alarm logic); firmware change management</td></tr>
+        <tr><td>IEC 62353</td><td>Recurrent test and test after repair</td><td>EBME</td><td>Electrical safety re-test after any mains-side repair</td></tr>
+        <tr><td>ISO 14971:2019</td><td>Risk management for medical devices</td><td>Manufacturer · EBME</td><td>Hazard identification; ALARP; residual risk acceptability</td></tr>
+        <tr><td>UK MDR 2002 / EU MDR 2017/745</td><td>Medical device regulation</td><td>Manufacturer · EBME · Trust</td><td>UKCA/CE marking; incident reporting; FSCA obligations</td></tr>
+        <tr><td>COSHH 2002</td><td>Control of substances hazardous to health</td><td>EBME · Clinical</td><td>Biological exposure assessment; decontamination before service</td></tr>
+        <tr><td>MHRA DB2010(02)</td><td>Managing medical devices</td><td>EBME · Trust</td><td>Asset management; maintenance record retention; incident management</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<script>
+function go(id, el, cls) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.getElementById('sec-' + id).classList.add('on');
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active-p','active-u','active-e','active-n'));
+  el.classList.add(cls);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

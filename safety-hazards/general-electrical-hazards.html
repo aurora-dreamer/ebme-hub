@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>General Electrical Hazards — Clinical Engineering Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f8f5;
+  --white: #ffffff;
+  --ink: #12100e;
+  --ink2: #3d3830;
+  --ink3: #7a7268;
+  --ink4: #b0a898;
+  --rule: #e2ddd6;
+  --rule2: #ede9e2;
+
+  --patient: #c0392b;
+  --patient-bg: #fdf3f2;
+  --patient-light: #fae5e3;
+  --patient-border: #f5b7b1;
+
+  --user: #1a5276;
+  --user-bg: #eaf2f8;
+  --user-light: #d6eaf8;
+  --user-border: #85c1e9;
+
+  --eng: #1e8449;
+  --eng-bg: #eafaf1;
+  --eng-light: #d5f5e3;
+  --eng-border: #82e0aa;
+
+  --alarm: #7d3c98;
+  --alarm-bg: #f5eef8;
+  --alarm-light: #e8daef;
+
+  --safe: #1a5276;
+  --safe-bg: #eaf2f8;
+
+  --crit: #922b21;
+  --maj: #784212;
+  --mod: #4d611b;
+
+  --shadow: 0 1px 3px rgba(18,16,14,0.08), 0 4px 16px rgba(18,16,14,0.05);
+  --shadow-hover: 0 4px 12px rgba(18,16,14,0.12), 0 12px 32px rgba(18,16,14,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.masthead { background: var(--ink); color: var(--bg); padding: 0; position: relative; overflow: hidden; }
+.masthead-inner { padding: 44px 52px 36px; position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: flex-end; }
+.masthead::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(249,248,245,0.07) 1px, transparent 1px); background-size: 22px 22px; z-index: 1; }
+.masthead-rule { width: 48px; height: 3px; background: var(--patient); margin-bottom: 14px; }
+.masthead-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(249,248,245,0.45); margin-bottom: 10px; }
+.masthead h1 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 4vw, 52px); font-weight: 900; line-height: 1.0; letter-spacing: -1px; margin-bottom: 10px; }
+.masthead h1 em { font-style: italic; font-weight: 400; color: rgba(249,248,245,0.5); }
+.masthead-sub { font-size: 13px; color: rgba(249,248,245,0.5); font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; margin-top: 6px; }
+.masthead-pills { display: flex; flex-direction: column; gap: 7px; align-items: flex-end; padding-bottom: 4px; }
+.mpill { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 4px 12px; border-radius: 2px; border: 1px solid; font-weight: 500; }
+.mpill-p { color: #f5b7b1; border-color: #f5b7b1; }
+.mpill-u { color: #85c1e9; border-color: #85c1e9; }
+.mpill-e { color: #82e0aa; border-color: #82e0aa; }
+
+.navbar { background: var(--white); border-bottom: 2px solid var(--rule); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(18,16,14,0.07); }
+.navbar-inner { display: flex; overflow-x: auto; padding: 0 52px; gap: 0; scrollbar-width: none; }
+.navbar-inner::-webkit-scrollbar { display: none; }
+.ntab { padding: 16px 20px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink3); cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+.ntab:hover { color: var(--ink); }
+.ntab-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.ntab.active-p { color: var(--patient); border-bottom-color: var(--patient); }
+.ntab.active-u { color: var(--user); border-bottom-color: var(--user); }
+.ntab.active-e { color: var(--eng); border-bottom-color: var(--eng); }
+.ntab.active-n { color: var(--ink); border-bottom-color: var(--ink); }
+
+.shell { max-width: 1360px; margin: 0 auto; padding: 48px 52px; }
+.section { display: none; }
+.section.on { display: block; animation: appear 0.3s ease both; }
+@keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+.sec-hd { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: flex-end; padding-bottom: 20px; border-bottom: 1px solid var(--rule); margin-bottom: 32px; }
+.sec-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
+.sec-title { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 900; line-height: 1.1; letter-spacing: -0.5px; }
+.sec-note { font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--ink3); max-width: 380px; text-align: right; line-height: 1.55; }
+
+.matrix-card { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow); }
+.matrix-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 3px; color: var(--ink4); text-transform: uppercase; margin-bottom: 4px; }
+.matrix-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
+.rm { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 3px; }
+.rc { padding: 10px 6px; text-align: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 500; border-radius: 2px; letter-spacing: 0.5px; }
+.rc-head { background: var(--ink); color: var(--bg); letter-spacing: 1px; }
+.rc-side { background: var(--rule2); color: var(--ink2); text-align: right; padding-right: 12px; display: flex; align-items: center; justify-content: flex-end; font-size: 9px; }
+.rc-neg { background: #d5f5e3; color: #145a32; }
+.rc-acc { background: #fef9c3; color: #7d6608; }
+.rc-alarp { background: #fde8c8; color: #784212; }
+.rc-un { background: #fadbd8; color: #922b21; font-weight: 700; }
+
+.ov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+.ov-card { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 24px; box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.ov-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.ov-card.cp::before { background: var(--patient); }
+.ov-card.cu::before { background: var(--user); }
+.ov-card.ce::before { background: var(--eng); }
+.ov-card:hover { box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+
+.ov-hd { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px; }
+.ov-icon { font-size: 22px; line-height: 1; }
+.ov-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; line-height: 1; }
+.ov-role { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; margin-top: 3px; }
+
+.ov-stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--rule2); font-size: 11px; gap: 10px; }
+.ov-stat:last-child { border-bottom: none; }
+.ov-stat-label { color: var(--ink2); }
+
+.sev { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; letter-spacing: 1px; font-weight: 600; text-transform: uppercase; white-space: nowrap; border: 1px solid; }
+.sev-crit { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.sev-maj { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.sev-mod { background: #fdfefe; color: var(--mod); border-color: #a9cce3; }
+.sev-min { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+.hz-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+.hz { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; box-shadow: var(--shadow); transition: all 0.2s; }
+.hz:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.hz-top { padding: 16px 20px; border-bottom: 1px solid; display: flex; align-items: flex-start; gap: 12px; }
+.hz-glyph { font-size: 20px; line-height: 1; margin-top: 3px; }
+.hz-meta { flex: 1; min-width: 0; }
+.hz-id { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 2px; margin-bottom: 3px; }
+.hz-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600; line-height: 1.2; }
+.hz-body { padding: 16px 20px; }
+.hz-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--rule2); font-size: 12px; align-items: flex-start; }
+.hz-row:last-child { border-bottom: none; padding-bottom: 0; }
+.hz-k { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 1.5px; text-transform: uppercase; padding-top: 2px; }
+.hz-v { color: var(--ink); line-height: 1.5; }
+
+.atbl { width: 100%; border-collapse: collapse; }
+.atbl th { text-align: left; padding: 12px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--bg); background: var(--ink); font-weight: 500; }
+.atbl td { padding: 12px 14px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.atbl tr:hover td { background: var(--rule2); }
+.atbl td:first-child { font-weight: 600; color: var(--ink); font-size: 12px; }
+.pri { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 8px; border-radius: 2px; font-weight: 600; letter-spacing: 1px; border: 1px solid; }
+.p-h { background: #fadbd8; color: var(--crit); border-color: #f1948a; }
+.p-m { background: #fdebd0; color: var(--maj); border-color: #f0b27a; }
+.p-l { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+
+.sm-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px; }
+.sm { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 22px; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s; }
+.sm:hover { border-color: var(--ink3); box-shadow: var(--shadow-hover); }
+.sm-bg-num { position: absolute; right: 14px; top: 8px; font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 900; color: rgba(18,16,14,0.04); line-height: 1; }
+.sm-icon-wrap { width: 38px; height: 38px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 12px; }
+.sm-eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin-bottom: 4px; }
+.sm-name { font-size: 14px; font-weight: 700; font-family: 'IBM Plex Sans', sans-serif; margin-bottom: 8px; line-height: 1.25; }
+.sm-desc { font-size: 12px; color: var(--ink3); line-height: 1.55; margin-bottom: 10px; }
+.sm-std { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: var(--ink4); letter-spacing: 0.5px; padding-top: 8px; border-top: 1px dashed var(--rule2); }
+
+.def-wrap { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; box-shadow: var(--shadow); overflow: hidden; }
+.def-row { display: grid; grid-template-columns: 72px 1fr; border-bottom: 1px solid var(--rule); }
+.def-row:last-child { border-bottom: none; }
+.def-num { padding: 24px 16px; border-right: 1px solid var(--rule); display: flex; align-items: flex-start; justify-content: center; padding-top: 28px; }
+.def-roman { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; color: var(--ink4); font-style: italic; }
+.def-body { padding: 22px 28px; }
+.def-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.def-desc { font-size: 12px; color: var(--ink3); line-height: 1.6; margin-bottom: 12px; }
+.def-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.dtag { padding: 2px 9px; border-radius: 2px; font-size: 10px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.3px; border: 1px solid; }
+.dtag-p { background: var(--patient-light); color: var(--patient); border-color: var(--patient-border); }
+.dtag-u { background: var(--user-light); color: var(--user); border-color: var(--user-border); }
+.dtag-e { background: var(--eng-light); color: var(--eng); border-color: var(--eng-border); }
+
+.stbl { width: 100%; border-collapse: collapse; }
+.stbl th { text-align: left; padding: 12px 16px; background: var(--ink); color: var(--bg); font-family: 'IBM Plex Mono', monospace; font-size: 8px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; }
+.stbl td { padding: 12px 16px; border-bottom: 1px solid var(--rule2); font-size: 12px; vertical-align: top; line-height: 1.5; color: var(--ink2); }
+.stbl tr:hover td { background: var(--rule2); }
+.stbl td:first-child { font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--ink); font-size: 11px; white-space: nowrap; }
+
+.banner { display: flex; gap: 12px; padding: 14px 18px; border-radius: 3px; margin-bottom: 20px; font-size: 13px; line-height: 1.55; border-left: 4px solid; }
+.banner-e { background: var(--eng-bg); border-color: var(--eng); color: var(--eng); }
+.banner-p { background: var(--patient-bg); border-color: var(--patient); color: var(--patient); }
+.banner strong { font-weight: 700; display: block; margin-bottom: 3px; }
+
+.pri-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.pri-card { padding: 20px; border-radius: 3px; border: 1px solid; }
+.pc-h { background: #fdedec; border-color: #f1948a; }
+.pc-m { background: #fef5e4; border-color: #f0b27a; }
+.pc-l { background: var(--user-bg); border-color: var(--user-border); }
+.pc-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; margin-bottom: 6px; }
+.pc-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; font-family: 'IBM Plex Sans', sans-serif; }
+.pc-items { font-size: 11px; line-height: 1.8; color: var(--ink2); }
+
+.vtype-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+.vtype { background: var(--white); border: 1px solid var(--rule); border-radius: 3px; padding: 18px; box-shadow: var(--shadow); }
+.vtype-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: var(--ink); }
+.vtype-sub { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 1px; margin-bottom: 10px; text-transform: uppercase; }
+.vtype-desc { font-size: 11px; color: var(--ink3); line-height: 1.6; }
+
+.waveform-wrap { background: var(--ink); border-radius: 3px; padding: 20px; margin-bottom: 20px; overflow: hidden; }
+
+@media (max-width: 1000px) {
+  .masthead-inner { grid-template-columns: 1fr; }
+  .masthead-pills { flex-direction: row; }
+  .ov-grid, .hz-grid, .sm-grid, .pri-grid { grid-template-columns: 1fr; }
+  .vtype-grid { grid-template-columns: repeat(2, 1fr); }
+  .shell { padding: 28px 20px; }
+  .navbar-inner { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="masthead-eyebrow">IEC 60601-1 · IEC 62353 · BS 7671 · Clinical Engineering Reference</div>
+      <div class="masthead-rule"></div>
+      <h1>General Electrical<br><em>Hazard, Test &<br>Safety Analysis</em></h1>
+      <div class="masthead-sub">Cross-device electrical risk — patient · clinical user · service engineer</div>
+    </div>
+    <div class="masthead-pills">
+      <span class="mpill mpill-p">● Patient Risk</span>
+      <span class="mpill mpill-u">● Clinical User</span>
+      <span class="mpill mpill-e">● Service Engineer</span>
+    </div>
+  </div>
+</div>
+
+<div class="navbar">
+  <div class="navbar-inner">
+    <div class="ntab active-n" id="t-over" onclick="go('over',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Overview</div>
+    <div class="ntab" id="t-pat" onclick="go('pat',this,'active-p')"><div class="ntab-dot" style="background:var(--patient)"></div>Patient Hazards</div>
+    <div class="ntab" id="t-usr" onclick="go('usr',this,'active-u')"><div class="ntab-dot" style="background:var(--user)"></div>User Hazards</div>
+    <div class="ntab" id="t-eng" onclick="go('eng',this,'active-e')"><div class="ntab-dot" style="background:var(--eng)"></div>Engineer Hazards</div>
+    <div class="ntab" id="t-alm" onclick="go('alm',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Detection &amp; Test</div>
+    <div class="ntab" id="t-saf" onclick="go('saf',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Safety Mechanisms</div>
+    <div class="ntab" id="t-def" onclick="go('def',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Defence-in-Depth</div>
+    <div class="ntab" id="t-std" onclick="go('std',this,'active-n')"><div class="ntab-dot" style="background:var(--ink)"></div>Standards</div>
+  </div>
+</div>
+
+<div class="shell">
+
+<!-- OVERVIEW -->
+<div id="sec-over" class="section on">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 00 · Stakeholder Risk Map</div>
+      <div class="sec-title">The General Electrical<br>Risk Landscape</div>
+    </div>
+    <div class="sec-note">Electrical hazards cut across every device an EBME engineer touches. Unlike device-specific risks, the same handful of principles — leakage current, earth continuity, applied part classification — govern almost every incident.</div>
+  </div>
+
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink4);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">Scope</div>
+  <div class="vtype-grid">
+    <div class="vtype">
+      <div class="vtype-name">Applied Part Classification</div>
+      <div class="vtype-sub">Type B · BF · CF</div>
+      <div class="vtype-desc">Determines the permitted leakage current and isolation requirement for any part of a device that contacts the patient — the single most important electrical concept in EBME.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">Medical IT Power Systems</div>
+      <div class="vtype-sub">Theatres · Critical care</div>
+      <div class="vtype-desc">Isolated power supplies with line isolation monitors, used where a first earth fault must not cause an automatic disconnection during a procedure.</div>
+    </div>
+    <div class="vtype">
+      <div class="vtype-name">Portable Appliance &amp; Recurrent Testing</div>
+      <div class="vtype-sub">IEC 62353 · PAT</div>
+      <div class="vtype-desc">The recurring verification regime — earth continuity, insulation resistance, leakage current — that underpins every device's ongoing electrical safety.</div>
+    </div>
+  </div>
+
+  <div class="ov-grid">
+    <div class="ov-card cp" onclick="go('pat',document.getElementById('t-pat'),'active-p')">
+      <div class="ov-hd"><div class="ov-icon">⚡</div><div><div class="ov-name" style="color:var(--patient)">Patient</div><div class="ov-role">Direct physiological consequence</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Macroshock — earth fault</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Microshock — CF applied part</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Diathermy return electrode burn</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Wrong applied part classification</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Leakage current summation (multi-device)</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Static discharge in O₂-enriched area</span><span class="sev sev-mod">MODERATE</span></div>
+    </div>
+
+    <div class="ov-card cu" onclick="go('usr',document.getElementById('t-usr'),'active-u')">
+      <div class="ov-hd"><div class="ov-icon">👩‍⚕️</div><div><div class="ov-name" style="color:var(--user)">Clinical User</div><div class="ov-role">Use error & human factors</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Damaged mains lead/plug still in use</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">PAT test overdue/skipped</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Multi-way adaptors in clinical areas</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Wet-environment electrical hazard</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Visible damage ignored</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Non-medical-grade device at bedside</span><span class="sev sev-mod">MODERATE</span></div>
+    </div>
+
+    <div class="ov-card ce" onclick="go('eng',document.getElementById('t-eng'),'active-e')">
+      <div class="ov-hd"><div class="ov-icon">🔧</div><div><div class="ov-name" style="color:var(--eng)">Engineer</div><div class="ov-role">Occupational & patient-forward</div></div></div>
+      <div class="ov-stat"><span class="ov-stat-label">Electric shock — live working</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Arc flash</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Residual capacitor charge</span><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Incorrect/uncalibrated test equipment</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Lone working on electrical systems</span><span class="sev sev-maj">MAJOR</span></div>
+      <div class="ov-stat"><span class="ov-stat-label">Isolation transformer misuse</span><span class="sev sev-maj">MAJOR</span></div>
+    </div>
+  </div>
+
+  <div class="matrix-card">
+    <div class="matrix-label">ISO 14971:2019</div>
+    <div class="matrix-title">Risk Acceptability Matrix — General Electrical Hazard Positions</div>
+    <div class="rm">
+      <div class="rc" style="background:transparent;border:none"></div>
+      <div class="rc rc-head">Negligible</div><div class="rc rc-head">Minor</div><div class="rc rc-head">Moderate</div><div class="rc rc-head">Serious</div><div class="rc rc-head">Catastrophic</div>
+
+      <div class="rc rc-side">Improbable</div>
+      <div class="rc rc-neg">Neg</div><div class="rc rc-neg">Neg</div><div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div>
+
+      <div class="rc rc-side">Remote</div>
+      <div class="rc rc-neg">Neg</div><div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Occasional</div>
+      <div class="rc rc-acc">Accept</div><div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Probable</div>
+      <div class="rc rc-acc">Accept</div><div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+
+      <div class="rc rc-side">Frequent</div>
+      <div class="rc rc-alarp">ALARP</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div><div class="rc rc-un">⚠ UNACCEPTABLE</div>
+    </div>
+    <div style="margin-top:16px;font-size:12px;color:var(--ink3);line-height:1.6;font-style:italic">
+      Pre-mitigation: <strong>Microshock via CF applied part earth fault</strong> → Catastrophic × Occasional → Unacceptable — mitigated by ≤10 µA leakage limit, double isolation barriers, and annual IEC 62353 verification. <strong>Live working without isolation</strong> → Catastrophic × Occasional → Unacceptable — mitigated by LOTO, isolation transformers, and Cat-rated test equipment.
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT -->
+<div id="sec-pat" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 01 · Patient Hazards</div>
+      <div class="sec-title" style="color:var(--patient)">Direct Physiological Risk</div>
+    </div>
+    <div class="sec-note">Electrical harm to a patient is almost always the failure of an invisible barrier — insulation, isolation, or earthing — rather than an obvious mechanical fault.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">⚡</div><div class="hz-meta"><div class="hz-id">P.01</div><div class="hz-name">Macroshock — Earth Fault / Exposed Conductive Parts</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Protective earth conductor broken or corroded; insulation breakdown allowing mains contact with an accessible metal part; patient in contact with two devices at different potentials.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Current through skin contact (not requiring a direct cardiac path) — burns, muscle tetany, cardiac arrhythmia at higher currents.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Earth continuity ≤0.1 Ω (Class I equipment); enclosure leakage current limits; RCD protection on the supply circuit; IEC 62353 recurrent testing.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-1 §8 · IEC 62353</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">💓</div><div class="hz-meta"><div class="hz-id">P.02</div><div class="hz-name">Microshock — CF Applied Part Fault</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Isolation barrier degraded in a device with a direct or near-direct intracardiac connection (IBP, CVP, pacing leads); leakage current as low as 10 µA reaching the heart directly.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Ventricular fibrillation at currents far below the threshold for macroshock — because the current bypasses skin resistance entirely via an intracardiac path.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">CF classification: ≤10 µA leakage normal condition, ≤50 µA single fault; double isolation barrier design; annual IEC 62353 patient leakage verification.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-1 Table 1 — CF classification</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🔥</div><div class="hz-meta"><div class="hz-id">P.03</div><div class="hz-name">Diathermy Return Electrode Burn</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Patient return electrode (neutral plate) poorly applied, partially detached, or applied over a bony prominence/scar tissue with poor conductivity; return electrode monitoring (REM) circuit fault.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">High-frequency surgical current concentrates at the point of poor contact, causing a severe burn at a site distant from the surgical field.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Return electrode monitoring (REM) circuit that halts diathermy output if electrode contact impedance rises above a safe threshold; annual diathermy analyzer verification.</div></div>
+        <div class="hz-row"><div class="hz-k">Standard</div><div class="hz-v">IEC 60601-2-2 — HF surgical equipment</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🏷️</div><div class="hz-meta"><div class="hz-id">P.04</div><div class="hz-name">Wrong Applied Part Classification in Use</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">A Type BF-rated accessory (e.g., an SpO₂ probe) used in a role that places it in an effective intracardiac position, exceeding its designed isolation level.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Leakage current within the BF spec (≤100 µA) but exceeding the safe CF threshold for a direct cardiac path — a classification mismatch rather than a component fault.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Understand and respect the applied part classification of every accessory before clinical deployment; never substitute accessories across classification boundaries.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">➕</div><div class="hz-meta"><div class="hz-id">P.05</div><div class="hz-name">Leakage Current Summation — Multiple Devices</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Several devices simultaneously connected to the same patient (monitor, infusion pump, ventilator), each within its own individual leakage spec, but combining at the patient connection point.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Cumulative leakage current at the patient exceeds a safe threshold even though no single device is individually faulty.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">System-level leakage assessment for any multi-device patient configuration (particularly in critical care); IEC 60601-1 total patient leakage current considerations.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--patient-bg);border-color:var(--patient-border)"><div class="hz-glyph">🔥</div><div class="hz-meta"><div class="hz-id">P.06</div><div class="hz-name">Static Discharge in Oxygen-Enriched Environment</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Electrostatic discharge (e.g., from synthetic bedding, movement) occurring near a free-flowing oxygen source close to the patient's face/chest.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">A spark in an oxygen-enriched atmosphere can ignite a flash fire — a documented incident category, notably during defibrillation but relevant to any spark source near free-flowing O₂.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Anti-static flooring and materials in high-O₂ areas per HTM guidance; direct O₂ away from the patient's chest/face where practical during any procedure with a spark risk.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USER -->
+<div id="sec-usr" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 02 · Clinical User Hazards</div>
+      <div class="sec-title" style="color:var(--user)">Use Error &<br>Human Factors</div>
+    </div>
+    <div class="sec-note">Most clinical-user electrical hazards are entirely preventable through basic visual inspection and adherence to the testing schedule — the barrier here is workload, not knowledge.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔌</div><div class="hz-meta"><div class="hz-id">U.01</div><div class="hz-name">Damaged Mains Lead / Plug Still in Use</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Visible cable damage, exposed conductors, or a cracked plug not reported or removed from service; device continues to be used because it "still works."</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Direct shock risk to whoever handles the lead — patient, visitor, or staff member — and fire risk from an arcing connection.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">"See something, remove something" culture: any visible damage takes the device out of service immediately pending EBME inspection; visual check as part of routine use.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">📋</div><div class="hz-meta"><div class="hz-id">U.02</div><div class="hz-name">PAT / IEC 62353 Test Overdue</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Asset test label expired and not checked before use; device brought back into service after storage without re-test; equipment missed during a PPM round.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">A device in active clinical use may be carrying an undetected earth or insulation fault, with no engineering verification in place.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Clear test-due labelling visible to ward staff; device availability audits; simple "check the label" habit before use.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔀</div><div class="hz-meta"><div class="hz-id">U.03</div><div class="hz-name">Multi-Way Adaptors in Clinical Areas</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Insufficient wall sockets leading to unofficial multi-way adaptors or extension leads being used to power multiple pieces of medical equipment.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Circuit overload risk; defeats the earthing and current-limiting design assumptions of the fixed installation; fire risk.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Trust policy prohibiting non-medical-grade adaptors in clinical areas; escalate socket-provision shortfalls to Estates rather than working around them.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">NHS HTM 06-01</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">💧</div><div class="hz-meta"><div class="hz-id">U.04</div><div class="hz-name">Wet-Environment Electrical Hazard</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Electrical equipment used or stored near sinks, bathing areas, or in theatre with fluid spillage risk; splash guards missing or bypassed.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Water dramatically reduces skin/contact resistance, increasing the severity of any shock from an otherwise minor fault.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">IP-rated equipment enclosures appropriate to the location; RCD protection in wet areas per BS 7671 special locations requirements.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">👁️</div><div class="hz-meta"><div class="hz-id">U.05</div><div class="hz-name">Visible Damage Ignored</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Cracked casing, scorch marks, or unusual smell/noise from a device not reported due to time pressure or assumption that it's "probably fine."</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Early warning signs of an internal fault are missed, allowing a minor issue to progress to a shock or fire hazard.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Simple, low-friction fault-reporting process; positive safety culture where reporting is never treated as a nuisance.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--user-bg);border-color:var(--user-border)"><div class="hz-glyph">🔋</div><div class="hz-meta"><div class="hz-id">U.06</div><div class="hz-name">Non-Medical-Grade Equipment at the Bedside</div></div><span class="sev sev-mod">MODERATE</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Personal fans, phone chargers, or consumer electronics brought in by patients/visitors and used within reach of the patient without electrical safety verification.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Non-medical-grade leakage current limits and insulation standards do not meet the requirements for equipment in the patient environment.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Trust policy on personal electrical items in clinical areas; PAT testing of any approved personal item before use near a patient.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ENGINEER -->
+<div id="sec-eng" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 03 · Service Engineer Hazards</div>
+      <div class="sec-title" style="color:var(--eng)">Occupational &<br>Patient-Forward Risk</div>
+    </div>
+    <div class="sec-note">Electrical work is the one category of EBME activity where the engineer's own safety and the patient's future safety are both directly at stake in the same task.</div>
+  </div>
+
+  <div class="banner banner-e">
+    <span style="font-size:18px">⚠</span>
+    <div><strong>Foundational principle</strong> Every electrical hazard in this reference — across every device type in this site — traces back to one of three failures: a broken earth path, a degraded isolation barrier, or an untested/miscalibrated safety mechanism. Mastering general electrical safety is the foundation for every device-specific page.</div>
+  </div>
+
+  <div class="hz-grid">
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">⚡</div><div class="hz-meta"><div class="hz-id">E.01</div><div class="hz-name">Electric Shock — Live Working</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Fault-finding on an energised PCB; assuming a device is isolated without verifying; damaged or incorrectly rated test leads.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">230 V AC mains contact — VF risk, flash burns, muscle tetany preventing self-release.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Lock-out/tag-out (LOTO); isolation transformer for any necessary live diagnostics; Cat-rated test leads per IEC 61010; prove-dead procedure before touching any conductor.</div></div>
+        <div class="hz-row"><div class="hz-k">Regulation</div><div class="hz-v">Electricity at Work Regs 1989 · IEC 61010-1</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">💥</div><div class="hz-meta"><div class="hz-id">E.02</div><div class="hz-name">Arc Flash</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Short circuit created while working on or near an energised high-current circuit; damaged test lead insulation; incorrect meter setting for the circuit under test.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">Severe burns from thermal radiation and molten metal spray; potential permanent injury even without direct electrical contact.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Correct CAT-rating for the circuit being tested; appropriate PPE for higher-energy work; isolate before working wherever feasible rather than relying on protective equipment alone.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🔋</div><div class="hz-meta"><div class="hz-id">E.03</div><div class="hz-name">Residual Capacitor Charge</div></div><span class="sev sev-crit">CRITICAL</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Power supply or HV storage capacitor (defibrillators, diathermy units, X-ray generators) retains a charge after mains and battery removal; assumption that power-off equals discharged.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">A stored charge can deliver a significant, potentially lethal shock well after the device has been switched off and unplugged.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Verify discharge via service menu/test point or manufacturer-specified wait time before opening any case with known HV storage; never assume — confirm.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🧰</div><div class="hz-meta"><div class="hz-id">E.04</div><div class="hz-name">Incorrect or Uncalibrated Test Equipment</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">IEC 62353 analyser or multimeter used past its own calibration due date; wrong CAT rating for the circuit; test leads damaged but still in use.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">A false-pass result on a genuinely faulty device — the device is returned to clinical use believing it to be electrically safe when it is not.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Test equipment on its own calibration schedule, traceable to a national standard; pre-use function check (test on a known-good reference) before each testing session.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🧑</div><div class="hz-meta"><div class="hz-id">E.05</div><div class="hz-name">Lone Working on Electrical Systems</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Higher-risk electrical fault-finding or HV work performed without a second person present or a check-in protocol.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">If an incident occurs, no one is present to isolate the supply, provide first aid, or raise the alarm promptly.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">Two-person rule for defined higher-risk tasks (live mains probing, HV capacitor work); lone-worker check-in system for all other electrical service work.</div></div>
+      </div>
+    </div>
+
+    <div class="hz">
+      <div class="hz-top" style="background:var(--eng-bg);border-color:var(--eng-border)"><div class="hz-glyph">🔌</div><div class="hz-meta"><div class="hz-id">E.06</div><div class="hz-name">Isolation Transformer Misuse</div></div><span class="sev sev-maj">MAJOR</span></div>
+      <div class="hz-body">
+        <div class="hz-row"><div class="hz-k">Cause</div><div class="hz-v">Isolation transformer used beyond its rated capacity; earth reference incorrectly assumed on the isolated side; multiple devices daisy-chained off a single isolation transformer.</div></div>
+        <div class="hz-row"><div class="hz-k">Harm</div><div class="hz-v">The protective benefit of isolation is defeated — a second fault can complete a shock circuit that the transformer was meant to prevent.</div></div>
+        <div class="hz-row"><div class="hz-k">Control</div><div class="hz-v">One device per isolation transformer at a time; verify rated capacity before use; training on correct isolated-supply working principles.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DETECTION & TEST -->
+<div id="sec-alm" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 04 · Detection &amp; Test</div>
+      <div class="sec-title">Fault Detection &amp;<br>Recurrent Test Regime</div>
+    </div>
+    <div class="sec-note">Electrical safety has no continuous "alarm" in the way a ventilator or monitor does — detection instead relies on a recurring cycle of scheduled tests and passive protective devices.</div>
+  </div>
+
+  <div class="pri-grid">
+    <div class="pri-card pc-h">
+      <div class="pc-label" style="color:#922b21">FAIL CRITERIA</div>
+      <div class="pc-title" style="color:#922b21">Immediate Action</div>
+      <div class="pc-items">· Earth continuity &gt;0.1 Ω<br>· CF leakage &gt;10 µA<br>· Insulation resistance below limit<br>· Device removed from service immediately</div>
+    </div>
+    <div class="pri-card pc-m">
+      <div class="pc-label" style="color:#784212">MARGINAL RESULT</div>
+      <div class="pc-title" style="color:#784212">Investigate Before Return</div>
+      <div class="pc-items">· Result close to limit but passing<br>· Trend against previous test results<br>· Re-test after any environmental change</div>
+    </div>
+    <div class="pri-card pc-l">
+      <div class="pc-label" style="color:var(--user)">PASS</div>
+      <div class="pc-title" style="color:var(--user)">Routine Recurrence</div>
+      <div class="pc-items">· Within IEC 62353 limits<br>· Documented with analyser serial number<br>· Next test date recorded on asset</div>
+    </div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:24px;">
+    <table class="atbl">
+      <thead><tr><th style="width:20%">Test / Detection Mechanism</th><th style="width:12%">Applies To</th><th style="width:30%">What It Detects</th><th style="width:38%">Engineer's Action</th></tr></thead>
+      <tbody>
+        <tr><td>Earth Continuity Test</td><td>Class I equipment</td><td>Broken or high-resistance protective earth conductor</td><td>Verify ≤0.1 Ω; investigate any reading trending upward between tests</td></tr>
+        <tr><td>Insulation Resistance Test</td><td>All mains-powered equipment</td><td>Breakdown of insulation between live parts and enclosure/earth</td><td>Verify against IEC 62353 minimum resistance; fail and quarantine if below threshold</td></tr>
+        <tr><td>Enclosure Leakage Current</td><td>All ME equipment</td><td>Current that would flow from accessible parts to earth under fault conditions</td><td>Verify against classification-specific limit; document with test equipment ID</td></tr>
+        <tr><td>Patient Leakage Current</td><td>Applied parts (B/BF/CF)</td><td>Current that could flow through the patient via an applied part</td><td>Verify against B/BF/CF-specific limit under normal and single-fault condition</td></tr>
+        <tr><td>Residual Current Device (RCD)</td><td>Fixed installation / socket circuits</td><td>Earth leakage above a trip threshold — automatic disconnection</td><td>Verify trip time/current at installation and per BS 7671 testing schedule</td></tr>
+        <tr><td>Line Isolation Monitor (Medical IT System)</td><td>Theatres / critical care IT systems</td><td>A first earth fault on an isolated supply, without causing disconnection</td><td>Verify alarm function per HTM 06-01; investigate any first-fault alarm before a second fault can occur</td></tr>
+        <tr><td>Return Electrode Monitoring (REM)</td><td>HF surgical/diathermy equipment</td><td>Poor or partial contact of the patient return electrode</td><td>Verify REM cutoff function with diathermy analyzer at PPM</td></tr>
+        <tr><td>Visual Inspection</td><td>All equipment, every use</td><td>Physical damage to leads, plugs, casing — precursor to electrical fault</td><td>Reinforce "remove from service on visible damage" culture with clinical users</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- SAFETY MECHANISMS -->
+<div id="sec-saf" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 05 · Engineered Controls</div>
+      <div class="sec-title">Built-In Safety<br>Mechanisms</div>
+    </div>
+    <div class="sec-note">These principles recur across every device category in this reference — understanding them here makes every device-specific hazard page easier to reason about.</div>
+  </div>
+
+  <div class="sm-grid">
+    <div class="sm">
+      <div class="sm-bg-num">01</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🏷️</div>
+      <div class="sm-eyebrow">Design Classification · Patient</div>
+      <div class="sm-name">Applied Part Classification (B / BF / CF)</div>
+      <div class="sm-desc">Every patient-contacting part is classified by its isolation level and permitted leakage current, matched to the clinical risk of its use — CF for any part with a direct or effective intracardiac path.</div>
+      <div class="sm-std">IEC 60601-1 Table 1</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">02</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🛡️</div>
+      <div class="sm-eyebrow">Construction · Patient</div>
+      <div class="sm-name">Class I / Class II Equipment Construction</div>
+      <div class="sm-desc">Class I relies on protective earthing plus basic insulation; Class II uses double or reinforced insulation with no reliance on an earth connection at all.</div>
+      <div class="sm-std">IEC 60601-1 §8.4 — protection classes</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">03</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🔌</div>
+      <div class="sm-eyebrow">Installation · Occupational &amp; Patient</div>
+      <div class="sm-name">Medical IT (Isolated Power) Systems</div>
+      <div class="sm-desc">In theatres and critical care, an isolated power supply with a line isolation monitor allows a first earth fault to be flagged and investigated without automatic disconnection mid-procedure.</div>
+      <div class="sm-std">NHS HTM 06-01 — medical IT systems</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">04</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🔴</div>
+      <div class="sm-eyebrow">Fixed Installation · Occupational</div>
+      <div class="sm-name">Residual Current Devices (RCDs)</div>
+      <div class="sm-desc">Detect an earth-leakage imbalance and disconnect the circuit automatically, protecting against both macroshock to people and downstream equipment faults.</div>
+      <div class="sm-std">BS 7671 — wiring regulations</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">05</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🔥</div>
+      <div class="sm-eyebrow">Electronic · Patient</div>
+      <div class="sm-name">Return Electrode Monitoring (REM)</div>
+      <div class="sm-desc">Continuously monitors contact impedance of the diathermy return electrode, halting output before a poor-contact burn can occur.</div>
+      <div class="sm-std">IEC 60601-2-2 — HF surgical equipment</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">06</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">🔻</div>
+      <div class="sm-eyebrow">Electrical · Engineer</div>
+      <div class="sm-name">Isolation Transformers for Live Diagnostics</div>
+      <div class="sm-desc">Floats the equipment under test relative to earth, so a single fault while probing does not complete a shock circuit through the engineer.</div>
+      <div class="sm-std">One device per transformer — do not daisy-chain</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">07</div>
+      <div class="sm-icon-wrap" style="background:var(--patient-light)">🔻</div>
+      <div class="sm-eyebrow">Electrical · Engineer &amp; Patient</div>
+      <div class="sm-name">Automatic HV Discharge Circuits</div>
+      <div class="sm-desc">Dump resistors and bleed circuits safely discharge stored energy in HV devices (defibrillators, diathermy, X-ray generators) — the design pattern that keeps residual-charge risk manageable.</div>
+      <div class="sm-std">Verify at every PPM on HV-storage devices</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">08</div>
+      <div class="sm-icon-wrap" style="background:var(--eng-light)">📒</div>
+      <div class="sm-eyebrow">Process · Forensic</div>
+      <div class="sm-name">IEC 62353 Recurrent Test Regime</div>
+      <div class="sm-desc">Scheduled, documented electrical safety testing at defined intervals — and always after any repair — forms the backbone of ongoing electrical safety assurance for every device in the fleet.</div>
+      <div class="sm-std">IEC 62353 — recurrent test and test after repair</div>
+    </div>
+    <div class="sm">
+      <div class="sm-bg-num">09</div>
+      <div class="sm-icon-wrap" style="background:var(--user-light)">🔒</div>
+      <div class="sm-eyebrow">Process · Occupational</div>
+      <div class="sm-name">Lock-Out / Tag-Out (LOTO)</div>
+      <div class="sm-desc">Physical isolation and labelling of a circuit under work, preventing re-energisation by another person while the engineer is still exposed.</div>
+      <div class="sm-std">Electricity at Work Regs 1989</div>
+    </div>
+  </div>
+</div>
+
+<!-- DEFENCE -->
+<div id="sec-def" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 06 · Swiss Cheese Model</div>
+      <div class="sec-title">Defence-in-Depth</div>
+    </div>
+    <div class="sec-note">Each layer has holes. Electrical harm — to patient or engineer — occurs only when holes align across every layer simultaneously.</div>
+  </div>
+
+  <div class="def-wrap">
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">I</div></div>
+      <div class="def-body">
+        <div class="def-title">Inherent Design Controls</div>
+        <div class="def-desc">Applied part classification (B/BF/CF) and Class I/II construction remove hazards at the design stage, matched to the intended clinical use of each device and accessory.</div>
+        <div class="def-tags"><span class="dtag dtag-p">Applied part classification</span><span class="dtag dtag-p">Class I/II construction</span><span class="dtag dtag-p">Double isolation barriers</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">II</div></div>
+      <div class="def-body">
+        <div class="def-title">Automatic Protection Devices</div>
+        <div class="def-desc">RCDs disconnect on earth-leakage imbalance. Return electrode monitoring halts diathermy on poor contact. Line isolation monitors flag a first fault in theatre without disconnecting.</div>
+        <div class="def-tags"><span class="dtag dtag-p">RCD protection</span><span class="dtag dtag-p">REM cutoff</span><span class="dtag dtag-p">Line isolation monitor</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">III</div></div>
+      <div class="def-body">
+        <div class="def-title">Test-Cycle Detection</div>
+        <div class="def-desc">Unlike continuous alarms, electrical safety relies on a recurring test cycle — IEC 62353 earth continuity, insulation resistance, and leakage current checks at scheduled intervals and after repair.</div>
+        <div class="def-tags"><span class="dtag dtag-u">Test-due labelling</span><span class="dtag dtag-u">IEC 62353 schedule</span><span class="dtag dtag-u">Test-after-repair rule</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">IV</div></div>
+      <div class="def-body">
+        <div class="def-title">Clinical &amp; Occupational Procedures</div>
+        <div class="def-desc">"Remove on visible damage" culture, prohibition of unofficial multi-way adaptors, wet-area equipment protocols, lone-worker rules for higher-risk electrical tasks.</div>
+        <div class="def-tags"><span class="dtag dtag-u">Visible damage reporting</span><span class="dtag dtag-u">Adaptor policy</span><span class="dtag dtag-u">Lone-worker protocol</span></div>
+      </div>
+    </div>
+    <div class="def-row">
+      <div class="def-num"><div class="def-roman">V</div></div>
+      <div class="def-body">
+        <div class="def-title">EBME Verification Practice</div>
+        <div class="def-desc">LOTO before any internal work, isolation transformers for necessary live diagnostics, calibrated Cat-rated test equipment, verified HV discharge before opening any case with known energy storage.</div>
+        <div class="def-tags"><span class="dtag dtag-e">LOTO</span><span class="dtag dtag-e">Isolation transformer use</span><span class="dtag dtag-e">Calibrated test equipment</span><span class="dtag dtag-e">HV discharge verification</span></div>
+      </div>
+    </div>
+    <div class="def-row" style="border-bottom:none">
+      <div class="def-num"><div class="def-roman">VI</div></div>
+      <div class="def-body">
+        <div class="def-title">Post-Market Surveillance &amp; Vigilance</div>
+        <div class="def-desc">MHRA Yellow Card and MIR reporting for any electrical incident, RIDDOR reporting of engineer injuries, fleet-wide trend analysis of test failures by manufacturer/model.</div>
+        <div class="def-tags"><span class="dtag dtag-e">MHRA Yellow Card</span><span class="dtag dtag-e">RIDDOR reporting</span><span class="dtag dtag-e">Fleet trend analysis</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STANDARDS -->
+<div id="sec-std" class="section">
+  <div class="sec-hd">
+    <div>
+      <div class="sec-eyebrow">§ 07 · Normative Framework</div>
+      <div class="sec-title">Applicable Standards<br>&amp; Regulations</div>
+    </div>
+    <div class="sec-note">These are the foundational electrical standards referenced throughout every device-specific hazard page in this reference.</div>
+  </div>
+
+  <div style="background:var(--white);border:1px solid var(--rule);border-radius:3px;overflow:hidden;box-shadow:var(--shadow)">
+    <table class="stbl">
+      <thead><tr><th style="width:18%">Standard / Reg</th><th style="width:28%">Scope</th><th style="width:16%">Applies To</th><th style="width:38%">Key Requirements for EBME</th></tr></thead>
+      <tbody>
+        <tr><td>IEC 60601-1</td><td>General requirements for basic safety of ME equipment</td><td>Manufacturer · EBME</td><td>Applied part classification; leakage current limits; earth continuity; MOOP/MOPP; Class I/II construction</td></tr>
+        <tr><td>IEC 62353</td><td>Recurrent test and test after repair of ME equipment</td><td>EBME</td><td>Earth continuity ≤0.1 Ω; insulation resistance; leakage current thresholds by classification; documentation requirements</td></tr>
+        <tr><td>IEC 60601-2-2</td><td>Particular requirements for HF surgical (diathermy) equipment</td><td>Manufacturer · EBME</td><td>Return electrode monitoring; HF leakage current limits</td></tr>
+        <tr><td>IEC 61010-1</td><td>Safety requirements for electrical test and measurement equipment</td><td>EBME</td><td>CAT rating of test equipment matched to circuit energy level</td></tr>
+        <tr><td>BS 7671</td><td>Requirements for electrical installations (UK Wiring Regulations)</td><td>EBME · Estates</td><td>RCD protection requirements; special locations (wet areas); fixed installation testing</td></tr>
+        <tr><td>NHS HTM 06-01</td><td>Electrical services supply and distribution</td><td>EBME · Estates</td><td>Medical IT (isolated power) systems in theatres/critical care; line isolation monitor requirements</td></tr>
+        <tr><td>NHS HTM 08-03</td><td>Bedhead services</td><td>EBME · Estates</td><td>Socket provision and configuration at the bedside; reducing reliance on adaptors</td></tr>
+        <tr><td>Electricity at Work Regulations 1989</td><td>Workplace electrical safety</td><td>EBME Engineer</td><td>Competence requirements; safe systems of work; LOTO; duty to prevent danger from electrical work</td></tr>
+        <tr><td>RIDDOR 2013</td><td>Reporting of injuries, diseases, dangerous occurrences</td><td>EBME · Trust</td><td>Mandatory reporting of electric shock injuries to HSE</td></tr>
+        <tr><td>ISO 14971:2019</td><td>Risk management for medical devices</td><td>Manufacturer · EBME</td><td>Hazard identification; ALARP; residual risk acceptability</td></tr>
+        <tr><td>UK MDR 2002 / EU MDR 2017/745</td><td>Medical device regulation</td><td>Manufacturer · EBME · Trust</td><td>UKCA/CE marking; incident reporting; FSCA obligations</td></tr>
+        <tr><td>MHRA DB2010(02)</td><td>Managing medical devices</td><td>EBME · Trust</td><td>Asset management; electrical test record retention; incident management</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<script>
+function go(id, el, cls) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('on'));
+  document.getElementById('sec-' + id).classList.add('on');
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('active-p','active-u','active-e','active-n'));
+  el.classList.add(cls);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
